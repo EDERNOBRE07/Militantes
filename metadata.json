@@ -1,0 +1,11 @@
+{
+  "name": "Militância São José - Gestão e Monitoramento de Campanha",
+  "description": "Sistema de controle operacional de militância, distribuição de materiais de campanha por ruas e bairros de São José - SC com dados do IBGE, rastreamento GPS, mapas de calor, rotas de van, folha de pagamento semanal de diárias com controle de acesso de administrador, relatórios e CRM.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
