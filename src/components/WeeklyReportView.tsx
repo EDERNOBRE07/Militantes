@@ -65,6 +65,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const [selectedWeek, setSelectedWeek] = useState<string>('semana-1');
   const [selectedPhotoZoom, setSelectedPhotoZoom] = useState<string | null>(null);
   const [viewGrouping, setViewGrouping] = useState<'por_militante' | 'tabela_geral' | 'tabela_produtividade' | 'por_bairro'>('por_militante');
+  const [selectedBairroId, setSelectedBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
 
@@ -82,6 +83,20 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     { id: 'semana-5', label: 'Semana 5 (22/09 a 28/09/2026)' },
     { id: 'semana-6', label: 'Semana 6 / Reta Final (29/09 a 04/10/2026)' }
   ];
+
+  // Current selected neighborhood for territorial report
+  const currentSelectedBairro = useMemo(() => {
+    return neighborhoods.find(n => n.id === selectedBairroId) || neighborhoods[0] || {
+      id: 'kobrasol',
+      name: 'Kobrasol',
+      zone: 'Zona Sul',
+      population: 18500,
+      votersEstimated: 14200,
+      totalStreets: 48,
+      lat: -27.5962,
+      lng: -48.6190
+    };
+  }, [neighborhoods, selectedBairroId]);
 
   // Filter checkins
   const filteredCheckIns = checkIns.filter(chk => {
@@ -168,15 +183,60 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     ].filter(item => item.value > 0);
   }, [totalSantinhos, totalAdesivoBola, totalColinhas, totalParachoque]);
 
+  // Dynamic titles and labels based on viewGrouping
+  const getReportMainTitle = () => {
+    switch (viewGrouping) {
+      case 'por_bairro':
+        return `Relatório Territorial & Auditoria Geográfica por Bairros e Mapas`;
+      case 'por_militante':
+        return `Relatório Semanal de Desempenho & Cobertura por Militante`;
+      case 'tabela_produtividade':
+        return `Relatório Oficial de Produtividade & Metas de Campo`;
+      case 'tabela_geral':
+        return `Relatório Consolidado Compilado Geral de Todos os Relatórios`;
+      default:
+        return `Relatório Semanal de Desempenho & Auditoria de Campo`;
+    }
+  };
+
+  const getReportSubtitle = () => {
+    switch (viewGrouping) {
+      case 'por_bairro':
+        return `Visão territorial do bairro ${currentSelectedBairro.name}, mapa com ruas pintadas em vermelho e pins, galeria de fotos de comprovação e gráficos de distribuição.`;
+      case 'por_militante':
+        return `Fichas individuais de cada militante com ruas percorridas, comprovantes fotográficos, coordenadas GPS e validação oficial.`;
+      case 'tabela_produtividade':
+        return `Ranking consolidado de rendimento por equipe, controle de metas semanais e estimativa de folha de diárias a pagar.`;
+      case 'tabela_geral':
+        return `Compilado integral e consolidado de toda a campanha: Resumo Executivo, Produtividade, Metas, Auditoria Territorial por Bairros e Tabela Geral de Ruas.`;
+      default:
+        return `Consolidado com gráficos de produtividade, tabela de metas, ruas percorridas, comprovantes fotográficos e assinatura oficial.`;
+    }
+  };
+
+  const getExportButtonLabel = () => {
+    switch (viewGrouping) {
+      case 'por_bairro':
+        return `Exportar PDF (Relatório do Bairro ${currentSelectedBairro.name} & Mapa)`;
+      case 'por_militante':
+        return `Exportar PDF (Relatório por Militante)`;
+      case 'tabela_produtividade':
+        return `Exportar PDF (Tabela de Produtividade)`;
+      case 'tabela_geral':
+        return `Exportar PDF (Compilado Geral Completo)`;
+      default:
+        return `Exportar PDF`;
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
 
-  // Enhanced PDF Export Function including Charts and Productivity Tables
+  // Comprehensive Multi-Report PDF Export Function
   const handleExportPDF = async () => {
     try {
       setIsGeneratingPdf(true);
-      setExportFeedback('Capturando gráficos e processando tabela de produtividade...');
 
       const doc = new jsPDF({
         orientation: 'landscape',
@@ -195,24 +255,24 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12.5);
+        doc.setFontSize(11.5);
         doc.text(pageTitle, 14, 10);
 
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
+        doc.setFontSize(7.5);
         doc.text(subTitle, 14, 17);
 
         // Coordinator Badge
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
+        doc.setFontSize(8.5);
         doc.text(`Coordenação Geral: ${COORDINATOR_NAME}`, pageWidth - 14, 10, { align: 'right' });
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7.5);
+        doc.setFontSize(7);
         doc.text(`Emissão: ${emissionDate} | Autenticação: SJ-OFICIAL-2026`, pageWidth - 14, 17, { align: 'right' });
       };
 
       // Helper for Footer
-      const drawFooter = (pageNum: number, totalPages?: number) => {
+      const drawFooter = (pageNum: number) => {
         doc.setDrawColor(203, 213, 225);
         doc.line(14, pageHeight - 24, pageWidth - 14, pageHeight - 24);
 
@@ -250,228 +310,781 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         doc.text(`Página ${pageNum}`, 14, pageHeight - 8);
       };
 
-      // ================= PAGE 1: EXECUTIVE KPI SUMMARY & CHARTS =================
-      drawHeaderBanner(
-        'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO OFICIAL DE PRODUTIVIDADE',
-        `${COMMITTEE_NAME} | Período: ${selectedWeekLabel}`
-      );
+      // ================= 1. RELATÓRIO TERRITORIAL & AUDITORIA POR BAIRROS & MAPAS =================
+      if (viewGrouping === 'por_bairro') {
+        setExportFeedback(`Capturando mapa territorial de ${currentSelectedBairro.name} e gerando relatório...`);
 
-      // KPI Summary Section
-      doc.setFillColor(248, 250, 252);
-      doc.roundedRect(14, 28, 269, 17, 2, 2, 'F');
-      doc.setDrawColor(226, 232, 240);
-      doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
+        // PAGE 1: HEADER, CARDS, MAP WITH PAINTED STREETS AND CHARTS
+        drawHeaderBanner(
+          'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO TERRITORIAL & AUDITORIA GEOGRÁFICA',
+          `Bairro: ${currentSelectedBairro.name.toUpperCase()} (${currentSelectedBairro.zone}) • Eleições 2026 | Período: ${selectedWeekLabel}`
+        );
 
-      const kpiItems = [
-        { label: 'TOTAL DE RUAS', val: `${filteredCheckIns.length}` },
-        { label: 'ABORDAGENS DIRETAS', val: `${totalAbordagens}` },
-        { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComercios}` },
-        { label: 'SANTINHOS', val: `${totalSantinhos.toLocaleString('pt-BR')}` },
-        { label: 'ADESIVOS BOLA', val: `${totalAdesivoBola.toLocaleString('pt-BR')}` },
-        { label: 'TOTAL MATERIAIS', val: `${totalMateriaisGeral.toLocaleString('pt-BR')}` },
-      ];
+        // Demographic & Activity KPI Cards for this Neighborhood
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(14, 27, 269, 17, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(14, 27, 269, 17, 2, 2, 'D');
 
-      const kpiWidth = 269 / kpiItems.length;
-      kpiItems.forEach((kpi, idx) => {
-        const xPos = 14 + (idx * kpiWidth) + (kpiWidth / 2);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7);
-        doc.setTextColor(100, 116, 139);
-        doc.text(kpi.label, xPos, 33.5, { align: 'center' });
+        const bairroCheckIns = filteredCheckIns.filter(chk => 
+          chk.neighborhoodId === currentSelectedBairro.id || 
+          chk.neighborhoodName.toLowerCase().includes(currentSelectedBairro.name.toLowerCase())
+        );
+        const totalAbordBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+        const totalComBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
+        const totalMatBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos + c.materialsDelivered.adesivo_bola + c.materialsDelivered.adesivo_parachoque + c.materialsDelivered.colinhas), 0);
+        const coveragePercent = Math.min(Math.round((bairroCheckIns.length / Math.max(currentSelectedBairro.totalStreets, 1)) * 100), 100);
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10.5);
-        doc.setTextColor(30, 58, 138);
-        doc.text(kpi.val, xPos, 41, { align: 'center' });
-      });
+        const bairroKpiItems = [
+          { label: 'POPULAÇÃO (IBGE)', val: `${currentSelectedBairro.population.toLocaleString('pt-BR')} hab.` },
+          { label: 'ELEITORES ESTIMADOS', val: `${currentSelectedBairro.votersEstimated.toLocaleString('pt-BR')}` },
+          { label: 'RUAS REGISTRADAS', val: `${bairroCheckIns.length} / ${currentSelectedBairro.totalStreets} (${coveragePercent}%)` },
+          { label: 'ABORDAGENS DIRETAS', val: `${totalAbordBairro} eleitores` },
+          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComBairro}` },
+          { label: 'MATERIAIS NO BAIRRO', val: `${totalMatBairro.toLocaleString('pt-BR')}` },
+        ];
 
-      // Capture Chart Canvas if container exists
-      let nextStartY = 50;
-      if (chartsContainerRef.current) {
-        try {
-          const chartCanvas = await html2canvas(chartsContainerRef.current, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-          });
-          const imgData = chartCanvas.toDataURL('image/png');
-          const imgWidth = 269;
-          const imgHeight = (chartCanvas.height * imgWidth) / chartCanvas.width;
-          const finalImgHeight = Math.min(imgHeight, 62); // Cap height to fit table on same page
-          
-          doc.addImage(imgData, 'PNG', 14, 48, imgWidth, finalImgHeight);
-          nextStartY = 48 + finalImgHeight + 4;
-        } catch (err) {
-          console.warn('Erro ao renderizar imagem dos gráficos no PDF:', err);
-          nextStartY = 50;
+        const bKpiWidth = 269 / bairroKpiItems.length;
+        bairroKpiItems.forEach((kpi, idx) => {
+          const xPos = 14 + (idx * bKpiWidth) + (bKpiWidth / 2);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(6.5);
+          doc.setTextColor(100, 116, 139);
+          doc.text(kpi.label, xPos, 32.5, { align: 'center' });
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9.5);
+          doc.setTextColor(30, 58, 138);
+          doc.text(kpi.val, xPos, 39.5, { align: 'center' });
+        });
+
+        // Capture Map and Charts element
+        const visualsEl = document.getElementById('neighborhood-report-visuals');
+        const mapStartY = 47;
+        if (visualsEl) {
+          try {
+            const visualCanvas = await html2canvas(visualsEl, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            const imgData = visualCanvas.toDataURL('image/png');
+            const imgWidth = 269;
+            const imgHeight = (visualCanvas.height * imgWidth) / visualCanvas.width;
+            const finalImgHeight = Math.min(imgHeight, 126);
+            doc.addImage(imgData, 'PNG', 14, mapStartY, imgWidth, finalImgHeight);
+            drawFooter(1);
+          } catch (err) {
+            console.warn('Erro ao capturar mapa do bairro:', err);
+            drawFooter(1);
+          }
+        } else {
+          drawFooter(1);
         }
+
+        // PAGE 2: DETAILED STREET TABLE FOR THIS NEIGHBORHOOD
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          `SISTEMA DE MILITÂNCIA SÃO JOSÉ - AUDITORIA DE RUAS: ${currentSelectedBairro.name.toUpperCase()}`,
+          `Logradouros, Coordenadas GPS, Abordagens e Validação no Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
+        );
+
+        const bairroStreetRows = bairroCheckIns.map(chk => {
+          const militant = militants.find(m => m.id === chk.militantId);
+          const mat = militant?.matricula ? `(${militant.matricula})` : '';
+          return [
+            chk.timestamp,
+            chk.streetName,
+            `${chk.militantName} ${mat}`,
+            `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
+            `${chk.materialsDelivered.abordagens || 0}`,
+            `${chk.materialsDelivered.comercio || 0}`,
+            `${chk.materialsDelivered.santinhos}`,
+            chk.status === 'validado' ? 'VALIDADO ✓' : 'PENDENTE'
+          ];
+        });
+
+        autoTable(doc, {
+          head: [[
+            'Data / Hora',
+            'Logradouro / Trecho Percorrido',
+            'Militante Responsável',
+            'GPS (Latitude, Longitude)',
+            'Abordagens',
+            'Comércio',
+            'Santinhos',
+            'Status Auditoria'
+          ]],
+          body: bairroStreetRows.length > 0 ? bairroStreetRows : [['-', `Nenhuma rua cadastrada para o bairro ${currentSelectedBairro.name} no período`, '-', '-', '-', '-', '-', '-']],
+          startY: 28,
+          margin: { left: 14, right: 14, bottom: 28 },
+          styles: {
+            fontSize: 7.5,
+            cellPadding: 2.2,
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+          },
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42],
+            fontStyle: 'bold',
+            fontSize: 8
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 252]
+          },
+          columnStyles: {
+            0: { cellWidth: 30 },
+            1: { cellWidth: 70, fontStyle: 'bold' },
+            2: { cellWidth: 46 },
+            3: { cellWidth: 42, font: 'courier' },
+            4: { cellWidth: 22, halign: 'center' },
+            5: { cellWidth: 20, halign: 'center' },
+            6: { cellWidth: 20, halign: 'center' },
+            7: { cellWidth: 25, halign: 'center', fontStyle: 'bold' }
+          },
+          didDrawPage: (data) => {
+            drawFooter(data.pageNumber);
+          }
+        });
+
+        // PAGE 3: GALERIA DE COMPROVAÇÃO FOTOGRÁFICA DO BAIRRO
+        const photosEl = document.getElementById('neighborhood-report-photos-card');
+        if (photosEl && bairroCheckIns.flatMap(c => c.photos || []).length > 0) {
+          doc.addPage('a4', 'landscape');
+          drawHeaderBanner(
+            `SISTEMA DE MILITÂNCIA SÃO JOSÉ - GALERIA DE COMPROVAÇÃO FOTOGRÁFICA DAS RUAS`,
+            `Auditoria Visual das Ruas e Comprovantes em Campo • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
+          );
+
+          try {
+            const photosCanvas = await html2canvas(photosEl, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            const imgData = photosCanvas.toDataURL('image/png');
+            const imgWidth = 269;
+            const imgHeight = (photosCanvas.height * imgWidth) / photosCanvas.width;
+            const finalImgHeight = Math.min(imgHeight, 145);
+            doc.addImage(imgData, 'PNG', 14, 28, imgWidth, finalImgHeight);
+            drawFooter(doc.getNumberOfPages());
+          } catch (err) {
+            console.warn('Erro ao capturar fotos do bairro:', err);
+            drawFooter(doc.getNumberOfPages());
+          }
+        }
+
+        const sanitizedBairro = currentSelectedBairro.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
+        doc.save(`relatorio_territorial_${sanitizedBairro}_${sanitizedWeek}.pdf`);
+        setExportFeedback(`✓ Relatório Territorial do Bairro ${currentSelectedBairro.name} com mapa, gráficos, fotos e tabela gerado com sucesso!`);
+        setTimeout(() => setExportFeedback(null), 6000);
+        return;
       }
 
-      // Title for Productivity Table
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.setTextColor(30, 41, 59);
-      doc.text('TABELA CONSOLIDADA DE PRODUTIVIDADE & METAS POR MILITANTE', 14, nextStartY);
+      // ================= 2. RELATÓRIO DE DESEMPENHO & COBERTURA POR MILITANTE =================
+      if (viewGrouping === 'por_militante') {
+        setExportFeedback('Gerando Relatório de Desempenho por Militante...');
 
-      // Build Productivity Table Data
-      const prodTableRows = productivityData.map((item, idx) => [
-        `#${idx + 1}`,
-        `${item.name} (${item.matricula})`,
-        item.teamName,
-        `${item.streetsCount} / ${item.weeklyGoal}`,
-        `${item.completionRate}%`,
-        `${item.abordagens}`,
-        `${item.comercios}`,
-        `${item.totalMat.toLocaleString('pt-BR')}`,
-        item.statusLabel.toUpperCase(),
-        `R$ ${item.totalPay.toFixed(2).replace('.', ',')}`
-      ]);
+        // PAGE 1: RESUMO EXECUTIVO E GRÁFICOS
+        drawHeaderBanner(
+          'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO DE DESEMPENHO POR MILITANTE',
+          `${selectedMilitantObj ? `Militante: ${selectedMilitantObj.name.toUpperCase()} (${selectedMilitantObj.matricula})` : `Todos os Militantes Ativos (${activeMilitants.length})`} | Período: ${selectedWeekLabel}`
+        );
 
-      // Add Total Row
-      const totalStreetsSum = productivityData.reduce((sum, d) => sum + d.streetsCount, 0);
-      const totalAbordagensSum = productivityData.reduce((sum, d) => sum + d.abordagens, 0);
-      const totalComerciosSum = productivityData.reduce((sum, d) => sum + d.comercios, 0);
-      const totalMateriaisSum = productivityData.reduce((sum, d) => sum + d.totalMat, 0);
-      const totalPaySum = productivityData.reduce((sum, d) => sum + d.totalPay, 0);
+        // KPI Summary Section
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
 
-      prodTableRows.push([
-        'TOTAL',
-        `${productivityData.length} MILITANTES ATIVOS`,
-        '-',
-        `${totalStreetsSum} RUAS`,
-        '100%',
-        `${totalAbordagensSum}`,
-        `${totalComerciosSum}`,
-        `${totalMateriaisSum.toLocaleString('pt-BR')}`,
-        'CONSOLIDADO',
-        `R$ ${totalPaySum.toFixed(2).replace('.', ',')}`
-      ]);
-
-      autoTable(doc, {
-        head: [[
-          'Pos',
-          'Militante (Matrícula)',
-          'Equipe',
-          'Ruas / Meta',
-          'Atingimento',
-          'Abordagens',
-          'Comércio',
-          'Materiais',
-          'Status Meta',
-          'Total Diárias'
-        ]],
-        body: prodTableRows,
-        startY: nextStartY + 2,
-        margin: { left: 14, right: 14, bottom: 28 },
-        styles: {
-          fontSize: 7,
-          cellPadding: 1.8,
-          textColor: [30, 41, 59],
-          lineColor: [226, 232, 240],
-          lineWidth: 0.1
-        },
-        headStyles: {
-          fillColor: [241, 245, 249],
-          textColor: [15, 23, 42],
-          fontStyle: 'bold',
-          fontSize: 7.5
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252]
-        },
-        columnStyles: {
-          0: { cellWidth: 10, halign: 'center' },
-          1: { cellWidth: 50, fontStyle: 'bold' },
-          2: { cellWidth: 26 },
-          3: { cellWidth: 24, halign: 'center' },
-          4: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
-          5: { cellWidth: 22, halign: 'center' },
-          6: { cellWidth: 20, halign: 'center' },
-          7: { cellWidth: 25, halign: 'center' },
-          8: { cellWidth: 32, halign: 'center' },
-          9: { cellWidth: 38, halign: 'right', fontStyle: 'bold' }
-        },
-        didDrawPage: (data) => {
-          drawFooter(data.pageNumber);
-        }
-      });
-
-      // ================= PAGE 2: DETAILED STREET CHECK-INS AUDIT =================
-      doc.addPage('a4', 'landscape');
-      drawHeaderBanner(
-        'SISTEMA DE MILITÂNCIA SÃO JOSÉ - DETALHAMENTO DE RUAS & AUDITORIA DE CAMPO',
-        `Registro Georreferenciado Completo de Ruas Atendidas | Período: ${selectedWeekLabel}`
-      );
-
-      const streetTableRows = filteredCheckIns.map(chk => {
-        const militant = militants.find(m => m.id === chk.militantId);
-        const mat = militant?.matricula ? `(${militant.matricula})` : '';
-        return [
-          chk.timestamp,
-          `${chk.militantName} ${mat}`,
-          chk.neighborhoodName,
-          chk.streetName,
-          `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
-          `${chk.materialsDelivered.abordagens || 0}`,
-          `${chk.materialsDelivered.comercio || 0}`,
-          `${chk.materialsDelivered.santinhos} sant / ${chk.materialsDelivered.adesivo_bola} bola`,
-          chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
+        const mKpiItems = [
+          { label: 'TOTAL DE RUAS', val: `${filteredCheckIns.length}` },
+          { label: 'ABORDAGENS DIRETAS', val: `${totalAbordagens}` },
+          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComercios}` },
+          { label: 'SANTINHOS', val: `${totalSantinhos.toLocaleString('pt-BR')}` },
+          { label: 'ADESIVOS BOLA', val: `${totalAdesivoBola.toLocaleString('pt-BR')}` },
+          { label: 'TOTAL MATERIAIS', val: `${totalMateriaisGeral.toLocaleString('pt-BR')}` },
         ];
-      });
 
-      autoTable(doc, {
-        head: [[
-          'Data / Hora',
-          'Militante (Matrícula)',
-          'Bairro',
-          'Logradouro / Trecho Percorrido',
-          'GPS (Lat, Lng)',
-          'Abordagens',
-          'Comércio',
-          'Materiais',
-          'Auditoria'
-        ]],
-        body: streetTableRows.length > 0 ? streetTableRows : [['-', 'Nenhum registro encontrado no período', '-', '-', '-', '-', '-', '-', '-']],
-        startY: 30,
-        margin: { left: 14, right: 14, bottom: 28 },
-        styles: {
-          fontSize: 7.5,
-          cellPadding: 2,
-          textColor: [30, 41, 59],
-          lineColor: [226, 232, 240],
-          lineWidth: 0.1
-        },
-        headStyles: {
-          fillColor: [241, 245, 249],
-          textColor: [15, 23, 42],
-          fontStyle: 'bold',
-          fontSize: 8
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252]
-        },
-        columnStyles: {
-          0: { cellWidth: 26 },
-          1: { cellWidth: 42, fontStyle: 'bold' },
-          2: { cellWidth: 28 },
-          3: { cellWidth: 55 },
-          4: { cellWidth: 32, font: 'courier' },
-          5: { cellWidth: 18, halign: 'center' },
-          6: { cellWidth: 16, halign: 'center' },
-          7: { cellWidth: 32 },
-          8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
-        },
-        didDrawPage: (data) => {
-          drawFooter(data.pageNumber);
+        const mKpiWidth = 269 / mKpiItems.length;
+        mKpiItems.forEach((kpi, idx) => {
+          const xPos = 14 + (idx * mKpiWidth) + (mKpiWidth / 2);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(100, 116, 139);
+          doc.text(kpi.label, xPos, 33.5, { align: 'center' });
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10.5);
+          doc.setTextColor(30, 58, 138);
+          doc.text(kpi.val, xPos, 41, { align: 'center' });
+        });
+
+        if (chartsContainerRef.current) {
+          try {
+            const chartCanvas = await html2canvas(chartsContainerRef.current, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            const imgData = chartCanvas.toDataURL('image/png');
+            const imgWidth = 269;
+            const imgHeight = (chartCanvas.height * imgWidth) / chartCanvas.width;
+            const finalImgHeight = Math.min(imgHeight, 115);
+            doc.addImage(imgData, 'PNG', 14, 48, imgWidth, finalImgHeight);
+          } catch (err) {
+            console.warn('Erro ao renderizar gráficos:', err);
+          }
         }
-      });
+        drawFooter(1);
 
-      // Save PDF file
-      const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
-      doc.save(`relatorio_produtividade_militancia_${sanitizedWeek}_coord_pedro_rosa.pdf`);
-      setExportFeedback('✓ Relatório em PDF com gráficos e tabelas gerado com sucesso!');
-      setTimeout(() => setExportFeedback(null), 5000);
+        // PAGE 2: TABELA DE RUAS PERCORRIDAS PELO(S) MILITANTE(S)
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          'DETALHAMENTO DE RUAS & COBERTURA POR MILITANTE',
+          `Registro Georreferenciado de Ruas Percorridas | Período: ${selectedWeekLabel}`
+        );
+
+        const milStreetRows = filteredCheckIns.map(chk => {
+          const militant = militants.find(m => m.id === chk.militantId);
+          const mat = militant?.matricula ? `(${militant.matricula})` : '';
+          return [
+            chk.timestamp,
+            `${chk.militantName} ${mat}`,
+            chk.neighborhoodName,
+            chk.streetName,
+            `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
+            `${chk.materialsDelivered.abordagens || 0}`,
+            `${chk.materialsDelivered.comercio || 0}`,
+            `${chk.materialsDelivered.santinhos} sant / ${chk.materialsDelivered.adesivo_bola} bola`,
+            chk.status === 'validado' ? 'VALIDADO ✓' : 'PENDENTE'
+          ];
+        });
+
+        autoTable(doc, {
+          head: [[
+            'Data / Hora',
+            'Militante (Matrícula)',
+            'Bairro',
+            'Logradouro / Trecho Percorrido',
+            'GPS (Lat, Lng)',
+            'Abordagens',
+            'Comércio',
+            'Materiais',
+            'Auditoria'
+          ]],
+          body: milStreetRows.length > 0 ? milStreetRows : [['-', 'Nenhum registro encontrado no período', '-', '-', '-', '-', '-', '-', '-']],
+          startY: 28,
+          margin: { left: 14, right: 14, bottom: 28 },
+          styles: {
+            fontSize: 7.5,
+            cellPadding: 2,
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+          },
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42],
+            fontStyle: 'bold',
+            fontSize: 8
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 252]
+          },
+          columnStyles: {
+            0: { cellWidth: 26 },
+            1: { cellWidth: 42, fontStyle: 'bold' },
+            2: { cellWidth: 28 },
+            3: { cellWidth: 55 },
+            4: { cellWidth: 32, font: 'courier' },
+            5: { cellWidth: 18, halign: 'center' },
+            6: { cellWidth: 16, halign: 'center' },
+            7: { cellWidth: 32 },
+            8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+          },
+          didDrawPage: (data) => {
+            drawFooter(data.pageNumber);
+          }
+        });
+
+        const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
+        doc.save(`relatorio_militantes_${sanitizedWeek}.pdf`);
+        setExportFeedback('✓ Relatório por Militante gerado com sucesso!');
+        setTimeout(() => setExportFeedback(null), 6000);
+        return;
+      }
+
+      // ================= 3. RELATÓRIO OFICIAL DE PRODUTIVIDADE & METAS DE CAMPO =================
+      if (viewGrouping === 'tabela_produtividade') {
+        setExportFeedback('Gerando Relatório de Produtividade & Metas...');
+
+        // PAGE 1: RESUMO EXECUTIVO, GRÁFICOS & TABELA DE METAS
+        drawHeaderBanner(
+          'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO OFICIAL DE PRODUTIVIDADE & METAS',
+          `Ranking de Rendimento, Metas Semanais e Folha de Diárias Estimada | Período: ${selectedWeekLabel}`
+        );
+
+        // KPI Summary Section
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
+
+        const totalStreetsSum = productivityData.reduce((sum, d) => sum + d.streetsCount, 0);
+        const totalPaySum = productivityData.reduce((sum, d) => sum + d.totalPay, 0);
+        const avgCompletion = productivityData.length > 0 ? Math.round(productivityData.reduce((sum, d) => sum + d.completionRate, 0) / productivityData.length) : 0;
+
+        const prodKpis = [
+          { label: 'TOTAL RUAS PERCORRIDAS', val: `${totalStreetsSum} ruas` },
+          { label: 'ATINGIMENTO MÉDIO', val: `${avgCompletion}% da meta` },
+          { label: 'ABORDAGENS DIRETAS', val: `${totalAbordagens}` },
+          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComercios}` },
+          { label: 'TOTAL MATERIAIS', val: `${totalMateriaisGeral.toLocaleString('pt-BR')}` },
+          { label: 'FOLHA DIÁRIAS (ESTIMADA)', val: `R$ ${totalPaySum.toFixed(2).replace('.', ',')}` },
+        ];
+
+        const pKpiWidth = 269 / prodKpis.length;
+        prodKpis.forEach((kpi, idx) => {
+          const xPos = 14 + (idx * pKpiWidth) + (pKpiWidth / 2);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(6.5);
+          doc.setTextColor(100, 116, 139);
+          doc.text(kpi.label, xPos, 33.5, { align: 'center' });
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9.5);
+          doc.setTextColor(30, 58, 138);
+          doc.text(kpi.val, xPos, 41, { align: 'center' });
+        });
+
+        let nextStartY = 48;
+        if (chartsContainerRef.current) {
+          try {
+            const chartCanvas = await html2canvas(chartsContainerRef.current, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            const imgData = chartCanvas.toDataURL('image/png');
+            const imgWidth = 269;
+            const imgHeight = (chartCanvas.height * imgWidth) / chartCanvas.width;
+            const finalImgHeight = Math.min(imgHeight, 58);
+            doc.addImage(imgData, 'PNG', 14, 48, imgWidth, finalImgHeight);
+            nextStartY = 48 + finalImgHeight + 4;
+          } catch (err) {
+            console.warn('Erro ao renderizar gráficos:', err);
+          }
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(30, 41, 59);
+        doc.text('TABELA CONSOLIDADA DE PRODUTIVIDADE & METAS POR MILITANTE', 14, nextStartY);
+
+        const prodTableRows = productivityData.map((item, idx) => [
+          `#${idx + 1}`,
+          `${item.name} (${item.matricula})`,
+          item.teamName,
+          `${item.streetsCount} / ${item.weeklyGoal}`,
+          `${item.completionRate}%`,
+          `${item.abordagens}`,
+          `${item.comercios}`,
+          `${item.totalMat.toLocaleString('pt-BR')}`,
+          item.statusLabel.toUpperCase(),
+          `R$ ${item.totalPay.toFixed(2).replace('.', ',')}`
+        ]);
+
+        const totalAbordagensSum = productivityData.reduce((sum, d) => sum + d.abordagens, 0);
+        const totalComerciosSum = productivityData.reduce((sum, d) => sum + d.comercios, 0);
+        const totalMateriaisSum = productivityData.reduce((sum, d) => sum + d.totalMat, 0);
+
+        prodTableRows.push([
+          'TOTAL',
+          `${productivityData.length} MILITANTES ATIVOS`,
+          '-',
+          `${totalStreetsSum} RUAS`,
+          `${avgCompletion}%`,
+          `${totalAbordagensSum}`,
+          `${totalComerciosSum}`,
+          `${totalMateriaisSum.toLocaleString('pt-BR')}`,
+          'CONSOLIDADO',
+          `R$ ${totalPaySum.toFixed(2).replace('.', ',')}`
+        ]);
+
+        autoTable(doc, {
+          head: [[
+            'Pos',
+            'Militante (Matrícula)',
+            'Equipe',
+            'Ruas / Meta',
+            'Atingimento',
+            'Abordagens',
+            'Comércio',
+            'Materiais',
+            'Status Meta',
+            'Total Diárias'
+          ]],
+          body: prodTableRows,
+          startY: nextStartY + 2,
+          margin: { left: 14, right: 14, bottom: 28 },
+          styles: {
+            fontSize: 7.5,
+            cellPadding: 2,
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+          },
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42],
+            fontStyle: 'bold',
+            fontSize: 8
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 252]
+          },
+          columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 50, fontStyle: 'bold' },
+            2: { cellWidth: 26 },
+            3: { cellWidth: 24, halign: 'center' },
+            4: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+            5: { cellWidth: 22, halign: 'center' },
+            6: { cellWidth: 20, halign: 'center' },
+            7: { cellWidth: 25, halign: 'center' },
+            8: { cellWidth: 32, halign: 'center' },
+            9: { cellWidth: 38, halign: 'right', fontStyle: 'bold' }
+          },
+          didDrawPage: (data) => {
+            drawFooter(data.pageNumber);
+          }
+        });
+
+        const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
+        doc.save(`relatorio_produtividade_metas_${sanitizedWeek}.pdf`);
+        setExportFeedback('✓ Relatório Oficial de Produtividade & Metas gerado com sucesso!');
+        setTimeout(() => setExportFeedback(null), 6000);
+        return;
+      }
+
+      // ================= 4. RELATÓRIO TABELA COMPLETA (COMPILADO GERAL DE TODOS OS RELATÓRIOS) =================
+      if (viewGrouping === 'tabela_geral') {
+        setExportFeedback('Gerando Compilado Geral de Todos os Relatórios (Produtividade, Metas, Bairros e Ruas)...');
+
+        // PAGE 1: RESUMO EXECUTIVO & GRÁFICOS GERAIS
+        drawHeaderBanner(
+          'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO CONSOLIDADO COMPILADO GERAL',
+          `Compilado Integral: Produtividade, Metas, Auditoria Territorial por Bairros e Ruas Georreferenciadas | Período: ${selectedWeekLabel}`
+        );
+
+        // KPI Summary Cards
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
+
+        const generalKpiItems = [
+          { label: 'TOTAL DE RUAS', val: `${filteredCheckIns.length}` },
+          { label: 'ABORDAGENS DIRETAS', val: `${totalAbordagens}` },
+          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComercios}` },
+          { label: 'SANTINHOS', val: `${totalSantinhos.toLocaleString('pt-BR')}` },
+          { label: 'ADESIVOS BOLA', val: `${totalAdesivoBola.toLocaleString('pt-BR')}` },
+          { label: 'TOTAL MATERIAIS', val: `${totalMateriaisGeral.toLocaleString('pt-BR')}` },
+        ];
+
+        const gKpiWidth = 269 / generalKpiItems.length;
+        generalKpiItems.forEach((kpi, idx) => {
+          const xPos = 14 + (idx * gKpiWidth) + (gKpiWidth / 2);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(100, 116, 139);
+          doc.text(kpi.label, xPos, 33.5, { align: 'center' });
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10.5);
+          doc.setTextColor(30, 58, 138);
+          doc.text(kpi.val, xPos, 41, { align: 'center' });
+        });
+
+        // Charts
+        if (chartsContainerRef.current) {
+          try {
+            const chartCanvas = await html2canvas(chartsContainerRef.current, {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            const imgData = chartCanvas.toDataURL('image/png');
+            const imgWidth = 269;
+            const imgHeight = (chartCanvas.height * imgWidth) / chartCanvas.width;
+            const finalImgHeight = Math.min(imgHeight, 115);
+            doc.addImage(imgData, 'PNG', 14, 48, imgWidth, finalImgHeight);
+          } catch (err) {
+            console.warn('Erro ao renderizar gráficos no PDF:', err);
+          }
+        }
+        drawFooter(1);
+
+        // PAGE 2: SEÇÃO 1 DO COMPILADO - TABELA CONSOLIDADA DE PRODUTIVIDADE & METAS
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          'COMPILADO GERAL (SEÇÃO 1/3) - PRODUTIVIDADE & METAS POR MILITANTE',
+          `Ranking de Rendimento, Metas Atingidas e Estimativa de Diárias | Período: ${selectedWeekLabel}`
+        );
+
+        const prodTableRows = productivityData.map((item, idx) => [
+          `#${idx + 1}`,
+          `${item.name} (${item.matricula})`,
+          item.teamName,
+          `${item.streetsCount} / ${item.weeklyGoal}`,
+          `${item.completionRate}%`,
+          `${item.abordagens}`,
+          `${item.comercios}`,
+          `${item.totalMat.toLocaleString('pt-BR')}`,
+          item.statusLabel.toUpperCase(),
+          `R$ ${item.totalPay.toFixed(2).replace('.', ',')}`
+        ]);
+
+        const totalStreetsSum = productivityData.reduce((sum, d) => sum + d.streetsCount, 0);
+        const totalAbordagensSum = productivityData.reduce((sum, d) => sum + d.abordagens, 0);
+        const totalComerciosSum = productivityData.reduce((sum, d) => sum + d.comercios, 0);
+        const totalMateriaisSum = productivityData.reduce((sum, d) => sum + d.totalMat, 0);
+        const totalPaySum = productivityData.reduce((sum, d) => sum + d.totalPay, 0);
+
+        prodTableRows.push([
+          'TOTAL',
+          `${productivityData.length} MILITANTES ATIVOS`,
+          '-',
+          `${totalStreetsSum} RUAS`,
+          '100%',
+          `${totalAbordagensSum}`,
+          `${totalComerciosSum}`,
+          `${totalMateriaisSum.toLocaleString('pt-BR')}`,
+          'CONSOLIDADO',
+          `R$ ${totalPaySum.toFixed(2).replace('.', ',')}`
+        ]);
+
+        autoTable(doc, {
+          head: [[
+            'Pos',
+            'Militante (Matrícula)',
+            'Equipe',
+            'Ruas / Meta',
+            'Atingimento',
+            'Abordagens',
+            'Comércio',
+            'Materiais',
+            'Status Meta',
+            'Total Diárias'
+          ]],
+          body: prodTableRows,
+          startY: 28,
+          margin: { left: 14, right: 14, bottom: 28 },
+          styles: {
+            fontSize: 7.5,
+            cellPadding: 2,
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+          },
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42],
+            fontStyle: 'bold',
+            fontSize: 8
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 252]
+          },
+          columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 50, fontStyle: 'bold' },
+            2: { cellWidth: 26 },
+            3: { cellWidth: 24, halign: 'center' },
+            4: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+            5: { cellWidth: 22, halign: 'center' },
+            6: { cellWidth: 20, halign: 'center' },
+            7: { cellWidth: 25, halign: 'center' },
+            8: { cellWidth: 32, halign: 'center' },
+            9: { cellWidth: 38, halign: 'right', fontStyle: 'bold' }
+          },
+          didDrawPage: (data) => {
+            drawFooter(data.pageNumber);
+          }
+        });
+
+        // PAGE 3: SEÇÃO 2 DO COMPILADO - AUDITORIA TERRITORIAL CONSOLIDADA DE TODOS OS BAIRROS
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          'COMPILADO GERAL (SEÇÃO 2/3) - AUDITORIA TERRITORIAL CONSOLIDADA POR BAIRROS',
+          `Cobertura Territorial, População IBGE, Eleitores e Ruas Registradas em São José - SC | Período: ${selectedWeekLabel}`
+        );
+
+        const bairrosConsolidatedRows = neighborhoods.map((n, idx) => {
+          const nCheckIns = filteredCheckIns.filter(c => c.neighborhoodId === n.id || c.neighborhoodName.toLowerCase().includes(n.name.toLowerCase()));
+          const nStreets = nCheckIns.length;
+          const nCoverage = Math.min(Math.round((nStreets / Math.max(n.totalStreets, 1)) * 100), 100);
+          const nAbord = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+          const nMat = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos + c.materialsDelivered.adesivo_bola + c.materialsDelivered.adesivo_parachoque + c.materialsDelivered.colinhas), 0);
+          let nStatus = 'Planejado';
+          if (nCoverage >= 70) nStatus = 'Alta Cobertura';
+          else if (nCoverage >= 30) nStatus = 'Em Andamento';
+          else if (nCoverage > 0) nStatus = 'Iniciado';
+
+          return [
+            `#${idx + 1}`,
+            n.name,
+            n.zone,
+            `${n.population.toLocaleString('pt-BR')} hab.`,
+            `${n.votersEstimated.toLocaleString('pt-BR')}`,
+            `${n.totalStreets}`,
+            `${nStreets}`,
+            `${nCoverage}%`,
+            `${nAbord}`,
+            `${nMat.toLocaleString('pt-BR')}`,
+            nStatus
+          ];
+        });
+
+        autoTable(doc, {
+          head: [[
+            'Pos',
+            'Bairro',
+            'Zona / Região',
+            'População (IBGE)',
+            'Eleitores Estimados',
+            'Total Ruas',
+            'Ruas Feitas',
+            '% Cobertura',
+            'Abordagens',
+            'Materiais',
+            'Status Cobertura'
+          ]],
+          body: bairrosConsolidatedRows,
+          startY: 28,
+          margin: { left: 14, right: 14, bottom: 28 },
+          styles: {
+            fontSize: 7.5,
+            cellPadding: 2,
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+          },
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42],
+            fontStyle: 'bold',
+            fontSize: 8
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 252]
+          },
+          columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 40, fontStyle: 'bold' },
+            2: { cellWidth: 28 },
+            3: { cellWidth: 32, halign: 'right' },
+            4: { cellWidth: 32, halign: 'right' },
+            5: { cellWidth: 22, halign: 'center' },
+            6: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+            7: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
+            8: { cellWidth: 24, halign: 'center' },
+            9: { cellWidth: 25, halign: 'center' },
+            10: { cellWidth: 28, halign: 'center' }
+          },
+          didDrawPage: (data) => {
+            drawFooter(data.pageNumber);
+          }
+        });
+
+        // PAGE 4: SEÇÃO 3 DO COMPILADO - TABELA COMPLETA DE TODAS AS RUAS PERCORRIDAS
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          'COMPILADO GERAL (SEÇÃO 3/3) - TABELA COMPLETA DE RUAS & AUDITORIA GEORREFERENCIADA',
+          `Registro Geral de Ruas Atendidas, Coordenadas GPS e Validação de Campo | Período: ${selectedWeekLabel}`
+        );
+
+        const allStreetRows = filteredCheckIns.map(chk => {
+          const militant = militants.find(m => m.id === chk.militantId);
+          const mat = militant?.matricula ? `(${militant.matricula})` : '';
+          return [
+            chk.timestamp,
+            `${chk.militantName} ${mat}`,
+            chk.neighborhoodName,
+            chk.streetName,
+            `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
+            `${chk.materialsDelivered.abordagens || 0}`,
+            `${chk.materialsDelivered.comercio || 0}`,
+            `${chk.materialsDelivered.santinhos} sant / ${chk.materialsDelivered.adesivo_bola} bola`,
+            chk.status === 'validado' ? 'VALIDADO ✓' : 'PENDENTE'
+          ];
+        });
+
+        autoTable(doc, {
+          head: [[
+            'Data / Hora',
+            'Militante (Matrícula)',
+            'Bairro',
+            'Logradouro / Trecho Percorrido',
+            'GPS (Lat, Lng)',
+            'Abordagens',
+            'Comércio',
+            'Materiais',
+            'Auditoria'
+          ]],
+          body: allStreetRows.length > 0 ? allStreetRows : [['-', 'Nenhum registro encontrado no período', '-', '-', '-', '-', '-', '-', '-']],
+          startY: 28,
+          margin: { left: 14, right: 14, bottom: 28 },
+          styles: {
+            fontSize: 7.5,
+            cellPadding: 2,
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+          },
+          headStyles: {
+            fillColor: [241, 245, 249],
+            textColor: [15, 23, 42],
+            fontStyle: 'bold',
+            fontSize: 8
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 252]
+          },
+          columnStyles: {
+            0: { cellWidth: 26 },
+            1: { cellWidth: 42, fontStyle: 'bold' },
+            2: { cellWidth: 28 },
+            3: { cellWidth: 55 },
+            4: { cellWidth: 32, font: 'courier' },
+            5: { cellWidth: 18, halign: 'center' },
+            6: { cellWidth: 16, halign: 'center' },
+            7: { cellWidth: 32 },
+            8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+          },
+          didDrawPage: (data) => {
+            drawFooter(data.pageNumber);
+          }
+        });
+
+        const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
+        doc.save(`relatorio_compilado_geral_completo_${sanitizedWeek}.pdf`);
+        setExportFeedback('✓ Relatório Consolidado Compilado Geral de Todos os Relatórios gerado com sucesso!');
+        setTimeout(() => setExportFeedback(null), 6000);
+        return;
+      }
+
     } catch (error: any) {
       console.error('Erro ao gerar PDF:', error);
       setExportFeedback('Erro ao processar PDF. Você pode utilizar a opção Imprimir / Salvar PDF do navegador.');
@@ -482,6 +1095,68 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   };
 
   const handleExportCSV = () => {
+    if (viewGrouping === 'por_bairro') {
+      const bairroCheckIns = filteredCheckIns.filter(chk => 
+        chk.neighborhoodId === currentSelectedBairro.id || 
+        chk.neighborhoodName.toLowerCase().includes(currentSelectedBairro.name.toLowerCase())
+      );
+      const headers = ['Bairro', 'Zona', 'Logradouro', 'Data/Hora', 'Militante', 'Matrícula', 'Latitude', 'Longitude', 'Santinhos', 'Adesivo Bola', 'Abordagens', 'Comércio', 'Status'];
+      const rows = bairroCheckIns.map(c => [
+        `"${currentSelectedBairro.name}"`,
+        `"${currentSelectedBairro.zone}"`,
+        `"${c.streetName}"`,
+        c.timestamp,
+        `"${c.militantName}"`,
+        `"${militants.find(m => m.id === c.militantId)?.matricula || ''}"`,
+        c.latitude,
+        c.longitude,
+        c.materialsDelivered.santinhos,
+        c.materialsDelivered.adesivo_bola,
+        c.materialsDelivered.abordagens || 0,
+        c.materialsDelivered.comercio || 0,
+        c.status
+      ]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `relatorio_bairro_${currentSelectedBairro.name.toLowerCase()}_${selectedWeek}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    if (viewGrouping === 'tabela_produtividade') {
+      const headers = ['Posição', 'Militante', 'Matrícula', 'Equipe', 'Ruas Percorridas', 'Meta Semanal', '% Atingimento', 'Abordagens', 'Comércio', 'Santinhos', 'Total Materiais', 'Status Meta', 'Diárias Estimadas', 'Valor Total R$'];
+      const rows = productivityData.map((d, idx) => [
+        idx + 1,
+        `"${d.name}"`,
+        `"${d.matricula}"`,
+        `"${d.teamName}"`,
+        d.streetsCount,
+        d.weeklyGoal,
+        `${d.completionRate}%`,
+        d.abordagens,
+        d.comercios,
+        d.santinhos,
+        d.totalMat,
+        `"${d.statusLabel}"`,
+        d.estimatedDiarias,
+        d.totalPay.toFixed(2)
+      ]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `relatorio_produtividade_metas_${selectedWeek}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // Default or General Full CSV
     const headers = ['ID', 'Data/Hora', 'Militante', 'Matrícula', 'Equipe', 'Bairro', 'Rua e Numeração', 'Latitude', 'Longitude', 'Santinhos', 'Colinhas', 'Adesivo Bola', 'Adesivo Parachoque', 'Abordagens', 'Comércio', 'Status', 'Coordenador'];
     const rows = filteredCheckIns.map(c => [
       c.id,
@@ -507,7 +1182,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `relatorio_semanal_militancia_${selectedWeek}.csv`);
+    link.setAttribute('download', `relatorio_geral_completo_${selectedWeek}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -531,10 +1206,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             </div>
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <FileText className="w-5 h-5 text-blue-600" />
-              Relatório Semanal de Desempenho & Cobertura por Militante
+              {getReportMainTitle()}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Consolidado com gráficos de produtividade, tabela de metas, ruas percorridas, comprovantes fotográficos e assinatura oficial.
+              {getReportSubtitle()}
             </p>
           </div>
 
@@ -593,10 +1268,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               onClick={handleExportPDF}
               disabled={isGeneratingPdf}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold text-white shadow-sm transition disabled:opacity-50 hover:shadow-md cursor-pointer"
-              title="Exportar documento PDF completo incluindo os gráficos de desempenho e a tabela de produtividade"
+              title="Exportar documento PDF oficial configurado para o tipo de relatório selecionado"
             >
               <FileDown className="w-4 h-4" />
-              {isGeneratingPdf ? 'Gerando PDF...' : 'Exportar PDF (Gráficos + Tabela)'}
+              {isGeneratingPdf ? 'Gerando PDF...' : getExportButtonLabel()}
             </button>
 
             <button
@@ -679,9 +1354,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               SJ
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">Relatório Semanal de Desempenho & Auditoria de Campo</h1>
+              <h1 className="text-xl font-bold text-slate-900">{getReportMainTitle()}</h1>
               <p className="text-xs text-slate-500">
-                {COMMITTEE_NAME}
+                {COMMITTEE_NAME} • {getReportSubtitle()}
               </p>
             </div>
           </div>
@@ -1237,6 +1912,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             checkIns={filteredCheckIns}
             militants={militants}
             teams={teams}
+            selectedBairroId={selectedBairroId}
+            onSelectBairro={(bId) => setSelectedBairroId(bId)}
             onZoomPhoto={(p) => setSelectedPhotoZoom(p)}
           />
         )}

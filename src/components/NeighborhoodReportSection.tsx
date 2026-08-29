@@ -38,6 +38,8 @@ interface NeighborhoodReportSectionProps {
   militants: Militant[];
   teams: Team[];
   onZoomPhoto: (photo: string) => void;
+  selectedBairroId?: string;
+  onSelectBairro?: (id: string) => void;
 }
 
 export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps> = ({
@@ -45,9 +47,20 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   checkIns,
   militants,
   teams,
-  onZoomPhoto
+  onZoomPhoto,
+  selectedBairroId: externalBairroId,
+  onSelectBairro
 }) => {
-  const [selectedBairroId, setSelectedBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
+  const [internalBairroId, setInternalBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
+  const selectedBairroId = externalBairroId || internalBairroId;
+
+  const handleSelectBairro = (newId: string) => {
+    setInternalBairroId(newId);
+    if (onSelectBairro) {
+      onSelectBairro(newId);
+    }
+  };
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
@@ -243,7 +256,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
           <label className="text-xs font-semibold text-slate-700 whitespace-nowrap">Bairro:</label>
           <select
             value={selectedBairroId}
-            onChange={(e) => setSelectedBairroId(e.target.value)}
+            onChange={(e) => handleSelectBairro(e.target.value)}
             className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer shadow-2xs"
           >
             {neighborhoods.map(n => (
@@ -256,7 +269,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       </div>
 
       {/* Neighborhood Overview Summary Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div id="neighborhood-report-cards" className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-[10px] uppercase font-semibold text-slate-500 block">População (IBGE)</span>
           <strong className="text-base font-bold text-slate-900 font-mono">{currentBairro.population.toLocaleString('pt-BR')} hab.</strong>
@@ -289,10 +302,10 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       </div>
 
       {/* SECTION 1: MAP WITH STREETS PAINTED RED & CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div id="neighborhood-report-visuals" className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Interactive Map Component */}
-        <div className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs space-y-2">
+        <div id="neighborhood-report-map-wrapper" className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs space-y-2">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-600 animate-pulse"></span>
@@ -321,7 +334,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
         </div>
 
         {/* Charts Panel for this Neighborhood */}
-        <div className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs flex flex-col justify-between space-y-3">
+        <div id="neighborhood-report-charts-card" className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs flex flex-col justify-between space-y-3">
           <div className="border-b border-slate-100 pb-2">
             <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
               <BarChart3 className="w-4 h-4 text-blue-600" />
@@ -384,7 +397,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       </div>
 
       {/* SECTION 2: PHOTO PROOF GALLERY FOR THIS NEIGHBORHOOD */}
-      <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 shadow-2xs">
+      <div id="neighborhood-report-photos-card" className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 shadow-2xs">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <ImageIcon className="w-4 h-4 text-blue-600" />
@@ -426,7 +439,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       </div>
 
       {/* SECTION 3: DETAILED STREETS TABLE FOR THIS NEIGHBORHOOD */}
-      <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 shadow-2xs">
+      <div id="neighborhood-report-streets-table" className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 shadow-2xs">
         <div className="flex items-center justify-between border-b border-slate-100 pb-2">
           <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
