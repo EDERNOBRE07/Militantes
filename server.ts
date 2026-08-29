@@ -7,9 +7,11 @@ const distPath = path.join(process.cwd(), 'dist');
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  const HOST = process.env.HOST || '0.0.0.0';
 
-  app.use(express.json({ limit: '15mb' }));
+  app.use(express.json({ limit: '25mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
   // Health endpoint
   app.get('/api/health', (req, res) => {
@@ -216,8 +218,8 @@ Forneça sempre orientações táticas, distribuição eficiente de equipes e va
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Militância SJ Server] Running on http://localhost:${PORT}`);
+  app.listen(PORT, HOST, () => {
+    console.log(`[Militância SJ Server] Running on http://${HOST}:${PORT}`);
   });
 }
 
