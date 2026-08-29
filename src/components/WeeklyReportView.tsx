@@ -283,30 +283,32 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.stroke();
     }
 
-    // Determine Geo Bounds
-    let minLat = bairro.lat - 0.008;
-    let maxLat = bairro.lat + 0.008;
-    let minLng = bairro.lng - 0.011;
-    let maxLng = bairro.lng + 0.011;
+    // Determine Geo Bounds strictly centered around the check-in streets
+    let minLat = 90;
+    let maxLat = -90;
+    let minLng = 180;
+    let maxLng = -180;
 
-    if (bairro.polygon && bairro.polygon.length > 0) {
-      bairro.polygon.forEach(([lat, lng]) => {
-        if (lat < minLat) minLat = lat;
-        if (lat > maxLat) maxLat = lat;
-        if (lng < minLng) minLng = lng;
-        if (lng > maxLng) maxLng = lng;
+    if (bCheckIns && bCheckIns.length > 0) {
+      bCheckIns.forEach(chk => {
+        if (chk.latitude < minLat) minLat = chk.latitude;
+        if (chk.latitude > maxLat) maxLat = chk.latitude;
+        if (chk.longitude < minLng) minLng = chk.longitude;
+        if (chk.longitude > maxLng) maxLng = chk.longitude;
       });
+    } else {
+      minLat = bairro.lat - 0.004;
+      maxLat = bairro.lat + 0.004;
+      minLng = bairro.lng - 0.006;
+      maxLng = bairro.lng + 0.006;
     }
 
-    bCheckIns.forEach(chk => {
-      if (chk.latitude < minLat) minLat = chk.latitude;
-      if (chk.latitude > maxLat) maxLat = chk.latitude;
-      if (chk.longitude < minLng) minLng = chk.longitude;
-      if (chk.longitude > maxLng) maxLng = chk.longitude;
-    });
-
-    const latSpan = Math.max(maxLat - minLat, 0.007) * 1.3;
-    const lngSpan = Math.max(maxLng - minLng, 0.009) * 1.3;
+    const rawLatSpan = Math.max(maxLat - minLat, 0.003);
+    const rawLngSpan = Math.max(maxLng - minLng, 0.004);
+    
+    // Balanced padding margin so streets are centered and comfortably sized
+    const latSpan = rawLatSpan * 1.6;
+    const lngSpan = rawLngSpan * 1.6;
     const centerLat = (minLat + maxLat) / 2;
     const centerLng = (minLng + maxLng) / 2;
 
@@ -315,48 +317,29 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     const bMinLng = centerLng - lngSpan / 2;
     const bMaxLng = centerLng + lngSpan / 2;
 
-    const mapPad = 55;
+    const mapPad = 50;
     const toX = (lng: number) => mapPad + ((lng - bMinLng) / (bMaxLng - bMinLng)) * (canvas.width - 2 * mapPad);
     const toY = (lat: number) => mapPad + ((bMaxLat - lat) / (bMaxLat - bMinLat)) * (canvas.height - 2 * mapPad);
 
-    // 1. Draw Neighborhood Polygon Boundary
-    if (bairro.polygon && bairro.polygon.length > 0) {
+    // 1. Draw Background Base Roads Grid Network
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 8; i++) {
+      const yLine = 60 + i * 80;
       ctx.beginPath();
-      bairro.polygon.forEach(([lat, lng], idx) => {
-        const px = toX(lng);
-        const py = toY(lat);
-        if (idx === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      });
-      ctx.closePath();
-      ctx.fillStyle = 'rgba(219, 234, 254, 0.45)'; // Soft blue fill
-      ctx.fill();
-      ctx.strokeStyle = '#2563eb'; // Blue stroke
-      ctx.lineWidth = 3;
-      ctx.setLineDash([8, 5]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    // 2. Draw Background Base Roads Network
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 2.5;
-    for (let i = 0; i < 7; i++) {
-      const yLine = 80 + i * 85;
-      ctx.beginPath();
-      ctx.moveTo(35, yLine + (i % 2 === 0 ? 12 : -12));
-      ctx.lineTo(canvas.width - 35, yLine + (i % 2 === 0 ? -12 : 12));
+      ctx.moveTo(25, yLine + (i % 2 === 0 ? 10 : -10));
+      ctx.lineTo(canvas.width - 25, yLine + (i % 2 === 0 ? -10 : 10));
       ctx.stroke();
     }
-    for (let j = 0; j < 11; j++) {
-      const xLine = 90 + j * 105;
+    for (let j = 0; j < 12; j++) {
+      const xLine = 70 + j * 95;
       ctx.beginPath();
-      ctx.moveTo(xLine + (j % 2 === 0 ? 15 : -15), 35);
-      ctx.lineTo(xLine + (j % 2 === 0 ? -15 : 15), canvas.height - 35);
+      ctx.moveTo(xLine + (j % 2 === 0 ? 12 : -12), 25);
+      ctx.lineTo(xLine + (j % 2 === 0 ? -12 : 12), canvas.height - 25);
       ctx.stroke();
     }
 
-    // 3. Draw Registered Streets in Vibrant RED
+    // 2. Draw Registered Streets in Vibrant RED
     bCheckIns.forEach(chk => {
       const hash = Array.from(chk.id + chk.streetName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const angle = ((hash % 180) * Math.PI) / 180;
@@ -373,8 +356,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.moveTo(p1.x, p1.y);
       ctx.lineTo(p2.x, p2.y);
       ctx.lineTo(p3.x, p3.y);
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
-      ctx.lineWidth = 14;
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+      ctx.lineWidth = 15;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
@@ -385,28 +368,28 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.lineTo(p2.x, p2.y);
       ctx.lineTo(p3.x, p3.y);
       ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 5.5;
+      ctx.lineWidth = 6;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
 
       // Street Name Tag
-      ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
+      ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
       const text = chk.streetName;
       const textWidth = ctx.measureText(text).width;
-      const labelX = p2.x + 12;
+      const labelX = p2.x + 14;
       const labelY = p2.y - 12;
 
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
       ctx.beginPath();
-      ctx.roundRect(labelX - 4, labelY - 14, textWidth + 8, 18, 4);
+      ctx.roundRect(labelX - 4, labelY - 14, textWidth + 8, 19, 4);
       ctx.fill();
 
       ctx.fillStyle = '#ffffff';
       ctx.fillText(text, labelX, labelY);
     });
 
-    // 4. Draw GPS Markers / Pins (📍)
+    // 3. Draw GPS Markers / Pins (📍)
     bCheckIns.forEach(chk => {
       const px = toX(chk.longitude);
       const py = toY(chk.latitude);
@@ -446,47 +429,34 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.fillText('✓', px + 6.5, py - 13.5);
     });
 
-    // 5. Map Legend Box
+    // 4. Map Legend Box
     ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(20, canvas.height - 105, 370, 85, 8);
+    ctx.roundRect(20, canvas.height - 85, 380, 65, 8);
     ctx.fill();
     ctx.stroke();
 
-    ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
+    ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#0f172a';
-    ctx.fillText(`LEGENDA TERRITORIAL • ${bairro.name.toUpperCase()}`, 34, canvas.height - 82);
+    ctx.fillText(`LEGENDA TERRITORIAL • ${bairro.name.toUpperCase()}`, 34, canvas.height - 64);
 
     // Red line legend item
     ctx.strokeStyle = '#dc2626';
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(34, canvas.height - 63);
-    ctx.lineTo(60, canvas.height - 63);
-    ctx.stroke();
-    ctx.font = 'bold 11px Helvetica, Arial, sans-serif';
-    ctx.fillStyle = '#991b1b';
-    ctx.fillText(`Ruas Cobertas no Bairro (${bCheckIns.length} ruas sinalizadas)`, 68, canvas.height - 59);
-
-    // Blue boundary legend item
-    ctx.strokeStyle = '#2563eb';
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath();
     ctx.moveTo(34, canvas.height - 42);
     ctx.lineTo(60, canvas.height - 42);
     ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.font = 'normal 10.5px Helvetica, Arial, sans-serif';
-    ctx.fillStyle = '#1e3a8a';
-    ctx.fillText(`Perímetro Territorial: ${bairro.name} (${bairro.zone})`, 68, canvas.height - 38);
+    ctx.font = 'bold 11px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#991b1b';
+    ctx.fillText(`Ruas Cobertas no Bairro (${bCheckIns.length} vias auditadas)`, 68, canvas.height - 38);
 
     // Geo reference info
     ctx.font = 'italic 10px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#64748b';
-    ctx.fillText(`Centro: Lat ${bairro.lat.toFixed(4)}, Lng ${bairro.lng.toFixed(4)} | Projeção WGS84`, canvas.width - 390, canvas.height - 18);
+    ctx.fillText(`Centro Geográfico: Lat ${centerLat.toFixed(4)}, Lng ${centerLng.toFixed(4)} | Projeção WGS84`, canvas.width - 440, canvas.height - 18);
 
     return canvas.toDataURL('image/png');
   };

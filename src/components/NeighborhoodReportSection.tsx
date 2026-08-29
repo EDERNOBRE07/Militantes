@@ -116,8 +116,6 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
       layerGroupRef.current = L.layerGroup().addTo(map);
       mapInstanceRef.current = map;
-    } else {
-      mapInstanceRef.current.setView([currentBairro.lat, currentBairro.lng], 15);
     }
 
     const map = mapInstanceRef.current;
@@ -126,20 +124,16 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
     layerGroup.clearLayers();
 
-    // 1. Draw Neighborhood Boundary Polygon
-    if (currentBairro.polygon && currentBairro.polygon.length > 0) {
-      const polygon = L.polygon(currentBairro.polygon, {
-        color: '#2563eb',
-        weight: 2.5,
-        opacity: 0.8,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.15
-      });
-      polygon.bindTooltip(`<b>Bairro: ${currentBairro.name}</b>`, { sticky: true });
-      layerGroup.addLayer(polygon);
+    // Auto-fit and center map on check-ins
+    if (bairroCheckIns.length > 0) {
+      const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
+      const bounds = L.latLngBounds(latLngs);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+    } else {
+      map.setView([currentBairro.lat, currentBairro.lng], 15);
     }
 
-    // 2. Draw all check-in streets in this neighborhood painted in RED
+    // Draw all check-in streets in this neighborhood painted in RED
     bairroCheckIns.forEach((chk) => {
       const hash = Array.from(chk.id + chk.streetName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const angle = ((hash % 180) * Math.PI) / 180;
@@ -324,10 +318,10 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             {/* Overlay Map Badge */}
             <div className="absolute bottom-2.5 left-2.5 z-[1000] bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] shadow-sm text-slate-700 space-y-0.5">
               <div className="flex items-center gap-1.5 font-bold text-rose-700">
-                <span className="w-3 h-1 bg-red-600 rounded-sm"></span> Ruas Cobertas (Linha Vermelha)
+                <span className="w-3 h-1 bg-red-600 rounded-sm"></span> Ruas Auditadas (Linha Vermelha)
               </div>
-              <div className="flex items-center gap-1.5 text-slate-600">
-                <span className="w-2 h-2 rounded-full bg-blue-600"></span> Limite do Bairro ({currentBairro.name})
+              <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+                <span className="text-xs">📍</span> Pins Georreferenciados (GPS)
               </div>
             </div>
           </div>
