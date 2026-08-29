@@ -2,6 +2,7 @@
   "name": "militancia-sao-jose",
   "private": true,
   "version": "1.0.0",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",

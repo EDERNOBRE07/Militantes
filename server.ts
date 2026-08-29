@@ -1,14 +1,13 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 
-const distPath = path.join(process.cwd(), 'dist');
-
 async function startServer() {
   const app = express();
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  const HOST = process.env.HOST || '0.0.0.0';
+  const rawPort = process.env.PORT || 3000;
+  const PORT = !isNaN(Number(rawPort)) ? Number(rawPort) : rawPort;
 
   app.use(express.json({ limit: '25mb' }));
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
@@ -20,7 +19,8 @@ async function startServer() {
       service: 'Militância São José - SC API',
       timestamp: new Date().toISOString(),
       city: 'São José - Santa Catarina',
-      target_mysql: 'u844537895_Militantes @ militancia.mastervisionmarketing.com'
+      target_mysql: 'u844537895_Militantes @ militancia.mastervisionmarketing.com',
+      port: typeof PORT === 'number' ? PORT : 'passenger_socket'
     });
   });
 
@@ -203,7 +203,7 @@ Forneça sempre orientações táticas, distribuição eficiente de equipes e va
 - Incentivar registro fotográfico com geolocalização no app de campo para validação imediata no painel.`;
   }
 
-  // Vite middleware setup
+  // Vite middleware for development vs Static serving for production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -211,16 +211,48 @@ Forneça sempre orientações táticas, distribuição eficiente de equipes e va
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    const candidateDirs = [
+      path.join(process.cwd(), 'dist'),
+      path.join(__dirname, '..', 'dist'),
+      path.join(__dirname, 'dist'),
+      process.cwd()
+    ];
+    const resolvedDist = candidateDirs.find(dir => fs.existsSync(path.join(dir, 'index.html'))) || path.join(process.cwd(), 'dist');
+    
+    app.use(express.static(resolvedDist));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      const indexFile = path.join(resolvedDist, 'index.html');
+      if (fs.existsSync(indexFile)) {
+        res.sendFile(indexFile);
+      } else {
+        res.status(200).send(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Militância São José - SC</title>
+</head>
+<body style="font-family:sans-serif;background:#0f172a;color:#f8fafc;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+  <div style="background:#1e293b;padding:32px;border-radius:12px;text-align:center;">
+    <h2 style="color:#38bdf8;">Sistema de Militância São José / SC</h2>
+    <p style="color:#94a3b8;">Servidor Node.js operacional. Execute o build para carregar o painel.</p>
+  </div>
+</body>
+</html>`);
+      }
     });
   }
 
-  app.listen(PORT, HOST, () => {
-    console.log(`[Militância SJ Server] Running on http://${HOST}:${PORT}`);
-  });
+  if (typeof PORT === 'number') {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[Militância SJ Server] Running on http://localhost:${PORT}`);
+    });
+  } else {
+    // Unix socket for Hostinger / Phusion Passenger
+    app.listen(PORT, () => {
+      console.log(`[Militância SJ Server] Running on socket: ${PORT}`);
+    });
+  }
 }
 
 startServer();
