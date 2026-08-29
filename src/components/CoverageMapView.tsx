@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Neighborhood, Militant, Van, StreetCheckIn } from '../types';
 import { SAO_JOSE_CENTER } from '../data/saoJoseData';
+import { formatDateTimeBR } from '../utils/formatters';
 import {
   MapPin,
   Users,
@@ -19,7 +20,9 @@ import {
   Target,
   Sparkles,
   ChevronRight,
-  X
+  X,
+  Camera,
+  MapPinOff
 } from 'lucide-react';
 
 export type MapLayerMode = 'demografia_ibge' | 'performance_militancia';
@@ -396,43 +399,144 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
     }
 
     // =========================================================================
-    // 4. RENDER STREET CHECK-INS (With photo proof & GPS)
+    // 4. RENDER STREET CHECK-INS (Painted Red on Map + Custom Red PINs)
     // =========================================================================
     if (showCheckins) {
-      checkIns.slice(0, 35).forEach(chk => {
-        const chkIcon = L.divIcon({
-          className: 'custom-chk-icon',
-          html: `
-            <div class="w-4 h-4 rounded-full bg-emerald-600 border-2 border-white shadow-sm flex items-center justify-center text-[9px] text-white font-bold hover:scale-125 transition-transform cursor-pointer">
-              ✓
-            </div>
-          `,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
+      const activeCheckIns = selectedBairroFilter === 'todos'
+        ? checkIns
+        : checkIns.filter(chk => chk.neighborhoodId === selectedBairroFilter);
+
+      activeCheckIns.forEach((chk, idx) => {
+        // Generate realistic street polyline trajectory around the checkin coordinates
+        const hash = Array.from(chk.id + chk.streetName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const angle = ((hash % 180) * Math.PI) / 180;
+        const length = 0.0016 + (hash % 8) * 0.00015; // ~150-240 meters
+        const dx = Math.cos(angle) * length;
+        const dy = Math.sin(angle) * (length * 0.82);
+
+        const streetPolylineCoords: [number, number][] = [
+          [chk.latitude - dy, chk.longitude - dx],
+          [chk.latitude - dy * 0.35, chk.longitude - dx * 0.35],
+          [chk.latitude, chk.longitude],
+          [chk.latitude + dy * 0.45, chk.longitude + dx * 0.45],
+          [chk.latitude + dy, chk.longitude + dx]
+        ];
+
+        // 4.1 Draw Glow Red Outer Line (Pintada de Vermelho)
+        const outerStreetGlow = L.polyline(streetPolylineCoords, {
+          color: '#ef4444',
+          weight: 9,
+          opacity: 0.45,
+          lineCap: 'round',
+          lineJoin: 'round'
         });
 
-        const marker = L.marker([chk.latitude, chk.longitude], { icon: chkIcon });
-        marker.bindPopup(`
-          <div class="p-2 text-slate-800 space-y-1.5 max-w-[230px]">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✓ Check-in Validado
+        // 4.2 Draw Core Red Solid Line (Pintada de Vermelho)
+        const coreStreetLine = L.polyline(streetPolylineCoords, {
+          color: '#dc2626',
+          weight: 4.5,
+          opacity: 0.98,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+
+        const formattedDate = formatDateTimeBR(chk.timestamp);
+        const militantObj = militants.find(m => m.id === chk.militantId);
+        const photoUrl = (chk.photos && chk.photos.length > 0) ? chk.photos[0] : null;
+
+        const streetPopupHtml = `
+          <div class="p-2.5 text-slate-800 space-y-2 max-w-[270px] font-sans">
+            <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-red-700">Rua Registrada & Coberta</span>
+              </div>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                ✓ Validado
               </span>
-              <span class="text-[10px] text-slate-400 font-mono">${chk.timestamp.substring(11, 16)}</span>
             </div>
-            <h5 class="font-bold text-xs text-slate-900 leading-tight">${chk.streetName}</h5>
-            <p class="text-[11px] text-slate-600">Bairro: <strong>${chk.neighborhoodName}</strong></p>
-            <p class="text-[10px] text-slate-500">Militante: <strong>${chk.militantName}</strong></p>
-            <div class="text-[11px] text-slate-700 border-t border-slate-200 pt-1 font-medium">
-              Santinhos: <strong>${chk.materialsDelivered.santinhos}</strong> | Abordagens: <strong>${chk.materialsDelivered.abordagens || 0}</strong>
+
+            <div>
+              <h4 class="font-black text-sm text-slate-900 leading-tight flex items-center gap-1">
+                <span>🛣️</span> ${chk.streetName}
+              </h4>
+              <p class="text-[11px] text-slate-600 font-medium">Bairro: <strong class="text-blue-700">${chk.neighborhoodName}</strong></p>
             </div>
-            ${chk.photos && chk.photos.length > 0 ? `
-              <div class="pt-1">
-                <img src="${chk.photos[0]}" class="w-full h-20 object-cover rounded-md border border-slate-200 mt-1 cursor-pointer hover:opacity-90" />
+
+            ${photoUrl ? `
+              <div class="rounded-lg overflow-hidden border border-slate-200 shadow-2xs group relative">
+                <img src="${photoUrl}" alt="Foto da Rua" class="w-full h-24 object-cover" />
+                <div class="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-mono flex items-center gap-1">
+                  📷 Foto de Campo
+                </div>
               </div>
             ` : ''}
+
+            <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-1">
+              <div class="flex items-center gap-2">
+                <img src="${militantObj?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" class="w-6 h-6 rounded-full object-cover ring-1 ring-slate-300" />
+                <div class="truncate">
+                  <strong class="text-slate-900 block truncate leading-tight">${chk.militantName}</strong>
+                  <span class="text-[10px] text-slate-500 font-mono">${militantObj?.matricula || 'Militante'}</span>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-[11px] text-slate-600 pt-1 border-t border-slate-200">
+                <span>🕒 Data & Horário:</span>
+                <strong class="text-slate-900 font-mono">${formattedDate}</strong>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-1 text-[10px] text-center pt-0.5">
+              <div class="p-1 rounded bg-blue-50 border border-blue-100">
+                <span class="text-slate-500 block">Santinhos</span>
+                <strong class="text-blue-800 text-xs font-mono">${chk.materialsDelivered.santinhos}</strong>
+              </div>
+              <div class="p-1 rounded bg-purple-50 border border-purple-100">
+                <span class="text-slate-500 block">Abordagens</span>
+                <strong class="text-purple-800 text-xs font-mono">${chk.materialsDelivered.abordagens || 0}</strong>
+              </div>
+              <div class="p-1 rounded bg-emerald-50 border border-emerald-100">
+                <span class="text-slate-500 block">Comércio</span>
+                <strong class="text-emerald-800 text-xs font-mono">${chk.materialsDelivered.comercio || 0}</strong>
+              </div>
+            </div>
+
+            <div class="pt-1 flex items-center justify-between text-[10px] text-slate-500 border-t border-slate-100">
+              <span class="font-mono">GPS: ${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}</span>
+              <a href="https://www.google.com/maps?q=${chk.latitude},${chk.longitude}" target="_blank" rel="noreferrer" class="text-blue-600 font-semibold hover:underline">
+                Abrir Mapa ↗
+              </a>
+            </div>
           </div>
-        `);
+        `;
+
+        outerStreetGlow.bindPopup(streetPopupHtml, { maxWidth: 290 });
+        coreStreetLine.bindPopup(streetPopupHtml, { maxWidth: 290 });
+        outerStreetGlow.bindTooltip(`<b>Rua Coberta (Vermelho):</b> ${chk.streetName}`, { sticky: true });
+        coreStreetLine.bindTooltip(`<b>Rua Coberta (Vermelho):</b> ${chk.streetName}`, { sticky: true });
+
+        layerGroup.addLayer(outerStreetGlow);
+        layerGroup.addLayer(coreStreetLine);
+
+        // 4.3 Draw Custom Red PIN Marker with Pulse & Checkmark Badge
+        const pinIcon = L.divIcon({
+          className: 'custom-red-pin-icon',
+          html: `
+            <div class="relative group cursor-pointer" style="transform: translate(-50%, -100%);">
+              <div class="absolute -inset-1 rounded-full bg-rose-500/50 animate-ping"></div>
+              <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-red-800 border-2 border-white shadow-xl flex items-center justify-center text-white text-xs font-bold ring-2 ring-red-400 hover:scale-125 transition-transform">
+                📍
+              </div>
+              <div class="w-1.5 h-1.5 bg-red-700 mx-auto -mt-0.5 rounded-b-full"></div>
+              <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-black shadow-xs">✓</div>
+            </div>
+          `,
+          iconSize: [32, 36],
+          iconAnchor: [16, 34]
+        });
+
+        const marker = L.marker([chk.latitude, chk.longitude], { icon: pinIcon });
+        marker.bindPopup(streetPopupHtml, { maxWidth: 290 });
         layerGroup.addLayer(marker);
       });
     }
@@ -669,15 +773,18 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
                 <span className="text-slate-700">&lt; 45% (Crítico / Prioridade)</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 pt-1 border-t border-slate-100 text-[10px] text-slate-500">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-600"></span> Check-in GPS
+            <div className="flex items-center gap-2 pt-1 border-t border-slate-100 text-[10px] text-slate-600 flex-wrap">
+              <span className="flex items-center gap-1 font-semibold text-rose-700">
+                <span className="w-3 h-1.5 bg-red-600 rounded-sm"></span> Rua Coberta (Linha Vermelha)
+              </span>
+              <span className="flex items-center gap-1 font-semibold text-rose-700">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-600 border border-white"></span> PIN Rua
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-blue-600"></span> Militante Ativo
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-cyan-600"></span> Van de Apoio
+                <span className="w-2 h-2 rounded-full bg-cyan-600"></span> Van
               </span>
             </div>
           </div>

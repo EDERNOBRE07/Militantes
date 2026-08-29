@@ -21,6 +21,8 @@ import {
   StreetCheckIn,
   Neighborhood
 } from '../types';
+import { formatDateTimeBR } from '../utils/formatters';
+import { NeighborhoodReportSection } from './NeighborhoodReportSection';
 import {
   FileText,
   Printer,
@@ -40,7 +42,9 @@ import {
   TrendingUp,
   Target,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  Camera,
+  Compass
 } from 'lucide-react';
 
 interface WeeklyReportViewProps {
@@ -53,13 +57,14 @@ interface WeeklyReportViewProps {
 export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   militants,
   teams,
-  checkIns
+  checkIns,
+  neighborhoods = []
 }) => {
   const [selectedMilitantId, setSelectedMilitantId] = useState<string>('todos');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('todos');
   const [selectedWeek, setSelectedWeek] = useState<string>('semana-1');
   const [selectedPhotoZoom, setSelectedPhotoZoom] = useState<string | null>(null);
-  const [viewGrouping, setViewGrouping] = useState<'por_militante' | 'tabela_geral' | 'tabela_produtividade'>('por_militante');
+  const [viewGrouping, setViewGrouping] = useState<'por_militante' | 'tabela_geral' | 'tabela_produtividade' | 'por_bairro'>('por_militante');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
 
@@ -535,12 +540,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
           <div className="flex items-center gap-2 flex-wrap">
             {/* View switcher */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs flex-wrap gap-0.5">
               <button
                 type="button"
                 onClick={() => setViewGrouping('por_militante')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  viewGrouping === 'por_militante' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600'
+                  viewGrouping === 'por_militante' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Por Militante
@@ -549,7 +554,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 type="button"
                 onClick={() => setViewGrouping('tabela_produtividade')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  viewGrouping === 'tabela_produtividade' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600'
+                  viewGrouping === 'tabela_produtividade' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Produtividade
@@ -558,10 +563,19 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 type="button"
                 onClick={() => setViewGrouping('tabela_geral')}
                 className={`px-3 py-1.5 rounded-lg font-bold transition-all ${
-                  viewGrouping === 'tabela_geral' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600'
+                  viewGrouping === 'tabela_geral' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Tabela Completa
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewGrouping('por_bairro')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                  viewGrouping === 'por_bairro' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🗺️</span> Por Bairro & Mapas
               </button>
             </div>
 
@@ -1023,73 +1037,81 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                         <table className="w-full text-left text-xs border-collapse">
                           <thead className="bg-slate-100/70 border-b border-slate-200 text-slate-600 uppercase text-[10px]">
                             <tr>
-                              <th className="py-2 px-3">Data/Hora</th>
-                              <th className="py-2 px-3">Bairro</th>
-                              <th className="py-2 px-3">Rua / Trecho Percorrido</th>
-                              <th className="py-2 px-3 text-center">GPS</th>
-                              <th className="py-2 px-3 text-center">Abordagens</th>
-                              <th className="py-2 px-3 text-center">Comércio</th>
-                              <th className="py-2 px-3 text-center">Santinhos</th>
-                              <th className="py-2 px-3 text-center">Fotos</th>
-                              <th className="py-2 px-3 text-center">Status</th>
+                              <th className="py-2.5 px-3">Data / Hora</th>
+                              <th className="py-2.5 px-3">Bairro</th>
+                              <th className="py-2.5 px-3">Rua / Trecho Percorrido</th>
+                              <th className="py-2.5 px-3">Foto da Rua & Localização (GPS)</th>
+                              <th className="py-2.5 px-3 text-center">Abordagens</th>
+                              <th className="py-2.5 px-3 text-center">Comércio</th>
+                              <th className="py-2.5 px-3 text-center">Santinhos</th>
+                              <th className="py-2.5 px-3 text-center">Status</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-slate-700">
-                            {milCheckIns.map(chk => (
-                              <tr key={chk.id} className="hover:bg-slate-50">
-                                <td className="py-2 px-3 font-mono text-[11px] whitespace-nowrap text-slate-600">
-                                  {chk.timestamp}
-                                </td>
-                                <td className="py-2 px-3 font-semibold text-slate-900 whitespace-nowrap">
-                                  {chk.neighborhoodName}
-                                </td>
-                                <td className="py-2 px-3 font-medium text-slate-900 max-w-[200px]">
-                                  {chk.streetName}
-                                </td>
-                                <td className="py-2 px-3 text-center whitespace-nowrap">
-                                  <a
-                                    href={`https://www.google.com/maps?q=${chk.latitude},${chk.longitude}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 hover:bg-slate-100 text-blue-700 font-semibold text-[10px] border border-slate-200"
-                                  >
-                                    <MapPin className="w-3 h-3 text-blue-600" />
-                                    {chk.latitude.toFixed(4)}, {chk.longitude.toFixed(4)}
-                                  </a>
-                                </td>
-                                <td className="py-2 px-3 text-center font-bold text-purple-700 whitespace-nowrap">
-                                  {chk.materialsDelivered.abordagens || 0}
-                                </td>
-                                <td className="py-2 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
-                                  {chk.materialsDelivered.comercio || 0}
-                                </td>
-                                <td className="py-2 px-3 text-center font-bold text-slate-900 whitespace-nowrap">
-                                  {chk.materialsDelivered.santinhos}
-                                </td>
-                                <td className="py-2 px-3 text-center">
-                                  <div className="flex items-center justify-center gap-1">
-                                    {chk.photos && chk.photos.length > 0 ? (
-                                      chk.photos.map((p, idx) => (
-                                        <img
-                                          key={idx}
-                                          src={p}
-                                          alt="Foto"
-                                          onClick={() => setSelectedPhotoZoom(p)}
-                                          className="w-6 h-6 rounded object-cover cursor-pointer hover:opacity-80 ring-1 ring-slate-200"
-                                        />
-                                      ))
-                                    ) : (
-                                      <span className="text-slate-400">-</span>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="py-2 px-3 text-center">
-                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    ✓ Validado
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
+                            {milCheckIns.map(chk => {
+                              const firstPhoto = chk.photos && chk.photos.length > 0 ? chk.photos[0] : null;
+                              return (
+                                <tr key={chk.id} className="hover:bg-slate-50">
+                                  <td className="py-2.5 px-3 font-mono text-[11px] whitespace-nowrap text-slate-600">
+                                    {formatDateTimeBR(chk.timestamp)}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                                    {chk.neighborhoodName}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-medium text-slate-900 max-w-[200px]">
+                                    {chk.streetName}
+                                  </td>
+                                  
+                                  {/* Foto correspondente da rua ao lado da localização GPS */}
+                                  <td className="py-2.5 px-3">
+                                    <div className="flex items-center gap-2.5">
+                                      {firstPhoto ? (
+                                        <div className="relative group shrink-0">
+                                          <img
+                                            src={firstPhoto}
+                                            alt={chk.streetName}
+                                            onClick={() => setSelectedPhotoZoom(firstPhoto)}
+                                            className="w-11 h-11 rounded-lg object-cover cursor-pointer ring-1 ring-slate-200 shadow-2xs hover:scale-105 transition-transform"
+                                          />
+                                          <span className="absolute bottom-0 right-0 p-0.5 bg-black/60 rounded text-[7px] text-white">📷</span>
+                                        </div>
+                                      ) : (
+                                        <div className="w-11 h-11 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-[10px] shrink-0">
+                                          Sem foto
+                                        </div>
+                                      )}
+                                      <div className="text-left space-y-0.5">
+                                        <a
+                                          href={`https://www.google.com/maps?q=${chk.latitude},${chk.longitude}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 hover:bg-slate-100 text-blue-700 font-semibold text-[10px] border border-slate-200"
+                                        >
+                                          <MapPin className="w-3 h-3 text-red-600" />
+                                          {chk.latitude.toFixed(4)}, {chk.longitude.toFixed(4)}
+                                        </a>
+                                        <span className="block text-[9px] text-slate-400 font-mono">Precisão: {chk.accuracyMeters || 3.5}m</span>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  <td className="py-2.5 px-3 text-center font-bold text-purple-700 whitespace-nowrap">
+                                    {chk.materialsDelivered.abordagens || 0}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
+                                    {chk.materialsDelivered.comercio || 0}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center font-bold text-slate-900 whitespace-nowrap">
+                                    {chk.materialsDelivered.santinhos}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                      ✓ Validado
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -1105,7 +1127,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           </div>
         )}
 
-        {/* SECTION 2: COMPLETE TABLE (ALL COLUMNS) */}
+        {/* SECTION 2: COMPLETE TABLE (ALL COLUMNS & PHOTOS) */}
         {viewGrouping === 'tabela_geral' && (
           <div className="space-y-3 pt-4">
             <h3 className="font-bold text-xs text-slate-700 uppercase tracking-wider">
@@ -1120,89 +1142,103 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                     <th className="py-2.5 px-3">Militante</th>
                     <th className="py-2.5 px-3">Bairro</th>
                     <th className="py-2.5 px-3">Logradouro / Trecho</th>
-                    <th className="py-2.5 px-3 text-center">GPS</th>
+                    <th className="py-2.5 px-3">Foto da Rua & Localização (GPS)</th>
                     <th className="py-2.5 px-3 text-center">Abordagens</th>
                     <th className="py-2.5 px-3 text-center">Comércio</th>
                     <th className="py-2.5 px-3 text-center">Materiais</th>
-                    <th className="py-2.5 px-3 text-center">Fotos</th>
                     <th className="py-2.5 px-3 text-center">Auditoria</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {filteredCheckIns.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="py-6 text-center text-slate-400">
+                      <td colSpan={9} className="py-6 text-center text-slate-400">
                         Nenhum check-in registrado com os filtros selecionados.
                       </td>
                     </tr>
                   ) : (
-                    filteredCheckIns.map(chk => (
-                      <tr key={chk.id} className="hover:bg-slate-50">
-                        <td className="py-3 px-3 whitespace-nowrap font-medium text-slate-600">
-                          {chk.timestamp}
-                        </td>
-                        <td className="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
-                          {chk.militantName}
-                        </td>
-                        <td className="py-3 px-3 whitespace-nowrap">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
-                            {chk.neighborhoodName}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-slate-900 font-medium max-w-[200px]">
-                          {chk.streetName}
-                        </td>
-                        <td className="py-3 px-3 text-center whitespace-nowrap">
-                          <a
-                            href={`https://www.google.com/maps?q=${chk.latitude},${chk.longitude}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-50 hover:bg-slate-100 text-blue-700 font-semibold text-[11px] border border-slate-200"
-                          >
-                            <MapPin className="w-3 h-3 text-blue-600" />
-                            Mapa
-                            <ExternalLink className="w-2.5 h-2.5" />
-                          </a>
-                        </td>
-                        <td className="py-3 px-3 text-center font-bold text-purple-700 whitespace-nowrap">
-                          {chk.materialsDelivered.abordagens || 0}
-                        </td>
-                        <td className="py-3 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
-                          {chk.materialsDelivered.comercio || 0}
-                        </td>
-                        <td className="py-3 px-3 text-center whitespace-nowrap">
-                          <span className="font-semibold text-slate-900">{chk.materialsDelivered.santinhos}</span> sant. |{' '}
-                          <span className="text-purple-700 font-semibold">{chk.materialsDelivered.adesivo_bola}</span> bola
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            {chk.photos && chk.photos.length > 0 ? (
-                              chk.photos.map((p, idx) => (
-                                <img
-                                  key={idx}
-                                  src={p}
-                                  alt="Foto"
-                                  onClick={() => setSelectedPhotoZoom(p)}
-                                  className="w-7 h-7 rounded object-cover cursor-pointer hover:opacity-80 ring-1 ring-slate-200"
-                                />
-                              ))
-                            ) : (
-                              <span className="text-slate-400">-</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            ✓ Validado
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                    filteredCheckIns.map(chk => {
+                      const firstPhoto = chk.photos && chk.photos.length > 0 ? chk.photos[0] : null;
+                      return (
+                        <tr key={chk.id} className="hover:bg-slate-50">
+                          <td className="py-3 px-3 whitespace-nowrap font-mono text-[11px] text-slate-600">
+                            {formatDateTimeBR(chk.timestamp)}
+                          </td>
+                          <td className="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                            {chk.militantName}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
+                              {chk.neighborhoodName}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-900 font-medium max-w-[200px]">
+                            {chk.streetName}
+                          </td>
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-2.5">
+                              {firstPhoto ? (
+                                <div className="relative group shrink-0">
+                                  <img
+                                    src={firstPhoto}
+                                    alt={chk.streetName}
+                                    onClick={() => setSelectedPhotoZoom(firstPhoto)}
+                                    className="w-10 h-10 rounded-lg object-cover cursor-pointer ring-1 ring-slate-200 shadow-2xs hover:scale-105 transition-transform"
+                                  />
+                                  <span className="absolute bottom-0 right-0 p-0.5 bg-black/60 rounded text-[7px] text-white">📷</span>
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-[10px] shrink-0">
+                                  Sem foto
+                                </div>
+                              )}
+                              <div className="text-left space-y-0.5">
+                                <a
+                                  href={`https://www.google.com/maps?q=${chk.latitude},${chk.longitude}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 hover:bg-slate-100 text-blue-700 font-semibold text-[10px] border border-slate-200"
+                                >
+                                  <MapPin className="w-3 h-3 text-red-600" />
+                                  {chk.latitude.toFixed(4)}, {chk.longitude.toFixed(4)}
+                                </a>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-center font-bold text-purple-700 whitespace-nowrap">
+                            {chk.materialsDelivered.abordagens || 0}
+                          </td>
+                          <td className="py-3 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
+                            {chk.materialsDelivered.comercio || 0}
+                          </td>
+                          <td className="py-3 px-3 text-center whitespace-nowrap">
+                            <span className="font-semibold text-slate-900">{chk.materialsDelivered.santinhos}</span> sant. |{' '}
+                            <span className="text-purple-700 font-semibold">{chk.materialsDelivered.adesivo_bola}</span> bola
+                          </td>
+                          <td className="py-3 px-3 text-center whitespace-nowrap">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              ✓ Validado
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
           </div>
+        )}
+
+        {/* SECTION 3: POR BAIRRO & MAPAS (TERRITORIAL REPORT WITH MAPS, CHARTS & PHOTOS) */}
+        {viewGrouping === 'por_bairro' && (
+          <NeighborhoodReportSection
+            neighborhoods={neighborhoods}
+            checkIns={filteredCheckIns}
+            militants={militants}
+            teams={teams}
+            onZoomPhoto={(p) => setSelectedPhotoZoom(p)}
+          />
         )}
 
         {/* Coordinator Validation & Official Sign-off */}
