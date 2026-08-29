@@ -23,7 +23,9 @@ import {
   Link as LinkIcon,
   Globe,
   Sparkles,
-  Navigation
+  Navigation,
+  Calendar,
+  Clock
 } from 'lucide-react';
 
 interface EditStreetModalProps {
@@ -65,6 +67,64 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Date and Time State (Day/Month/Year and 24h Hours & Minutes 00-59)
+  const parseInitialTimestamp = (ts: string) => {
+    let year = 2026;
+    let month = 8;
+    let day = 28;
+    let hours = 18;
+    let minutes = 30;
+    let seconds = 0;
+
+    if (ts) {
+      // Check for ISO or YYYY-MM-DD HH:mm:ss format
+      const isoMatch = ts.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+      if (isoMatch) {
+        year = parseInt(isoMatch[1], 10);
+        month = parseInt(isoMatch[2], 10);
+        day = parseInt(isoMatch[3], 10);
+        hours = parseInt(isoMatch[4], 10);
+        minutes = parseInt(isoMatch[5], 10);
+        seconds = isoMatch[6] ? parseInt(isoMatch[6], 10) : 0;
+      } else {
+        // Check for DD/MM/YYYY HH:mm:ss
+        const brMatch = ts.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[T\s](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+        if (brMatch) {
+          day = parseInt(brMatch[1], 10);
+          month = parseInt(brMatch[2], 10);
+          year = parseInt(brMatch[3], 10);
+          hours = parseInt(brMatch[4], 10);
+          minutes = parseInt(brMatch[5], 10);
+          seconds = brMatch[6] ? parseInt(brMatch[6], 10) : 0;
+        } else {
+          const d = new Date(ts);
+          if (!isNaN(d.getTime())) {
+            year = d.getFullYear();
+            month = d.getMonth() + 1;
+            day = d.getDate();
+            hours = d.getHours();
+            minutes = d.getMinutes();
+            seconds = d.getSeconds();
+          }
+        }
+      }
+    }
+
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return {
+      dateStr,
+      hours: Math.max(0, Math.min(23, hours)),
+      minutes: Math.max(0, Math.min(59, minutes)),
+      seconds: Math.max(0, Math.min(59, seconds))
+    };
+  };
+
+  const initialTime = parseInitialTimestamp(checkIn.timestamp);
+  const [recordDate, setRecordDate] = useState<string>(initialTime.dateStr);
+  const [recordHours, setRecordHours] = useState<number>(initialTime.hours);
+  const [recordMinutes, setRecordMinutes] = useState<number>(initialTime.minutes);
+  const [recordSeconds, setRecordSeconds] = useState<number>(initialTime.seconds);
+
   // Google Maps link input & location edit states
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [googleMapsUrlInput, setGoogleMapsUrlInput] = useState('');
@@ -92,6 +152,11 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
         abordagens: checkIn.materialsDelivered?.abordagens || 0,
         comercio: checkIn.materialsDelivered?.comercio || 0
       });
+      const parsedTime = parseInitialTimestamp(checkIn.timestamp);
+      setRecordDate(parsedTime.dateStr);
+      setRecordHours(parsedTime.hours);
+      setRecordMinutes(parsedTime.minutes);
+      setRecordSeconds(parsedTime.seconds);
       setObservations(checkIn.observations || '');
       setStatus(checkIn.status || 'validado');
       setErrorMsg(null);
@@ -208,6 +273,17 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
     }));
   };
 
+  const handleSetCurrentDateTime = () => {
+    const now = new Date();
+    const yr = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const da = String(now.getDate()).padStart(2, '0');
+    setRecordDate(`${yr}-${mo}-${da}`);
+    setRecordHours(now.getHours());
+    setRecordMinutes(now.getMinutes());
+    setRecordSeconds(now.getSeconds());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!streetName.trim()) {
@@ -219,12 +295,20 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
     try {
       const selectedNeigh = neighborhoods.find(n => n.id === neighborhoodId) || neighborhoods[0];
 
+      // Format clean timestamp YYYY-MM-DD HH:mm:ss
+      const safeHours = Math.max(0, Math.min(23, Number(recordHours) || 0));
+      const safeMinutes = Math.max(0, Math.min(59, Number(recordMinutes) || 0));
+      const safeSeconds = Math.max(0, Math.min(59, Number(recordSeconds) || 0));
+      const safeDate = recordDate && recordDate.includes('-') ? recordDate : '2026-08-28';
+      const formattedTimestamp = `${safeDate} ${String(safeHours).padStart(2, '0')}:${String(safeMinutes).padStart(2, '0')}:${String(safeSeconds).padStart(2, '0')}`;
+
       const updated: StreetCheckIn = {
         ...checkIn,
         streetName: streetName.trim(),
         houseNumberRange: houseNumberRange.trim() || 'Trecho Geral',
         neighborhoodId: selectedNeigh?.id || neighborhoodId,
         neighborhoodName: selectedNeigh?.name || checkIn.neighborhoodName,
+        timestamp: formattedTimestamp,
         latitude,
         longitude,
         accuracyMeters,
@@ -325,6 +409,116 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
                 placeholder="Ex: nº 100 ao 450"
                 className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
               />
+            </div>
+          </div>
+
+          {/* Data e Horário da Ação de Rua (Dia, Mês, Ano e Horas 24h / Minutos 00 a 59) */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                Data & Horário do Registro (24 Horas)
+              </span>
+              <button
+                type="button"
+                onClick={handleSetCurrentDateTime}
+                className="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 transition"
+                title="Preencher com a data e hora atual"
+              >
+                <Clock className="w-3 h-3 text-blue-600" />
+                <span>Definir Agora</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              {/* Data (Dia / Mês / Ano) */}
+              <div className="sm:col-span-6">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Data do Registro (Dia / Mês / Ano) *
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    required
+                    value={recordDate}
+                    onChange={(e) => setRecordDate(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Horário no formato 24h: Horas (00-23) e Minutos (00-59) */}
+              <div className="sm:col-span-6">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Horário Oficial (Horas 24h : Minutos 00-59) *
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-xl px-2 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500">
+                    <input
+                      type="number"
+                      min={0}
+                      max={23}
+                      value={recordHours}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setRecordHours(isNaN(val) ? 0 : Math.max(0, Math.min(23, val)));
+                      }}
+                      className="w-full text-center text-sm font-bold text-slate-900 bg-transparent outline-none"
+                      title="Horas (00 a 23)"
+                      placeholder="HH"
+                    />
+                    <span className="text-xs text-slate-400 font-medium ml-1">h</span>
+                  </div>
+
+                  <span className="text-slate-400 font-bold">:</span>
+
+                  <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-xl px-2 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500">
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      value={recordMinutes}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setRecordMinutes(isNaN(val) ? 0 : Math.max(0, Math.min(59, val)));
+                      }}
+                      className="w-full text-center text-sm font-bold text-slate-900 bg-transparent outline-none"
+                      title="Minutos (00 a 59)"
+                      placeholder="MM"
+                    />
+                    <span className="text-xs text-slate-400 font-medium ml-1">min</span>
+                  </div>
+
+                  <span className="text-slate-400 font-bold">:</span>
+
+                  <div className="flex-1 flex items-center bg-white border border-slate-300 rounded-xl px-2 py-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500">
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      value={recordSeconds}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setRecordSeconds(isNaN(val) ? 0 : Math.max(0, Math.min(59, val)));
+                      }}
+                      className="w-full text-center text-sm font-bold text-slate-900 bg-transparent outline-none"
+                      title="Segundos (00 a 59)"
+                      placeholder="SS"
+                    />
+                    <span className="text-xs text-slate-400 font-medium ml-1">s</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-1 flex items-center justify-between text-xs text-slate-500 border-t border-slate-200/60">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-blue-500" />
+                Formatado: <strong className="text-slate-800 font-mono">{recordDate ? recordDate.split('-').reverse().join('/') : '28/08/2026'} às {String(recordHours).padStart(2, '0')}:{String(recordMinutes).padStart(2, '0')}:{String(recordSeconds).padStart(2, '0')}</strong>
+              </span>
+              <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] font-semibold border border-emerald-200">
+                Horário 24h Válido
+              </span>
             </div>
           </div>
 

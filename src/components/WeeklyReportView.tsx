@@ -23,6 +23,8 @@ import {
 } from '../types';
 import { formatDateTimeBR } from '../utils/formatters';
 import { NeighborhoodReportSection } from './NeighborhoodReportSection';
+import { StorageService } from '../services/storageService';
+import { EditStreetModal } from './EditStreetModal';
 import {
   FileText,
   Printer,
@@ -44,7 +46,8 @@ import {
   DollarSign,
   AlertCircle,
   Camera,
-  Compass
+  Compass,
+  Edit3
 } from 'lucide-react';
 
 interface WeeklyReportViewProps {
@@ -52,13 +55,15 @@ interface WeeklyReportViewProps {
   teams: Team[];
   checkIns: StreetCheckIn[];
   neighborhoods: Neighborhood[];
+  onCheckInUpdated?: () => void;
 }
 
 export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   militants,
   teams,
   checkIns,
-  neighborhoods = []
+  neighborhoods = [],
+  onCheckInUpdated
 }) => {
   const [selectedMilitantId, setSelectedMilitantId] = useState<string>('todos');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('todos');
@@ -68,6 +73,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const [selectedBairroId, setSelectedBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
+  const [editingCheckIn, setEditingCheckIn] = useState<StreetCheckIn | null>(null);
 
   const chartsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -83,6 +89,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     { id: 'semana-5', label: 'Semana 5 (22/09 a 28/09/2026)' },
     { id: 'semana-6', label: 'Semana 6 / Reta Final (29/09 a 04/10/2026)' }
   ];
+
+  // Folha de Pagamento sincronizada do StorageService
+  const payrolls = useMemo(() => StorageService.getPayrolls(), [selectedWeek]);
+  const currentPayroll = useMemo(() => {
+    return payrolls.find(p => p.id === selectedWeek || p.id === `folha-${selectedWeek}` || p.weekNumber === parseInt(selectedWeek.replace('semana-', ''))) || payrolls[0];
+  }, [payrolls, selectedWeek]);
 
   // Current selected neighborhood for territorial report
   const currentSelectedBairro: Neighborhood = useMemo(() => {
@@ -147,7 +159,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     return true;
   });
 
-  // Calculate consolidated productivity data per militant
+  // Calculate consolidated productivity data per militant synced with payroll
   const productivityData = useMemo(() => {
     return activeMilitants.map(mil => {
       const milCheckIns = filteredCheckIns.filter(c => c.militantId === mil.id || c.militantName === mil.name);
@@ -162,9 +174,25 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       
       const weeklyGoal = 25; // Meta de 25 ruas por semana por militante
       const completionRate = Math.min(Math.round((streetsCount / weeklyGoal) * 100), 200);
-      const dailyRate = mil.dailyRate || 150;
-      const estimatedDiarias = Math.min(Math.max(streetsCount > 0 ? Math.ceil(streetsCount / 3) : 0, 1), 6);
-      const totalPay = estimatedDiarias * dailyRate;
+
+      // Sincronização estrita com a Folha de Pagamentos
+      const payrollItem = currentPayroll?.items?.find(it => 
+        it.workerId === mil.id || 
+        (it.matricula && mil.matricula && it.matricula === mil.matricula) ||
+        it.workerName.toLowerCase().trim() === mil.name.toLowerCase().trim()
+      );
+
+      const dailyRate = payrollItem ? payrollItem.dailyRate : (mil.dailyRate || 150);
+      
+      // Calcular dias trabalhados: se está na folha usa o valor da folha, senão calcula pelos dias de check-in
+      const uniqueDays = new Set(milCheckIns.map(c => c.timestamp.split('T')[0] || c.timestamp.split(' ')[0])).size;
+      const daysWorked = payrollItem ? payrollItem.daysWorked : (uniqueDays > 0 ? uniqueDays : (streetsCount > 0 ? Math.min(Math.ceil(streetsCount / 3), 6) : 0));
+      const bonus = payrollItem ? (payrollItem.bonus || 0) : 0;
+      const deductions = payrollItem ? (payrollItem.deductions || 0) : 0;
+      const totalPay = payrollItem ? payrollItem.totalAmount : (daysWorked * dailyRate + bonus - deductions);
+      const payrollStatus = payrollItem ? payrollItem.status : 'pendente';
+      const pixKey = payrollItem?.pixKey || mil.pixKey || '-';
+      const pixType = payrollItem?.pixType || mil.pixType || 'CPF';
 
       let statusLabel: 'Superou a Meta' | 'Na Meta' | 'Em Andamento' = 'Em Andamento';
       if (completionRate >= 100) statusLabel = 'Superou a Meta';
@@ -189,12 +217,18 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         weeklyGoal,
         completionRate,
         dailyRate,
-        estimatedDiarias,
+        daysWorked,
+        estimatedDiarias: daysWorked,
+        bonus,
+        deductions,
         totalPay,
+        payrollStatus,
+        pixKey,
+        pixType,
         statusLabel
       };
     }).sort((a, b) => b.streetsCount - a.streetsCount);
-  }, [activeMilitants, filteredCheckIns]);
+  }, [activeMilitants, filteredCheckIns, currentPayroll]);
 
   // Materials distribution pie data
   const materialsPieData = useMemo(() => {
@@ -1330,12 +1364,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
       // ================= 4. RELATÓRIO TABELA COMPLETA (COMPILADO GERAL DE TODOS OS RELATÓRIOS) =================
       if (viewGrouping === 'tabela_geral') {
-        setExportFeedback('Gerando Compilado Geral de Todos os Relatórios (Produtividade, Metas, Bairros e Ruas)...');
+        setExportFeedback('Gerando Compilado Geral de Todos os Relatórios (Produtividade, Folha, Militantes, Bairros e Ruas)...');
 
         // PAGE 1: RESUMO EXECUTIVO & GRÁFICOS GERAIS
         drawHeaderBanner(
           'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO CONSOLIDADO COMPILADO GERAL',
-          `Compilado Integral: Produtividade, Metas, Auditoria Territorial por Bairros e Ruas Georreferenciadas | Período: ${selectedWeekLabel}`
+          `Compilado Integral: Produtividade, Folha de Pagamentos, Militantes, Bairros e Ruas Georreferenciadas | Período: ${selectedWeekLabel}`
         );
 
         // KPI Summary Cards
@@ -1344,6 +1378,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         doc.setDrawColor(226, 232, 240);
         doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
 
+        const totalPaySumCalc = productivityData.reduce((sum, d) => sum + d.totalPay, 0);
+
         const generalKpiItems = [
           { label: 'TOTAL DE RUAS', val: `${filteredCheckIns.length}` },
           { label: 'ABORDAGENS DIRETAS', val: `${totalAbordagens}` },
@@ -1351,19 +1387,20 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           { label: 'SANTINHOS', val: `${totalSantinhos.toLocaleString('pt-BR')}` },
           { label: 'ADESIVOS BOLA', val: `${totalAdesivoBola.toLocaleString('pt-BR')}` },
           { label: 'TOTAL MATERIAIS', val: `${totalMateriaisGeral.toLocaleString('pt-BR')}` },
+          { label: 'FOLHA DE PAGAMENTO', val: `R$ ${totalPaySumCalc.toFixed(2).replace('.', ',')}` },
         ];
 
         const gKpiWidth = 269 / generalKpiItems.length;
         generalKpiItems.forEach((kpi, idx) => {
           const xPos = 14 + (idx * gKpiWidth) + (gKpiWidth / 2);
           doc.setFont('helvetica', 'bold');
-          doc.setFontSize(7);
+          doc.setFontSize(6.5);
           doc.setTextColor(100, 116, 139);
           doc.text(kpi.label, xPos, 33.5, { align: 'center' });
 
           doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10.5);
-          doc.setTextColor(30, 58, 138);
+          doc.setFontSize(9.5);
+          doc.setTextColor(idx === 6 ? 16 : 30, idx === 6 ? 185 : 58, idx === 6 ? 129 : 138);
           doc.text(kpi.val, xPos, 41, { align: 'center' });
         });
 
@@ -1387,11 +1424,11 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         }
         drawFooter(1);
 
-        // PAGE 2: SEÇÃO 1 DO COMPILADO - TABELA CONSOLIDADA DE PRODUTIVIDADE & METAS
+        // PAGE 2: SEÇÃO 1 DO COMPILADO - TABELA CONSOLIDADA DE PRODUTIVIDADE & FOLHA DE PAGAMENTOS
         doc.addPage('a4', 'landscape');
         drawHeaderBanner(
-          'COMPILADO GERAL (SEÇÃO 1/3) - PRODUTIVIDADE & METAS POR MILITANTE',
-          `Ranking de Rendimento, Metas Atingidas e Estimativa de Diárias | Período: ${selectedWeekLabel}`
+          'COMPILADO GERAL (SEÇÃO 1/4) - PRODUTIVIDADE & FOLHA DE PAGAMENTOS INTEGRADA',
+          `Diárias, Dias Trabalhados Apurados na Folha, Metas e Total a Pagar | Período: ${selectedWeekLabel}`
         );
 
         const prodTableRows = productivityData.map((item, idx) => [
@@ -1403,7 +1440,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           `${item.abordagens}`,
           `${item.comercios}`,
           `${item.totalMat.toLocaleString('pt-BR')}`,
-          item.statusLabel.toUpperCase(),
+          `R$ ${item.dailyRate.toFixed(2).replace('.', ',')}`,
+          `${item.daysWorked} d`,
+          (item.payrollStatus || 'Pendente').toUpperCase(),
           `R$ ${item.totalPay.toFixed(2).replace('.', ',')}`
         ]);
 
@@ -1411,19 +1450,21 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         const totalAbordagensSum = productivityData.reduce((sum, d) => sum + d.abordagens, 0);
         const totalComerciosSum = productivityData.reduce((sum, d) => sum + d.comercios, 0);
         const totalMateriaisSum = productivityData.reduce((sum, d) => sum + d.totalMat, 0);
-        const totalPaySum = productivityData.reduce((sum, d) => sum + d.totalPay, 0);
+        const totalDaysWorkedSum = productivityData.reduce((sum, d) => sum + d.daysWorked, 0);
 
         prodTableRows.push([
           'TOTAL',
-          `${productivityData.length} MILITANTES ATIVOS`,
+          `${productivityData.length} MILITANTES`,
           '-',
           `${totalStreetsSum} RUAS`,
           '100%',
           `${totalAbordagensSum}`,
           `${totalComerciosSum}`,
           `${totalMateriaisSum.toLocaleString('pt-BR')}`,
-          'CONSOLIDADO',
-          `R$ ${totalPaySum.toFixed(2).replace('.', ',')}`
+          '-',
+          `${totalDaysWorkedSum} d`,
+          'HOMOLOGADO',
+          `R$ ${totalPaySumCalc.toFixed(2).replace('.', ',')}`
         ]);
 
         autoTable(doc, {
@@ -1436,8 +1477,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             'Abordagens',
             'Comércio',
             'Materiais',
-            'Status Meta',
-            'Total Diárias'
+            'Diária (R$)',
+            'Dias Trab.',
+            'Status Folha',
+            'Total a Pagar'
           ]],
           body: prodTableRows,
           startY: 28,
@@ -1453,32 +1496,141 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             fillColor: [241, 245, 249],
             textColor: [15, 23, 42],
             fontStyle: 'bold',
-            fontSize: 8
+            fontSize: 7.5
           },
           alternateRowStyles: {
             fillColor: [248, 250, 252]
           },
           columnStyles: {
-            0: { cellWidth: 10, halign: 'center' },
-            1: { cellWidth: 50, fontStyle: 'bold' },
-            2: { cellWidth: 26 },
-            3: { cellWidth: 24, halign: 'center' },
-            4: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
-            5: { cellWidth: 22, halign: 'center' },
-            6: { cellWidth: 20, halign: 'center' },
-            7: { cellWidth: 25, halign: 'center' },
-            8: { cellWidth: 32, halign: 'center' },
-            9: { cellWidth: 38, halign: 'right', fontStyle: 'bold' }
+            0: { cellWidth: 8, halign: 'center' },
+            1: { cellWidth: 46, fontStyle: 'bold' },
+            2: { cellWidth: 22 },
+            3: { cellWidth: 22, halign: 'center' },
+            4: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
+            5: { cellWidth: 18, halign: 'center' },
+            6: { cellWidth: 16, halign: 'center' },
+            7: { cellWidth: 20, halign: 'center' },
+            8: { cellWidth: 22, halign: 'right' },
+            9: { cellWidth: 16, halign: 'center', fontStyle: 'bold' },
+            10: { cellWidth: 24, halign: 'center' },
+            11: { cellWidth: 32, halign: 'right', fontStyle: 'bold' }
           },
           didDrawPage: (data) => {
             drawFooter(data.pageNumber);
           }
         });
 
-        // PAGE 3: SEÇÃO 2 DO COMPILADO - AUDITORIA TERRITORIAL CONSOLIDADA DE TODOS OS BAIRROS
+        // PAGE 3: SEÇÃO 2 DO COMPILADO - FICHAS INDIVIDUAIS POR MILITANTE
         doc.addPage('a4', 'landscape');
         drawHeaderBanner(
-          'COMPILADO GERAL (SEÇÃO 2/3) - AUDITORIA TERRITORIAL CONSOLIDADA POR BAIRROS',
+          'COMPILADO GERAL (SEÇÃO 2/4) - DETALHAMENTO DE RUAS POR MILITANTE',
+          `Fichas Individuais, Matrículas, Diárias da Folha e Ruas Executadas | Período: ${selectedWeekLabel}`
+        );
+
+        let currentY = 28;
+        activeMilitants.forEach((mil, idx) => {
+          const milCheckIns = filteredCheckIns.filter(c => c.militantId === mil.id || c.militantName === mil.name);
+          const milProd = productivityData.find(p => p.id === mil.id);
+
+          if (currentY > 165) {
+            doc.addPage('a4', 'landscape');
+            drawHeaderBanner(
+              'COMPILADO GERAL (SEÇÃO 2/4) - DETALHAMENTO DE RUAS POR MILITANTE (CONT.)',
+              `Fichas Individuais de Militância e Registros de Campo | Período: ${selectedWeekLabel}`
+            );
+            currentY = 28;
+          }
+
+          // Militant Card Header
+          doc.setFillColor(241, 245, 249);
+          doc.roundedRect(14, currentY, 269, 10, 1.5, 1.5, 'F');
+          doc.setDrawColor(203, 213, 225);
+          doc.roundedRect(14, currentY, 269, 10, 1.5, 1.5, 'D');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.setTextColor(15, 23, 42);
+          doc.text(`${mil.name} (${mil.matricula || 'MAT-000'})`, 18, currentY + 6.5);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(71, 85, 105);
+          const teamLabel = mil.teamId === 'team-alpha' ? 'Equipe Alpha' : (mil.teamId === 'team-bravo' ? 'Equipe Bravo' : 'Equipe Geral');
+          doc.text(`Equipe: ${teamLabel} | Tel: ${mil.phone} | Diária: R$ ${milProd?.dailyRate || 150},00 | Folha Total: R$ ${(milProd?.totalPay || 0).toFixed(2).replace('.', ',')}`, 95, currentY + 6.5);
+
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(30, 58, 138);
+          doc.text(`${milCheckIns.length} ruas executadas`, 278, currentY + 6.5, { align: 'right' });
+
+          currentY += 12;
+
+          const milRows = milCheckIns.map(chk => [
+            chk.timestamp,
+            chk.neighborhoodName,
+            chk.streetName,
+            `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
+            `${chk.materialsDelivered.abordagens || 0}`,
+            `${chk.materialsDelivered.comercio || 0}`,
+            `${chk.materialsDelivered.santinhos} sant. / ${chk.materialsDelivered.adesivo_bola} bola`,
+            chk.status === 'validado' ? 'VALIDADO ✓' : 'PENDENTE'
+          ]);
+
+          if (milRows.length > 0) {
+            autoTable(doc, {
+              head: [[
+                'Data / Hora',
+                'Bairro',
+                'Logradouro / Trecho',
+                'GPS (Lat, Lng)',
+                'Abord.',
+                'Comércio',
+                'Materiais Entregues',
+                'Status'
+              ]],
+              body: milRows,
+              startY: currentY,
+              margin: { left: 14, right: 14, bottom: 28 },
+              styles: {
+                fontSize: 7,
+                cellPadding: 1.5,
+                textColor: [30, 41, 59],
+                lineColor: [226, 232, 240],
+                lineWidth: 0.1
+              },
+              headStyles: {
+                fillColor: [248, 250, 252],
+                textColor: [71, 85, 105],
+                fontStyle: 'bold',
+                fontSize: 7
+              },
+              columnStyles: {
+                0: { cellWidth: 26 },
+                1: { cellWidth: 32 },
+                2: { cellWidth: 70 },
+                3: { cellWidth: 35, font: 'courier' },
+                4: { cellWidth: 16, halign: 'center' },
+                5: { cellWidth: 18, halign: 'center' },
+                6: { cellWidth: 46 },
+                7: { cellWidth: 26, halign: 'center', fontStyle: 'bold' }
+              },
+              didDrawPage: (data) => {
+                drawFooter(data.pageNumber);
+              }
+            });
+            currentY = (doc as any).lastAutoTable.finalY + 6;
+          } else {
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.setTextColor(148, 163, 184);
+            doc.text('Nenhuma rua registrada para este militante no período.', 18, currentY + 3);
+            currentY += 8;
+          }
+        });
+
+        // PAGE 4: SEÇÃO 3 DO COMPILADO - AUDITORIA TERRITORIAL CONSOLIDADA DE TODOS OS BAIRROS
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          'COMPILADO GERAL (SEÇÃO 3/4) - AUDITORIA TERRITORIAL CONSOLIDADA POR BAIRROS',
           `Cobertura Territorial, População IBGE, Eleitores e Ruas Registradas em São José - SC | Período: ${selectedWeekLabel}`
         );
 
@@ -1559,10 +1711,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           }
         });
 
-        // PAGE 4: SEÇÃO 3 DO COMPILADO - TABELA COMPLETA DE TODAS AS RUAS PERCORRIDAS
+        // PAGE 5: SEÇÃO 4 DO COMPILADO - TABELA COMPLETA DE TODAS AS RUAS PERCORRIDAS
         doc.addPage('a4', 'landscape');
         drawHeaderBanner(
-          'COMPILADO GERAL (SEÇÃO 3/3) - TABELA COMPLETA DE RUAS & AUDITORIA GEORREFERENCIADA',
+          'COMPILADO GERAL (SEÇÃO 4/4) - TABELA COMPLETA DE RUAS & AUDITORIA GEORREFERENCIADA',
           `Registro Geral de Ruas Atendidas, Coordenadas GPS e Validação de Campo | Período: ${selectedWeekLabel}`
         );
 
@@ -1922,7 +2074,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         </div>
 
         {/* Aggregate KPI Summary for Selected Period */}
-        <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-7 gap-3">
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
             <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Ruas</span>
             <span className="text-base font-bold text-slate-900">{filteredCheckIns.length} ruas</span>
@@ -1940,12 +2092,20 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             <span className="text-base font-bold text-blue-700">{totalSantinhos.toLocaleString('pt-BR')}</span>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Colinhas</span>
-            <span className="text-base font-bold text-slate-900">{totalColinhas.toLocaleString('pt-BR')}</span>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
             <span className="text-[10px] text-slate-500 uppercase font-semibold block">Adesivos Bola</span>
             <span className="text-base font-bold text-amber-700">{totalAdesivoBola.toLocaleString('pt-BR')}</span>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Materiais</span>
+            <span className="text-base font-bold text-slate-900">{totalMateriaisGeral.toLocaleString('pt-BR')}</span>
+          </div>
+          <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-center col-span-2 sm:col-span-1">
+            <span className="text-[10px] text-emerald-700 uppercase font-bold block flex items-center justify-center gap-1">
+              <DollarSign className="w-3 h-3" /> Folha Total
+            </span>
+            <span className="text-sm font-black text-emerald-900 font-mono">
+              R$ {productivityData.reduce((acc, d) => acc + d.totalPay, 0).toFixed(2).replace('.', ',')}
+            </span>
           </div>
         </div>
 
@@ -2063,16 +2223,26 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           </div>
         </div>
 
-        {/* SECTION: TABELA CONSOLIDADA DE PRODUTIVIDADE & METAS */}
+        {/* SECTION: TABELA CONSOLIDADA DE PRODUTIVIDADE & FOLHA DE PAGAMENTOS */}
         <div className="space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
-            <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Target className="w-4 h-4 text-blue-600" />
-              Tabela Consolidada de Produtividade & Atingimento de Metas
-            </h3>
-            <span className="text-xs text-slate-500 font-medium">
-              Meta Semanal: <strong>25 ruas / militante</strong>
-            </span>
+            <div>
+              <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Target className="w-4 h-4 text-blue-600" />
+                Tabela Oficial de Produtividade & Folha de Pagamentos
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Valores de diárias, dias apurados e total a pagar 100% integrados à Folha de Pagamentos da campanha
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500 font-medium">
+                Meta: <strong>25 ruas / militante</strong>
+              </span>
+              <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono font-bold text-xs border border-emerald-200">
+                Folha da {selectedWeekLabel.split('(')[0].trim()}
+              </span>
+            </div>
           </div>
 
           <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-2xs">
@@ -2087,12 +2257,14 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                   <th className="py-2.5 px-3 text-center">Abordagens</th>
                   <th className="py-2.5 px-3 text-center">Comércios</th>
                   <th className="py-2.5 px-3 text-center">Total Materiais</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
-                  <th className="py-2.5 px-3 text-right">Diárias (R$)</th>
+                  <th className="py-2.5 px-3 text-center">Diária (R$)</th>
+                  <th className="py-2.5 px-3 text-center">Dias (Folha)</th>
+                  <th className="py-2.5 px-3 text-center">Status Folha</th>
+                  <th className="py-2.5 px-3 text-right">Total a Pagar (R$)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {productivityData.map((item, idx) => (
+                {productivityData.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2.5">
@@ -2140,18 +2312,24 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                     <td className="py-2.5 px-3 text-center font-mono text-slate-800 whitespace-nowrap">
                       {item.totalMat.toLocaleString('pt-BR')}
                     </td>
+                    <td className="py-2.5 px-3 text-center font-mono text-slate-700 whitespace-nowrap">
+                      R$ {item.dailyRate.toFixed(2).replace('.', ',')}
+                    </td>
+                    <td className="py-2.5 px-3 text-center font-bold text-blue-800 whitespace-nowrap">
+                      {item.daysWorked} {item.daysWorked === 1 ? 'dia' : 'dias'}
+                    </td>
                     <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        item.statusLabel === 'Superou a Meta'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : (item.statusLabel === 'Na Meta'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200')
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                        item.payrollStatus === 'pago'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : (item.payrollStatus === 'aprovado'
+                            ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                            : 'bg-amber-100 text-amber-800 border border-amber-300')
                       }`}>
-                        {item.statusLabel}
+                        {item.payrollStatus || 'Pendente'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-right font-bold text-slate-900 font-mono whitespace-nowrap">
+                    <td className="py-2.5 px-3 text-right font-bold text-emerald-900 font-mono whitespace-nowrap">
                       R$ {item.totalPay.toFixed(2).replace('.', ',')}
                     </td>
                   </tr>
@@ -2180,12 +2358,18 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                   <td className="py-2.5 px-3 text-center font-mono">
                     {totalMateriaisGeral.toLocaleString('pt-BR')}
                   </td>
+                  <td className="py-2.5 px-3 text-center text-slate-500 font-mono">
+                    -
+                  </td>
+                  <td className="py-2.5 px-3 text-center text-blue-800 font-bold">
+                    {productivityData.reduce((acc, d) => acc + d.daysWorked, 0)} d
+                  </td>
                   <td className="py-2.5 px-3 text-center">
                     <span className="text-[10px] text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded">
                       HOMOLOGADO
                     </span>
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-emerald-800">
+                  <td className="py-2.5 px-3 text-right font-mono text-emerald-800 text-sm">
                     R$ {productivityData.reduce((acc, d) => acc + d.totalPay, 0).toFixed(2).replace('.', ',')}
                   </td>
                 </tr>
@@ -2195,12 +2379,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         </div>
 
         {/* SECTION 1: PER-MILITANT DETAILED STREETS BREAKDOWN */}
-        {viewGrouping === 'por_militante' && (
-          <div className="space-y-6 pt-4">
+        {(viewGrouping === 'por_militante' || viewGrouping === 'tabela_geral') && (
+          <div className="space-y-6 pt-4 border-t border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
               <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-blue-600" />
-                Detalhamento de Ruas por Militante na Semana
+                Detalhamento de Ruas por Militante na Semana (Fichas Individuais)
               </h3>
               <span className="text-xs text-slate-500">{activeMilitants.length} militantes listados</span>
             </div>
@@ -2211,6 +2395,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 const milSantinhos = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
                 const milAbordagens = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
                 const milComercios = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
+                const milProd = productivityData.find(p => p.id === mil.id);
 
                 return (
                   <div
@@ -2231,12 +2416,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                             <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-xs font-mono font-semibold border border-blue-200">
                               {mil.matricula}
                             </span>
-                            <span className="text-xs text-slate-500 font-medium">
-                              (Diária: R$ {mil.dailyRate || 150},00)
+                            <span className="text-xs text-emerald-700 font-semibold">
+                              (Diária: R$ {milProd?.dailyRate || mil.dailyRate || 150},00 • Folha: R$ {milProd?.totalPay.toFixed(2).replace('.', ',')})
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500">
-                            {mil.phone} • {mil.teamId === 'team-alpha' ? 'Equipe Alpha' : (mil.teamId === 'team-bravo' ? 'Equipe Bravo' : 'Equipe Geral')}
+                            {mil.phone} • {mil.teamId === 'team-alpha' ? 'Equipe Alpha' : (mil.teamId === 'team-bravo' ? 'Equipe Bravo' : 'Equipe Geral')} • PIX ({milProd?.pixType}): {milProd?.pixKey}
                           </p>
                         </div>
                       </div>
@@ -2270,7 +2455,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                               <th className="py-2.5 px-3 text-center">Abordagens</th>
                               <th className="py-2.5 px-3 text-center">Comércio</th>
                               <th className="py-2.5 px-3 text-center">Santinhos</th>
-                              <th className="py-2.5 px-3 text-center">Status</th>
+                              <th className="py-2.5 px-3 text-center">Ações</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -2331,9 +2516,14 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                                     {chk.materialsDelivered.santinhos}
                                   </td>
                                   <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                      ✓ Validado
-                                    </span>
+                                    <button
+                                      onClick={() => setEditingCheckIn(chk)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs border border-blue-200 transition cursor-pointer"
+                                      title="Editar Registro de Rua, Data e Horário"
+                                    >
+                                      <Edit3 className="w-3 h-3" />
+                                      Editar Rua
+                                    </button>
                                   </td>
                                 </tr>
                               );
@@ -2353,12 +2543,49 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           </div>
         )}
 
-        {/* SECTION 2: COMPLETE TABLE (ALL COLUMNS & PHOTOS) */}
-        {viewGrouping === 'tabela_geral' && (
-          <div className="space-y-3 pt-4">
-            <h3 className="font-bold text-xs text-slate-700 uppercase tracking-wider">
-              Tabela Completa de Ruas Percorridas & Comprovação Georreferenciada
-            </h3>
+        {/* SECTION 2: POR BAIRRO & MAPAS (TERRITORIAL REPORT WITH MAPS, CHARTS & PHOTOS) */}
+        {(viewGrouping === 'por_bairro' || viewGrouping === 'tabela_geral') && (
+          <div className="pt-4 border-t border-slate-200 space-y-3">
+            {viewGrouping === 'tabela_geral' && (
+              <div className="flex items-center justify-between pb-1">
+                <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <Compass className="w-4 h-4 text-blue-600" />
+                  Auditoria Territorial por Bairros & Mapas de São José - SC
+                </h3>
+                <span className="text-xs text-blue-700 font-semibold">
+                  {neighborhoods.length} Bairros Auditados
+                </span>
+              </div>
+            )}
+            <NeighborhoodReportSection
+              neighborhoods={neighborhoods}
+              checkIns={filteredCheckIns}
+              militants={militants}
+              teams={teams}
+              selectedBairroId={selectedBairroId}
+              onSelectBairro={(bId) => setSelectedBairroId(bId)}
+              onZoomPhoto={(p) => setSelectedPhotoZoom(p)}
+            />
+          </div>
+        )}
+
+        {/* SECTION 3: COMPLETE TABLE (ALL COLUMNS & PHOTOS) */}
+        {(viewGrouping === 'tabela_geral') && (
+          <div className="space-y-3 pt-6 border-t border-slate-200">
+            <div className="flex items-center justify-between pb-1">
+              <div>
+                <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  Tabela Completa de Ruas Percorridas & Comprovação Georreferenciada
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Listagem integral de todos os check-ins geolocalizados com links para satélite e controle de auditoria
+                </p>
+              </div>
+              <span className="text-xs text-slate-600 font-bold">
+                {filteredCheckIns.length} Registros Auditados
+              </span>
+            </div>
 
             <div className="overflow-x-auto border border-slate-200 rounded-lg">
               <table className="w-full text-left text-xs border-collapse">
@@ -2372,7 +2599,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                     <th className="py-2.5 px-3 text-center">Abordagens</th>
                     <th className="py-2.5 px-3 text-center">Comércio</th>
                     <th className="py-2.5 px-3 text-center">Materiais</th>
-                    <th className="py-2.5 px-3 text-center">Auditoria</th>
+                    <th className="py-2.5 px-3 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -2442,9 +2669,14 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                             <span className="text-purple-700 font-semibold">{chk.materialsDelivered.adesivo_bola}</span> bola
                           </td>
                           <td className="py-3 px-3 text-center whitespace-nowrap">
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              ✓ Validado
-                            </span>
+                            <button
+                              onClick={() => setEditingCheckIn(chk)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-[11px] border border-blue-200 transition cursor-pointer"
+                              title="Editar Registro de Rua, Data e Horário"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                              Editar
+                            </button>
                           </td>
                         </tr>
                       );
@@ -2456,44 +2688,21 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           </div>
         )}
 
-        {/* SECTION 3: POR BAIRRO & MAPAS (TERRITORIAL REPORT WITH MAPS, CHARTS & PHOTOS) */}
-        {viewGrouping === 'por_bairro' && (
-          <NeighborhoodReportSection
-            neighborhoods={neighborhoods}
-            checkIns={filteredCheckIns}
-            militants={militants}
-            teams={teams}
-            selectedBairroId={selectedBairroId}
-            onSelectBairro={(bId) => setSelectedBairroId(bId)}
-            onZoomPhoto={(p) => setSelectedPhotoZoom(p)}
-          />
-        )}
-
-        {/* Coordinator Validation & Official Sign-off */}
-        <div className="pt-8 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-8 text-xs text-slate-500">
-          <div>
-            <p className="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
-              <Award className="w-4 h-4 text-blue-600" />
-              Parecer Oficial da Coordenação Geral:
-            </p>
-            <p className="leading-relaxed text-slate-600">
-              Certifico que as ruas, logradouros, abordagens a eleitores e entrega de materiais gráficos descritos neste relatório semanal foram devidamente executados pelas equipes de militância em campo no município de São José - SC, com auditoria de dados e validação georreferenciada.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center justify-center text-center pt-4 sm:pt-0">
-            <div className="w-72 border-b-2 border-slate-700 mb-2" />
-            <p className="font-bold text-base text-slate-900">{COORDINATOR_NAME}</p>
-            <p className="text-xs text-blue-700 font-bold">{COORDINATOR_ROLE}</p>
-            <p className="text-[10px] text-slate-500 mt-0.5">{COMMITTEE_NAME}</p>
-            <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-semibold border border-emerald-200">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              Assinatura e Validação Digital Homologada
-            </span>
-          </div>
-        </div>
-
       </div>
+
+      {/* Edit Street Modal (allows editing street, neighborhood, date/time and GPS) */}
+      {editingCheckIn && (
+        <EditStreetModal
+          checkIn={editingCheckIn}
+          neighborhoods={neighborhoods}
+          onClose={() => setEditingCheckIn(null)}
+          onSave={async (updated) => {
+            await StorageService.updateCheckIn(updated);
+            setEditingCheckIn(null);
+            onCheckInUpdated?.();
+          }}
+        />
+      )}
 
       {/* Photo Zoom Modal */}
       {selectedPhotoZoom && (
