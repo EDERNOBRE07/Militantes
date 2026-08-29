@@ -35,6 +35,7 @@ import {
   INITIAL_ADMINS,
   INITIAL_PAYROLLS
 } from '../data/saoJoseData';
+import { isCoordinateInsideSaoJose, resolveExactStreetCoordinates } from '../utils/saoJoseStreetsGeo';
 
 const STORAGE_KEYS = {
   USERS: 'militancia_users_v1',
@@ -727,6 +728,14 @@ export class StorageService {
   }
 
   static async updateCheckIn(updatedCheckIn: StreetCheckIn): Promise<void> {
+    const neighborhoods = this.getNeighborhoods();
+    // Calibrate coordinates if missing or invalid
+    if (!isCoordinateInsideSaoJose(updatedCheckIn.latitude, updatedCheckIn.longitude)) {
+      const resolved = resolveExactStreetCoordinates(updatedCheckIn.streetName, updatedCheckIn.neighborhoodId, neighborhoods);
+      updatedCheckIn.latitude = resolved.lat;
+      updatedCheckIn.longitude = resolved.lng;
+    }
+
     const allCheckins = this.getCheckIns();
     const idx = allCheckins.findIndex(c => c.id === updatedCheckIn.id);
     if (idx !== -1) {
@@ -796,6 +805,15 @@ export class StorageService {
 
   static addCheckIn(checkIn: StreetCheckIn, isOffline = false): { success: boolean; isQueued: boolean } {
     const user = this.getCurrentUser();
+    const neighborhoods = this.getNeighborhoods();
+
+    // Calibrate coordinates if missing or invalid using São José street dictionary
+    if (!isCoordinateInsideSaoJose(checkIn.latitude, checkIn.longitude)) {
+      const resolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
+      checkIn.latitude = resolved.lat;
+      checkIn.longitude = resolved.lng;
+    }
+
     const allCheckins = this.getCheckIns();
 
     if (isOffline) {
@@ -809,7 +827,6 @@ export class StorageService {
     this.set(STORAGE_KEYS.CHECKINS, updatedCheckins);
 
     // Update Neighborhood stats
-    const neighborhoods = this.getNeighborhoods();
     const targetNeigh = neighborhoods.find(n => n.id === checkIn.neighborhoodId);
     if (targetNeigh) {
       targetNeigh.completedStreets = Math.min(targetNeigh.totalStreets, targetNeigh.completedStreets + 1);

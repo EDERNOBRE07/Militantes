@@ -192,6 +192,7 @@ export default function App() {
             checkIns={checkIns}
             militants={militants}
             vans={vans}
+            onCheckInUpdated={reloadData}
           />
         )}
 

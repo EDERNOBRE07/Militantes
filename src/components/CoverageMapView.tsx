@@ -3,26 +3,30 @@ import L from 'leaflet';
 import { Neighborhood, Militant, Van, StreetCheckIn } from '../types';
 import { SAO_JOSE_CENTER } from '../data/saoJoseData';
 import { formatDateTimeBR } from '../utils/formatters';
+import { getCalibratedCheckInPosition, resolveExactStreetCoordinates } from '../utils/saoJoseStreetsGeo';
+import { EditStreetModal } from './EditStreetModal';
+import { StorageService } from '../services/storageService';
 import {
   MapPin,
   Users,
   Truck,
-  Flame,
   CheckCircle,
   Maximize2,
   Layers,
-  BarChart2,
   Building2,
   Activity,
   Compass,
-  Info,
-  TrendingUp,
-  Target,
-  Sparkles,
-  ChevronRight,
-  X,
+  FileText,
+  MessageSquare,
+  Store,
+  ExternalLink,
   Camera,
-  MapPinOff
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  CheckCircle2,
+  Eye
 } from 'lucide-react';
 
 export type MapLayerMode = 'demografia_ibge' | 'performance_militancia';
@@ -34,6 +38,7 @@ interface CoverageMapViewProps {
   vans: Van[];
   checkIns: StreetCheckIn[];
   onSelectNeighborhood?: (neighborhood: Neighborhood) => void;
+  onCheckInUpdated?: () => void;
 }
 
 export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
@@ -41,7 +46,8 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   militants,
   vans,
   checkIns,
-  onSelectNeighborhood
+  onSelectNeighborhood,
+  onCheckInUpdated
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -59,6 +65,12 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [selectedBairroFilter, setSelectedBairroFilter] = useState<string>('todos');
   const [inspectedBairro, setInspectedBairro] = useState<Neighborhood | null>(null);
+
+  // Selected check-in for detailed drawer / full multi-photo view
+  const [inspectedCheckIn, setInspectedCheckIn] = useState<StreetCheckIn | null>(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
+  const [expandedPhotoModal, setExpandedPhotoModal] = useState<string | null>(null);
+  const [editingCheckIn, setEditingCheckIn] = useState<StreetCheckIn | null>(null);
 
   const getTileLayerConfig = (provider: BaseMapProvider) => {
     switch (provider) {
@@ -171,48 +183,48 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
 
       let fillColor = '#10b981';
       let strokeColor = '#059669';
-      let fillOpacity = 0.28;
+      let fillOpacity = 0.25;
 
       if (layerMode === 'demografia_ibge') {
         // IBGE Population / Demography scale
         if (bairro.population >= 20000) {
           fillColor = '#6366f1'; // Indigo (>20k hab - Muito Alta)
           strokeColor = '#4338ca';
-          fillOpacity = 0.45;
+          fillOpacity = 0.40;
         } else if (bairro.population >= 14000) {
           fillColor = '#3b82f6'; // Blue (14k-20k hab - Alta)
           strokeColor = '#1d4ed8';
-          fillOpacity = 0.38;
+          fillOpacity = 0.32;
         } else if (bairro.population >= 8000) {
           fillColor = '#0ea5e9'; // Sky (8k-14k hab - Média)
           strokeColor = '#0284c7';
-          fillOpacity = 0.32;
+          fillOpacity = 0.28;
         } else {
           fillColor = '#14b8a6'; // Teal (<8k hab - Moderada)
           strokeColor = '#0d9488';
-          fillOpacity = 0.25;
+          fillOpacity = 0.22;
         }
       } else {
         // Performance & Militancy scale
         if (completionRate >= 75) {
           fillColor = '#10b981'; // Emerald (>=75% - Meta Atingida)
           strokeColor = '#059669';
-          fillOpacity = 0.35;
+          fillOpacity = 0.30;
         } else if (completionRate >= 45) {
           fillColor = '#f59e0b'; // Amber (45-74% - Em Andamento)
           strokeColor = '#d97706';
-          fillOpacity = 0.35;
+          fillOpacity = 0.30;
         } else {
           fillColor = '#ef4444'; // Red (<45% - Área Crítica / Prioridade)
           strokeColor = '#dc2626';
-          fillOpacity = 0.40;
+          fillOpacity = 0.35;
         }
       }
 
       const polygon = L.polygon(bairro.polygon, {
         color: strokeColor,
-        weight: 2.2,
-        opacity: 0.9,
+        weight: 2.0,
+        opacity: 0.85,
         fillColor: fillColor,
         fillOpacity: fillOpacity
       });
@@ -324,7 +336,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
     });
 
     // =========================================================================
-    // 2. RENDER MILITANTES IN FIELD (Available in both, prominent in performance)
+    // 2. RENDER MILITANTES IN FIELD
     // =========================================================================
     if (showMilitants) {
       militants.forEach(m => {
@@ -399,79 +411,124 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
     }
 
     // =========================================================================
-    // 4. RENDER STREET CHECK-INS (Painted Red on Map + Custom Red PINs)
+    // 4. RENDER PRECISE STREET PINS (Posicionado exatamente na Rua cadastrada)
     // =========================================================================
     if (showCheckins) {
       const activeCheckIns = selectedBairroFilter === 'todos'
         ? checkIns
         : checkIns.filter(chk => chk.neighborhoodId === selectedBairroFilter);
 
-      activeCheckIns.forEach((chk, idx) => {
-        // Generate realistic street polyline trajectory around the checkin coordinates
-        const hash = Array.from(chk.id + chk.streetName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const angle = ((hash % 180) * Math.PI) / 180;
-        const length = 0.0016 + (hash % 8) * 0.00015; // ~150-240 meters
-        const dx = Math.cos(angle) * length;
-        const dy = Math.sin(angle) * (length * 0.82);
-
-        const streetPolylineCoords: [number, number][] = [
-          [chk.latitude - dy, chk.longitude - dx],
-          [chk.latitude - dy * 0.35, chk.longitude - dx * 0.35],
-          [chk.latitude, chk.longitude],
-          [chk.latitude + dy * 0.45, chk.longitude + dx * 0.45],
-          [chk.latitude + dy, chk.longitude + dx]
-        ];
-
-        // 4.1 Draw Glow Red Outer Line (Pintada de Vermelho)
-        const outerStreetGlow = L.polyline(streetPolylineCoords, {
-          color: '#ef4444',
-          weight: 9,
-          opacity: 0.45,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-
-        // 4.2 Draw Core Red Solid Line (Pintada de Vermelho)
-        const coreStreetLine = L.polyline(streetPolylineCoords, {
-          color: '#dc2626',
-          weight: 4.5,
-          opacity: 0.98,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-
-        const formattedDate = formatDateTimeBR(chk.timestamp);
+      activeCheckIns.forEach((chk) => {
+        // Calibrate precise position on the registered street
+        const pos = getCalibratedCheckInPosition(chk, neighborhoods);
+        const pinLat = pos.lat;
+        const pinLng = pos.lng;
+        const photosList = chk.photos || [];
+        const photoCount = photosList.length;
         const militantObj = militants.find(m => m.id === chk.militantId);
-        const photoUrl = (chk.photos && chk.photos.length > 0) ? chk.photos[0] : null;
+        const formattedDate = formatDateTimeBR(chk.timestamp);
 
-        const streetPopupHtml = `
-          <div class="p-2.5 text-slate-800 space-y-2 max-w-[270px] font-sans">
-            <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
+        // Render Elegant Street PIN
+        const pinHtml = `
+          <div class="relative group cursor-pointer flex flex-col items-center" style="transform: translate(-50%, -100%);">
+            
+            <!-- Pulse ring for visual attention -->
+            <div class="absolute -inset-1 rounded-full bg-rose-500/40 animate-ping"></div>
+            
+            <!-- Main Street Pin Badge -->
+            <div class="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-rose-600 via-red-600 to-amber-500 text-white shadow-xl ring-2 ring-white hover:scale-125 hover:ring-rose-300 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="drop-shadow-xs">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              
+              <!-- Multi-photo camera badge if photos exist -->
+              ${photoCount > 0 ? `
+                <div class="absolute -top-1.5 -left-1.5 px-1 py-0.5 bg-blue-600 text-white text-[8px] font-black rounded-full border border-white flex items-center gap-0.5 shadow-sm">
+                  📷${photoCount > 1 ? `<span>${photoCount}</span>` : ''}
+                </div>
+              ` : ''}
+              
+              <!-- Checkmark badge -->
+              <div class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 text-white rounded-full border border-white flex items-center justify-center text-[8px] font-black shadow-xs">
+                ✓
+              </div>
+            </div>
+
+            <!-- Pin Stem Needle -->
+            <div class="w-1.5 h-2 bg-gradient-to-b from-red-600 to-red-800 mx-auto -mt-0.5 rounded-b-full"></div>
+            
+            <!-- Street Name Capsule Tooltip on Hover -->
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 bg-slate-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap pointer-events-none shadow-md z-50">
+              ${chk.streetName}
+            </div>
+
+          </div>
+        `;
+
+        const streetPinIcon = L.divIcon({
+          className: 'custom-exact-street-pin',
+          html: pinHtml,
+          iconSize: [32, 38],
+          iconAnchor: [16, 36]
+        });
+
+        // Multi-Photo HTML snippet for Leaflet popup
+        let photosHtmlSection = '';
+        if (photoCount > 0) {
+          photosHtmlSection = `
+            <div class="space-y-1 pt-1">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-bold text-slate-800 flex items-center gap-1">
+                  📷 Fotos da Rua (${photoCount})
+                </span>
+                <span class="text-[10px] text-blue-600 font-semibold">Clique para ver fotos</span>
+              </div>
+              <div class="grid grid-cols-${Math.min(photoCount, 3)} gap-1 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 p-1">
+                ${photosList.slice(0, 3).map((p, pIdx) => `
+                  <div class="relative h-16 rounded overflow-hidden group/p cursor-pointer bg-black/5 border border-slate-200">
+                    <img src="${p}" alt="Foto ${pIdx + 1}" class="w-full h-full object-cover hover:scale-105 transition duration-200" />
+                    ${pIdx === 2 && photoCount > 3 ? `
+                      <div class="absolute inset-0 bg-black/60 text-white flex items-center justify-center font-bold text-xs">
+                        +${photoCount - 2}
+                      </div>
+                    ` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        const popupHtml = `
+          <div class="p-2.5 text-slate-800 space-y-2 max-w-[280px] font-sans">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2.5 rounded-t">
               <div class="flex items-center gap-1.5">
                 <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
-                <span class="text-[10px] font-bold uppercase tracking-wider text-red-700">Rua Registrada & Coberta</span>
+                <span class="text-[10px] font-black uppercase tracking-wider text-red-700">Rua Registrada & Coberta</span>
               </div>
               <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
                 ✓ Validado
               </span>
             </div>
 
+            <!-- Street & Neighborhood Details -->
             <div>
-              <h4 class="font-black text-sm text-slate-900 leading-tight flex items-center gap-1">
-                <span>🛣️</span> ${chk.streetName}
+              <h4 class="font-black text-sm text-slate-900 leading-tight">
+                📍 ${chk.streetName}
               </h4>
-              <p class="text-[11px] text-slate-600 font-medium">Bairro: <strong class="text-blue-700">${chk.neighborhoodName}</strong></p>
+              <p class="text-[11px] text-slate-600 font-medium mt-0.5">
+                Bairro: <strong class="text-blue-700">${chk.neighborhoodName}</strong>
+                ${chk.houseNumberRange ? `<span class="text-slate-500"> • ${chk.houseNumberRange}</span>` : ''}
+              </p>
             </div>
 
-            ${photoUrl ? `
-              <div class="rounded-lg overflow-hidden border border-slate-200 shadow-2xs group relative">
-                <img src="${photoUrl}" alt="Foto da Rua" class="w-full h-24 object-cover" />
-                <div class="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-mono flex items-center gap-1">
-                  📷 Foto de Campo
-                </div>
-              </div>
-            ` : ''}
+            <!-- Photos Section -->
+            ${photosHtmlSection}
 
+            <!-- Militant info -->
             <div class="p-2 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-1">
               <div class="flex items-center gap-2">
                 <img src="${militantObj?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}" class="w-6 h-6 rounded-full object-cover ring-1 ring-slate-300" />
@@ -486,6 +543,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
               </div>
             </div>
 
+            <!-- Materials count -->
             <div class="grid grid-cols-3 gap-1 text-[10px] text-center pt-0.5">
               <div class="p-1 rounded bg-blue-50 border border-blue-100">
                 <span class="text-slate-500 block">Santinhos</span>
@@ -501,42 +559,33 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
               </div>
             </div>
 
+            ${chk.observations ? `
+              <p class="text-[11px] text-slate-600 italic bg-amber-50/70 p-1.5 rounded border border-amber-100">
+                "${chk.observations}"
+              </p>
+            ` : ''}
+
+            <!-- Footer links -->
             <div class="pt-1 flex items-center justify-between text-[10px] text-slate-500 border-t border-slate-100">
-              <span class="font-mono">GPS: ${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}</span>
-              <a href="https://www.google.com/maps?q=${chk.latitude},${chk.longitude}" target="_blank" rel="noreferrer" class="text-blue-600 font-semibold hover:underline">
+              <span class="font-mono">GPS: ${pinLat.toFixed(4)}, ${pinLng.toFixed(4)}</span>
+              <a href="https://www.google.com/maps?q=${pinLat},${pinLng}" target="_blank" rel="noreferrer" class="text-blue-600 font-semibold hover:underline flex items-center gap-0.5">
                 Abrir Mapa ↗
               </a>
             </div>
+
           </div>
         `;
 
-        outerStreetGlow.bindPopup(streetPopupHtml, { maxWidth: 290 });
-        coreStreetLine.bindPopup(streetPopupHtml, { maxWidth: 290 });
-        outerStreetGlow.bindTooltip(`<b>Rua Coberta (Vermelho):</b> ${chk.streetName}`, { sticky: true });
-        coreStreetLine.bindTooltip(`<b>Rua Coberta (Vermelho):</b> ${chk.streetName}`, { sticky: true });
-
-        layerGroup.addLayer(outerStreetGlow);
-        layerGroup.addLayer(coreStreetLine);
-
-        // 4.3 Draw Custom Red PIN Marker with Pulse & Checkmark Badge
-        const pinIcon = L.divIcon({
-          className: 'custom-red-pin-icon',
-          html: `
-            <div class="relative group cursor-pointer" style="transform: translate(-50%, -100%);">
-              <div class="absolute -inset-1 rounded-full bg-rose-500/50 animate-ping"></div>
-              <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-red-800 border-2 border-white shadow-xl flex items-center justify-center text-white text-xs font-bold ring-2 ring-red-400 hover:scale-125 transition-transform">
-                📍
-              </div>
-              <div class="w-1.5 h-1.5 bg-red-700 mx-auto -mt-0.5 rounded-b-full"></div>
-              <div class="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-black shadow-xs">✓</div>
-            </div>
-          `,
-          iconSize: [32, 36],
-          iconAnchor: [16, 34]
+        const marker = L.marker([pinLat, pinLng], { icon: streetPinIcon });
+        marker.bindPopup(popupHtml, { maxWidth: 290 });
+        marker.bindTooltip(`<b>Rua:</b> ${chk.streetName} (${chk.neighborhoodName})`, { sticky: true });
+        
+        // Open rich inspect drawer on click
+        marker.on('click', () => {
+          setInspectedCheckIn(chk);
+          setActivePhotoIndex(0);
         });
 
-        const marker = L.marker([chk.latitude, chk.longitude], { icon: pinIcon });
-        marker.bindPopup(streetPopupHtml, { maxWidth: 290 });
         layerGroup.addLayer(marker);
       });
     }
@@ -546,8 +595,18 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   const zoomToSaoJose = () => {
     setSelectedBairroFilter('todos');
     setInspectedBairro(null);
+    setInspectedCheckIn(null);
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setView(SAO_JOSE_CENTER, 13);
+    }
+  };
+
+  const handleSaveEditedCheckIn = async (updated: StreetCheckIn) => {
+    await StorageService.updateCheckIn(updated);
+    setEditingCheckIn(null);
+    setInspectedCheckIn(updated);
+    if (onCheckInUpdated) {
+      onCheckInUpdated();
     }
   };
 
@@ -557,7 +616,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   const totalCompletedStreets = neighborhoods.reduce((acc, curr) => acc + curr.completedStreets, 0);
 
   return (
-    <div className="relative w-full h-[660px] lg:h-[730px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm flex flex-col">
+    <div className="relative w-full h-[680px] lg:h-[750px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 shadow-sm flex flex-col">
       
       {/* Top Map Control & Layer Switcher Bar */}
       <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-[1000] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
@@ -590,8 +649,8 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
             title="Alternar para visualização de Performance de Militância, Cobertura de Ruas e Check-ins"
           >
             <Activity className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Performance de Militância (Check-ins)</span>
-            <span className="sm:hidden">Performance</span>
+            <span className="hidden sm:inline">PINs de Ruas & Performance</span>
+            <span className="sm:hidden">PINs de Ruas</span>
           </button>
         </div>
 
@@ -674,12 +733,12 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
             type="button"
             onClick={() => setShowCheckins(!showCheckins)}
             className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg font-medium transition ${
-              showCheckins ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:bg-slate-50'
+              showCheckins ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'text-slate-500 hover:bg-slate-50'
             }`}
-            title="Exibir Check-ins Georreferenciados de Ruas"
+            title="Exibir PINs Georreferenciados de Ruas Registradas"
           >
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-            <span className="hidden sm:inline">Check-ins ({checkIns.length})</span>
+            <MapPin className="w-3.5 h-3.5 text-rose-600" />
+            <span className="hidden sm:inline">PINs de Ruas ({checkIns.length})</span>
           </button>
 
           <button
@@ -757,7 +816,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
           <div>
             <div className="flex items-center gap-1.5 mb-1 text-slate-900 font-bold text-[11px] uppercase tracking-wider">
               <Activity className="w-3.5 h-3.5 text-emerald-600" />
-              Cobertura de Ruas & Check-ins de Campo
+              PINs de Ruas & Performance de Campo
             </div>
             <div className="flex flex-wrap items-center gap-3 text-[11px]">
               <div className="flex items-center gap-1.5">
@@ -775,16 +834,13 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
             </div>
             <div className="flex items-center gap-2 pt-1 border-t border-slate-100 text-[10px] text-slate-600 flex-wrap">
               <span className="flex items-center gap-1 font-semibold text-rose-700">
-                <span className="w-3 h-1.5 bg-red-600 rounded-sm"></span> Rua Coberta (Linha Vermelha)
+                <span className="w-3 h-3 rounded-full bg-red-600 border border-white text-[8px] flex items-center justify-center text-white">📍</span> PIN na Rua Cadastrada
               </span>
-              <span className="flex items-center gap-1 font-semibold text-rose-700">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-600 border border-white"></span> PIN Rua
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-blue-600"></span> Militante Ativo
+              <span className="flex items-center gap-1 font-semibold text-blue-700">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Militante Ativo
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-cyan-600"></span> Van
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-600"></span> Van
               </span>
             </div>
           </div>
@@ -825,7 +881,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
         )}
       </div>
 
-      {/* Selected Neighborhood Drawer (Bottom Center / Floating Panel) */}
+      {/* Selected Neighborhood Drawer */}
       {inspectedBairro && (
         <div className="absolute top-20 right-4 z-[1000] bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-xl text-xs space-y-2 pointer-events-auto max-w-xs animate-in fade-in slide-in-from-right-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -869,7 +925,197 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
         </div>
       )}
 
+      {/* Detailed Street Check-in Drawer with Multi-Photo Gallery */}
+      {inspectedCheckIn && (
+        <div className="absolute top-20 left-4 z-[1000] bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-2xl text-xs space-y-3 pointer-events-auto w-[320px] sm:w-[360px] animate-in fade-in slide-in-from-left-4 max-h-[85%] overflow-y-auto">
+          
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-xl bg-rose-100 text-rose-700">
+                <MapPin className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">Rua Registrada</span>
+                <h4 className="font-bold text-sm text-slate-900 leading-tight">{inspectedCheckIn.streetName}</h4>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setEditingCheckIn(inspectedCheckIn)}
+                className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition"
+                title="Editar dados ou fotos desta rua"
+              >
+                <Edit3 className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setInspectedCheckIn(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="text-[11px] text-slate-600 space-y-1">
+            <p>Bairro: <strong className="text-slate-900">{inspectedCheckIn.neighborhoodName}</strong></p>
+            {inspectedCheckIn.houseNumberRange && (
+              <p>Trecho / Numeração: <strong className="text-slate-800">{inspectedCheckIn.houseNumberRange}</strong></p>
+            )}
+            <p>Militante: <strong className="text-slate-900">{inspectedCheckIn.militantName}</strong></p>
+            <p>Data & Horário: <strong className="text-slate-800 font-mono">{formatDateTimeBR(inspectedCheckIn.timestamp)}</strong></p>
+          </div>
+
+          {/* Multi-Photo Viewer & Gallery */}
+          {inspectedCheckIn.photos && inspectedCheckIn.photos.length > 0 && (
+            <div className="space-y-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-800 text-[11px] flex items-center gap-1.5">
+                  <Camera className="w-3.5 h-3.5 text-blue-600" />
+                  Fotos de Comprovação ({inspectedCheckIn.photos.length})
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  {activePhotoIndex + 1} de {inspectedCheckIn.photos.length}
+                </span>
+              </div>
+
+              {/* Main Featured Photo Preview */}
+              <div className="relative rounded-lg overflow-hidden border border-slate-200 h-44 bg-black group">
+                <img
+                  src={inspectedCheckIn.photos[activePhotoIndex] || inspectedCheckIn.photos[0]}
+                  alt="Foto da Rua"
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Expand Zoom Button */}
+                <button
+                  type="button"
+                  onClick={() => setExpandedPhotoModal(inspectedCheckIn.photos![activePhotoIndex] || inspectedCheckIn.photos![0])}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 hover:bg-black/80 text-white shadow-md transition"
+                  title="Ampliar Foto"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+
+                {/* Left/Right controls if multi-photo */}
+                {inspectedCheckIn.photos.length > 1 && (
+                  <div className="absolute inset-x-2 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePhotoIndex(prev => (prev > 0 ? prev - 1 : inspectedCheckIn.photos!.length - 1));
+                      }}
+                      className="p-1 rounded-full bg-black/60 hover:bg-black/80 text-white pointer-events-auto transition"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePhotoIndex(prev => (prev < inspectedCheckIn.photos!.length - 1 ? prev + 1 : 0));
+                      }}
+                      className="p-1 rounded-full bg-black/60 hover:bg-black/80 text-white pointer-events-auto transition"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Thumbnails row for multiple photos */}
+              {inspectedCheckIn.photos.length > 1 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {inspectedCheckIn.photos.map((ph, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActivePhotoIndex(idx)}
+                      className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition ${
+                        activePhotoIndex === idx ? 'border-blue-600 scale-105' : 'border-slate-200 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={ph} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Materials */}
+          <div className="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+            <div className="p-1.5 rounded-lg bg-blue-50 border border-blue-100">
+              <span className="text-slate-500 block">Santinhos</span>
+              <strong className="text-blue-800 text-xs font-mono">{inspectedCheckIn.materialsDelivered.santinhos}</strong>
+            </div>
+            <div className="p-1.5 rounded-lg bg-purple-50 border border-purple-100">
+              <span className="text-slate-500 block">Abordagens</span>
+              <strong className="text-purple-800 text-xs font-mono">{inspectedCheckIn.materialsDelivered.abordagens || 0}</strong>
+            </div>
+            <div className="p-1.5 rounded-lg bg-emerald-50 border border-emerald-100">
+              <span className="text-slate-500 block">Comércio</span>
+              <strong className="text-emerald-800 text-xs font-mono">{inspectedCheckIn.materialsDelivered.comercio || 0}</strong>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <a
+              href={`https://www.google.com/maps?q=${inspectedCheckIn.latitude},${inspectedCheckIn.longitude}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-blue-600 font-semibold hover:underline inline-flex items-center gap-1"
+            >
+              Ver no Google Maps <ExternalLink className="w-3 h-3" />
+            </a>
+            <button
+              type="button"
+              onClick={() => setEditingCheckIn(inspectedCheckIn)}
+              className="px-3 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition flex items-center gap-1"
+            >
+              <Edit3 className="w-3 h-3" />
+              Editar Rua
+            </button>
+          </div>
+
+        </div>
+      )}
+
+      {/* Expanded Full-Resolution Photo Modal */}
+      {expandedPhotoModal && (
+        <div
+          className="fixed inset-0 z-[2000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setExpandedPhotoModal(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh] bg-black rounded-2xl overflow-hidden shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setExpandedPhotoModal(null)}
+              className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 transition z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={expandedPhotoModal}
+              alt="Foto ampliada da rua"
+              className="w-full h-full max-h-[85vh] object-contain"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Street Modal (Accessible from Map) */}
+      <EditStreetModal
+        isOpen={!!editingCheckIn}
+        checkIn={editingCheckIn}
+        neighborhoods={neighborhoods}
+        onClose={() => setEditingCheckIn(null)}
+        onSave={handleSaveEditedCheckIn}
+      />
+
     </div>
   );
 };
-
