@@ -24,20 +24,23 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 // server.ts
 var import_express = __toESM(require("express"), 1);
 var import_path = __toESM(require("path"), 1);
+var import_fs = __toESM(require("fs"), 1);
 var import_vite = require("vite");
 var import_genai = require("@google/genai");
-var distPath = import_path.default.join(process.cwd(), "dist");
 async function startServer() {
   const app = (0, import_express.default)();
-  const PORT = 3e3;
-  app.use(import_express.default.json({ limit: "15mb" }));
+  const rawPort = process.env.PORT || 3e3;
+  const PORT = !isNaN(Number(rawPort)) ? Number(rawPort) : rawPort;
+  app.use(import_express.default.json({ limit: "25mb" }));
+  app.use(import_express.default.urlencoded({ extended: true, limit: "25mb" }));
   app.get("/api/health", (req, res) => {
     res.json({
       status: "ok",
       service: "Milit\xE2ncia S\xE3o Jos\xE9 - SC API",
       timestamp: (/* @__PURE__ */ new Date()).toISOString(),
       city: "S\xE3o Jos\xE9 - Santa Catarina",
-      target_mysql: "u844537895_Militantes @ militancia.mastervisionmarketing.com"
+      target_mysql: "u844537895_Militantes @ militancia.mastervisionmarketing.com",
+      port: typeof PORT === "number" ? PORT : "passenger_socket"
     });
   });
   app.get("/api/checkin/test-hostinger", async (req, res) => {
@@ -207,15 +210,45 @@ ${prompt}`
     });
     app.use(vite.middlewares);
   } else {
-    const distPath2 = import_path.default.join(process.cwd(), "dist");
-    app.use(import_express.default.static(distPath2));
+    const candidateDirs = [
+      import_path.default.join(process.cwd(), "dist"),
+      import_path.default.join(__dirname, "..", "dist"),
+      import_path.default.join(__dirname, "dist"),
+      process.cwd()
+    ];
+    const resolvedDist = candidateDirs.find((dir) => import_fs.default.existsSync(import_path.default.join(dir, "index.html"))) || import_path.default.join(process.cwd(), "dist");
+    app.use(import_express.default.static(resolvedDist));
     app.get("*", (req, res) => {
-      res.sendFile(import_path.default.join(distPath2, "index.html"));
+      const indexFile = import_path.default.join(resolvedDist, "index.html");
+      if (import_fs.default.existsSync(indexFile)) {
+        res.sendFile(indexFile);
+      } else {
+        res.status(200).send(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milit\xE2ncia S\xE3o Jos\xE9 - SC</title>
+</head>
+<body style="font-family:sans-serif;background:#0f172a;color:#f8fafc;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+  <div style="background:#1e293b;padding:32px;border-radius:12px;text-align:center;">
+    <h2 style="color:#38bdf8;">Sistema de Milit\xE2ncia S\xE3o Jos\xE9 / SC</h2>
+    <p style="color:#94a3b8;">Servidor Node.js operacional. Execute o build para carregar o painel.</p>
+  </div>
+</body>
+</html>`);
+      }
     });
   }
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[Milit\xE2ncia SJ Server] Running on http://localhost:${PORT}`);
-  });
+  if (typeof PORT === "number") {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`[Milit\xE2ncia SJ Server] Running on http://localhost:${PORT}`);
+    });
+  } else {
+    app.listen(PORT, () => {
+      console.log(`[Milit\xE2ncia SJ Server] Running on socket: ${PORT}`);
+    });
+  }
 }
 startServer();
 //# sourceMappingURL=server.cjs.map

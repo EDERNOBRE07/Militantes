@@ -25,7 +25,8 @@ import {
   Award,
   Phone,
   CheckCircle2,
-  Trash2
+  Trash2,
+  Edit3
 } from 'lucide-react';
 
 interface MilitantSummaryCardProps {
@@ -36,6 +37,7 @@ interface MilitantSummaryCardProps {
   isCurrentMilitant?: boolean;
   onSaveMaterialAdjustment?: (militantId: string, materials: MaterialCount) => void;
   onDeleteCheckIn?: (checkInId: string, streetName: string) => void;
+  onEditCheckIn?: (checkIn: StreetCheckIn) => void;
 }
 
 export const MilitantSummaryCard: React.FC<MilitantSummaryCardProps> = ({
@@ -45,7 +47,8 @@ export const MilitantSummaryCard: React.FC<MilitantSummaryCardProps> = ({
   onSelectPhotoZoom,
   isCurrentMilitant = false,
   onSaveMaterialAdjustment,
-  onDeleteCheckIn
+  onDeleteCheckIn,
+  onEditCheckIn
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [showQuickAdjuster, setShowQuickAdjuster] = useState<boolean>(false);
@@ -635,11 +638,21 @@ export const MilitantSummaryCard: React.FC<MilitantSummaryCardProps> = ({
                         {chk.houseNumberRange && ` • ${chk.houseNumberRange}`}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1 mr-1">
                         <Clock className="w-3 h-3" />
                         {chk.timestamp.substring(11, 16) || 'Hoje'}
                       </span>
+                      {onEditCheckIn && (
+                        <button
+                          type="button"
+                          onClick={() => onEditCheckIn(chk)}
+                          className="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                          title={`Editar rua ${chk.streetName} (incluir fotos, GPS ou notas)`}
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {onDeleteCheckIn && (
                         <button
                           type="button"

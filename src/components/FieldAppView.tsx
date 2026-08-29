@@ -9,6 +9,7 @@ import {
 import { StorageService } from '../services/storageService';
 import { MilitantSummaryCard } from './MilitantSummaryCard';
 import { WhatsAppLocationInput } from './WhatsAppLocationInput';
+import { EditStreetModal } from './EditStreetModal';
 import {
   Camera,
   MapPin,
@@ -124,6 +125,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   const [isTestingConn, setIsTestingConn] = useState(false);
   const [isSyncingQueue, setIsSyncingQueue] = useState(false);
   const [deletingCheckIn, setDeletingCheckIn] = useState<{ id: string; streetName: string } | null>(null);
+  const [editingCheckIn, setEditingCheckIn] = useState<StreetCheckIn | null>(null);
   const [connStatus, setConnStatus] = useState<{ online: boolean; latencyMs?: number; label: string }>({
     online: true,
     latencyMs: 32,
@@ -320,6 +322,16 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       details: 'O histórico e as contagens de ruas foram atualizadas.'
     });
     setDeletingCheckIn(null);
+    onCheckInCreated();
+  };
+
+  const handleSaveEditedStreet = async (updatedCheckIn: StreetCheckIn) => {
+    await StorageService.updateCheckIn(updatedCheckIn);
+    setFeedbackMsg({
+      text: `✓ Registro da rua "${updatedCheckIn.streetName}" atualizado com sucesso!`,
+      details: 'Fotos, localização GPS e materiais foram salvos e sincronizados.'
+    });
+    setEditingCheckIn(null);
     onCheckInCreated();
   };
 
@@ -728,6 +740,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
                   onSelectPhotoZoom={setSelectedPhotoZoom}
                   onSaveMaterialAdjustment={handleSaveMaterialAdjustment}
                   onDeleteCheckIn={isCoordination ? handleRequestDeleteStreet : undefined}
+                  onEditCheckIn={setEditingCheckIn}
                 />
               );
             })}
@@ -772,6 +785,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
             onSaveMaterialAdjustment={handleSaveMaterialAdjustment}
             onSelectPhotoZoom={setSelectedPhotoZoom}
             onDeleteCheckIn={isCoordination ? handleRequestDeleteStreet : undefined}
+            onEditCheckIn={setEditingCheckIn}
             isCurrentMilitant={true}
           />
 
@@ -1228,6 +1242,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
             onQuickCheckIn={() => setActiveTab('novo_checkin')}
             onSelectPhotoZoom={setSelectedPhotoZoom}
             onSaveMaterialAdjustment={handleSaveMaterialAdjustment}
+            onEditCheckIn={setEditingCheckIn}
             isCurrentMilitant={true}
           />
 
@@ -1286,6 +1301,15 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Edit Street Modal (Includes photo upload, GPS coordinates, materials, notes) */}
+      <EditStreetModal
+        isOpen={!!editingCheckIn}
+        checkIn={editingCheckIn}
+        neighborhoods={neighborhoods}
+        onClose={() => setEditingCheckIn(null)}
+        onSave={handleSaveEditedStreet}
+      />
 
     </div>
   );

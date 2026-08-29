@@ -726,6 +726,74 @@ export class StorageService {
     );
   }
 
+  static async updateCheckIn(updatedCheckIn: StreetCheckIn): Promise<void> {
+    const allCheckins = this.getCheckIns();
+    const idx = allCheckins.findIndex(c => c.id === updatedCheckIn.id);
+    if (idx !== -1) {
+      allCheckins[idx] = updatedCheckIn;
+    } else {
+      allCheckins.unshift(updatedCheckIn);
+    }
+    this.set(STORAGE_KEYS.CHECKINS, allCheckins);
+
+    // Also update offline queue if present
+    const queue = this.get<StreetCheckIn[]>(STORAGE_KEYS.OFFLINE_QUEUE, []);
+    const qIdx = queue.findIndex(c => c.id === updatedCheckIn.id);
+    if (qIdx !== -1) {
+      queue[qIdx] = updatedCheckIn;
+      this.set(STORAGE_KEYS.OFFLINE_QUEUE, queue);
+    }
+
+    const user = this.getCurrentUser();
+    this.logAudit(
+      user,
+      'EDICAO_CHECKIN_RUA',
+      'CHECKIN_RUA',
+      `Rua/Check-in ${updatedCheckIn.streetName} (${updatedCheckIn.neighborhoodName}) de ${updatedCheckIn.militantName} foi atualizado (fotos/localização/materiais).`
+    );
+
+    // Transmit update to remote MySQL if online
+    if (typeof window !== 'undefined' && navigator.onLine) {
+      try {
+        const payload = {
+          action: 'SAVE_STREET_CHECKIN',
+          db: 'u844537895_Militantes',
+          user: 'u844537895_Militantes',
+          host: 'militancia.mastervisionmarketing.com',
+          data: {
+            id: updatedCheckIn.id,
+            militante_id: updatedCheckIn.militantId,
+            militante_nome: updatedCheckIn.militantName,
+            equipe_id: updatedCheckIn.teamId,
+            bairro_id: updatedCheckIn.neighborhoodId,
+            bairro_nome: updatedCheckIn.neighborhoodName,
+            nome_rua: updatedCheckIn.streetName,
+            faixa_numeracao: updatedCheckIn.houseNumberRange,
+            timestamp_checkin: updatedCheckIn.timestamp,
+            latitude: updatedCheckIn.latitude,
+            longitude: updatedCheckIn.longitude,
+            precisao_gps_metros: updatedCheckIn.accuracyMeters,
+            qtd_santinhos: updatedCheckIn.materialsDelivered.santinhos,
+            qtd_adesivos: updatedCheckIn.materialsDelivered.adesivos,
+            qtd_adesivo_bola: updatedCheckIn.materialsDelivered.adesivo_bola,
+            qtd_adesivo_parachoque: updatedCheckIn.materialsDelivered.adesivo_parachoque,
+            qtd_colinhas: updatedCheckIn.materialsDelivered.colinhas,
+            qtd_abordagens: updatedCheckIn.materialsDelivered.abordagens || 0,
+            qtd_comercio: updatedCheckIn.materialsDelivered.comercio || 0,
+            observacoes: updatedCheckIn.observations,
+            fotos_json: JSON.stringify(updatedCheckIn.photos),
+            status_auditoria: updatedCheckIn.status
+          }
+        };
+        fetch('https://militancia.mastervisionmarketing.com/api/checkin.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      } catch {}
+    }
+  }
+
   static addCheckIn(checkIn: StreetCheckIn, isOffline = false): { success: boolean; isQueued: boolean } {
     const user = this.getCurrentUser();
     const allCheckins = this.getCheckIns();
