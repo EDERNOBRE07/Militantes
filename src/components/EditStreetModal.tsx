@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StreetCheckIn, Neighborhood, MaterialCount } from '../types';
+import { parseWhatsAppLocationText } from '../utils/whatsappLocationParser';
 import {
   X,
   MapPin,
@@ -18,7 +19,11 @@ import {
   Minus,
   Save,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Link as LinkIcon,
+  Globe,
+  Sparkles,
+  Navigation
 } from 'lucide-react';
 
 interface EditStreetModalProps {
@@ -60,6 +65,14 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Google Maps link input & location edit states
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [googleMapsUrlInput, setGoogleMapsUrlInput] = useState('');
+  const [locationFeedback, setLocationFeedback] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+
   // Sync state if incoming checkIn changes
   useEffect(() => {
     if (checkIn) {
@@ -82,12 +95,16 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
       setObservations(checkIn.observations || '');
       setStatus(checkIn.status || 'validado');
       setErrorMsg(null);
+      setShowLinkInput(false);
+      setGoogleMapsUrlInput('');
+      setLocationFeedback(null);
     }
   }, [checkIn]);
 
   const handleCaptureGps = () => {
     setIsCapturingGps(true);
     setErrorMsg(null);
+    setLocationFeedback(null);
 
     if (!navigator.geolocation) {
       setErrorMsg('Geolocalização não suportada no navegador.');
@@ -101,17 +118,68 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
         setLongitude(Number(pos.coords.longitude.toFixed(6)));
         setAccuracyMeters(Number(pos.coords.accuracy.toFixed(1)));
         setIsCapturingGps(false);
+        setLocationFeedback({
+          type: 'success',
+          text: `Coordenadas atualizadas via GPS do dispositivo: ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`
+        });
       },
       (err) => {
         console.warn('GPS error in edit modal:', err);
-        // Fallback São José
         setLatitude(-27.5962);
         setLongitude(-48.6190);
         setAccuracyMeters(10);
         setIsCapturingGps(false);
+        setLocationFeedback({
+          type: 'error',
+          text: 'Não foi possível obter o sinal de GPS. Aplicado centro de São José.'
+        });
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
+  };
+
+  const handleApplyGoogleMapsLink = () => {
+    if (!googleMapsUrlInput.trim()) {
+      setLocationFeedback({
+        type: 'error',
+        text: 'Por favor, cole um link do Google Maps ou coordenadas.'
+      });
+      return;
+    }
+
+    const parsed = parseWhatsAppLocationText(googleMapsUrlInput, neighborhoods);
+    if (!parsed.success || parsed.lat === undefined || parsed.lng === undefined) {
+      setLocationFeedback({
+        type: 'error',
+        text: parsed.error || 'Não foi possível extrair coordenadas do link fornecido.'
+      });
+      return;
+    }
+
+    setLatitude(Number(parsed.lat.toFixed(6)));
+    setLongitude(Number(parsed.lng.toFixed(6)));
+    setAccuracyMeters(parsed.accuracy || 3);
+
+    const feedbackParts = [`Localização atualizada: Lat ${parsed.lat.toFixed(6)}, Lng ${parsed.lng.toFixed(6)}.`];
+
+    // If street name was detected in Google Maps URL (e.g. /place/R.+Águas+de+Chapecó)
+    if (parsed.extractedStreet && parsed.extractedStreet.length > 2) {
+      setStreetName(parsed.extractedStreet);
+      feedbackParts.push(`Rua identificada: "${parsed.extractedStreet}".`);
+    }
+
+    // If neighborhood was detected
+    if (parsed.suggestedNeighborhoodId) {
+      setNeighborhoodId(parsed.suggestedNeighborhoodId);
+      if (parsed.suggestedNeighborhoodName) {
+        feedbackParts.push(`Bairro identificado: ${parsed.suggestedNeighborhoodName}.`);
+      }
+    }
+
+    setLocationFeedback({
+      type: 'success',
+      text: feedbackParts.join(' ')
+    });
   };
 
   const handleAddPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,26 +329,103 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
           </div>
 
           {/* Localização GPS & Coordenadas */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-            <div className="flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                 <Compass className="w-3.5 h-3.5 text-blue-600" />
                 Localização & GPS da Rua
               </span>
-              <button
-                type="button"
-                onClick={handleCaptureGps}
-                disabled={isCapturingGps}
-                className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
-              >
-                <Compass className={`w-3 h-3 ${isCapturingGps ? 'animate-spin' : ''}`} />
-                {isCapturingGps ? 'Obtendo GPS...' : 'Atualizar com GPS Atual'}
-              </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShowLinkInput(!showLinkInput)}
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                    showLinkInput 
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs' 
+                      : 'bg-white hover:bg-slate-100 text-blue-700 border-blue-300'
+                  }`}
+                  title="Editar localização colando um link do Google Maps ou WhatsApp"
+                >
+                  <LinkIcon className="w-3 h-3" />
+                  <span>{showLinkInput ? 'Ocultar Link' : 'Editar Localização (Google Maps)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCaptureGps}
+                  disabled={isCapturingGps}
+                  className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+                  title="Capturar GPS ao vivo do dispositivo"
+                >
+                  <Compass className={`w-3 h-3 ${isCapturingGps ? 'animate-spin' : ''}`} />
+                  <span>{isCapturingGps ? 'GPS...' : 'GPS Atual'}</span>
+                </button>
+              </div>
             </div>
 
+            {/* Google Maps Link / WhatsApp URL Input Box */}
+            {showLinkInput && (
+              <div className="p-3 rounded-xl bg-white border border-blue-200 shadow-2xs space-y-2 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-blue-600" />
+                    Colar Link do Google Maps / WhatsApp
+                  </label>
+                  <span className="text-[10px] text-slate-500">Extrai coordenadas, rua e bairro</span>
+                </div>
+
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={googleMapsUrlInput}
+                    onChange={(e) => setGoogleMapsUrlInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleApplyGoogleMapsLink();
+                      }
+                    }}
+                    placeholder="Cole aqui o link do Google Maps (ex: https://www.google.com/maps/place/R.+Águas+de+Chapecó...)"
+                    className="flex-1 bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyGoogleMapsLink}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>Aplicar</span>
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-slate-500 leading-relaxed">
+                  💡 Aceita links do <strong>Google Maps</strong> (ex: <span className="font-mono text-[9px] bg-slate-100 px-1 py-0.5 rounded text-slate-700">/place/R.+Águas+de+Chapecó...</span>), links encurtados (<span className="font-mono text-[9px] bg-slate-100 px-1 py-0.5 rounded text-slate-700">maps.app.goo.gl</span>), links do WhatsApp ou coordenadas puras (<span className="font-mono text-[9px] bg-slate-100 px-1 py-0.5 rounded text-slate-700">-27.569179, -48.614417</span>).
+                </p>
+              </div>
+            )}
+
+            {/* Feedback message for Location / Link parsing */}
+            {locationFeedback && (
+              <div
+                className={`p-2.5 rounded-lg text-xs flex items-start gap-2 border ${
+                  locationFeedback.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-rose-50 border-rose-200 text-rose-700'
+                }`}
+              >
+                {locationFeedback.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                )}
+                <span className="leading-snug">{locationFeedback.text}</span>
+              </div>
+            )}
+
+            {/* Latitude & Longitude Numeric Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] text-slate-600 mb-1">Latitude</label>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">Latitude</label>
                 <input
                   type="number"
                   step="any"
@@ -291,7 +436,7 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-600 mb-1">Longitude</label>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">Longitude</label>
                 <input
                   type="number"
                   step="any"
@@ -302,8 +447,8 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-              <span>Precisão estimada: ±{accuracyMeters}m</span>
+            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
+              <span className="font-mono">Precisão estimada: ±{accuracyMeters}m</span>
               <a
                 href={`https://www.google.com/maps?q=${latitude},${longitude}`}
                 target="_blank"

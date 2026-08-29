@@ -79,13 +79,20 @@ export function parseWhatsAppLocationText(
     }
   }
 
-  // 3. Google Maps place URLs with /@lat,lng,
+  // 3. Google Maps place URLs with /@lat,lng, or /data=!3dlat!4dlng
   if (lat === null || lng === null) {
     const atMatch = cleanText.match(/@([+-]?\d+\.?\d+),([+-]?\d+\.?\d+)/i);
     if (atMatch) {
       lat = parseFloat(atMatch[1]);
       lng = parseFloat(atMatch[2]);
       sourceType = 'whatsapp_link';
+    } else {
+      const data3d4dMatch = cleanText.match(/!3d([+-]?\d+\.?\d+)!4d([+-]?\d+\.?\d+)/i);
+      if (data3d4dMatch) {
+        lat = parseFloat(data3d4dMatch[1]);
+        lng = parseFloat(data3d4dMatch[2]);
+        sourceType = 'whatsapp_link';
+      }
     }
   }
 
@@ -161,25 +168,52 @@ export function parseWhatsAppLocationText(
   // Attempt to extract street name or house number from text (e.g. "Rua Koesa, 150", "Av. Leoberto Leal")
   let extractedStreet: string | undefined;
   let extractedNumber: string | undefined;
+  let detectedNeighborhoodFromUrl: Neighborhood | undefined;
 
-  const streetPatterns = [
-    /(?:Rua|R\.|Avenida|Av\.|Travessa|Tv\.|Alameda|Al\.|Rodovia|Rod\.)\s+([A-Za-zÀ-ÖØ-öø-ÿ0-9\s]+?)(?:,\s*n?º?\s*(\d+)|,\s*bairro|,\s*São José|$|\n)/i,
-    /(?:Rua|Avenida|Av\.|Rodovia)\s+([A-Za-zÀ-ÖØ-öø-ÿ0-9\s]+)/i
-  ];
-
-  for (const pat of streetPatterns) {
-    const match = cleanText.match(pat);
-    if (match && match[1]) {
-      extractedStreet = match[0].split(',')[0].trim();
-      if (match[2]) {
-        extractedNumber = match[2].trim();
+  // Google Maps /place/ path parsing (e.g. /place/R.+%C3%81guas+de+Chapec%C3%B3+-+Bela+Vista,+S%C3%A3o+Jos%C3%A9+-+SC,+88110-515)
+  const placeMatch = cleanText.match(/\/place\/([^/@?]+)/i);
+  if (placeMatch && placeMatch[1]) {
+    try {
+      const decodedPlace = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+      const parts = decodedPlace.split(/[-–—,]/).map(p => p.trim()).filter(Boolean);
+      if (parts.length > 0) {
+        extractedStreet = parts[0];
       }
-      break;
+      for (const p of parts) {
+        const foundNeigh = neighborhoods.find(n => 
+          n.name.toLowerCase() === p.toLowerCase() || 
+          p.toLowerCase().includes(n.name.toLowerCase())
+        );
+        if (foundNeigh) {
+          detectedNeighborhoodFromUrl = foundNeigh;
+          break;
+        }
+      }
+    } catch (e) {
+      console.warn('Error decoding Google Maps place:', e);
     }
   }
 
-  // Detect Closest São José Neighborhood
-  const closestNeighborhood = findClosestNeighborhood(lat, lng, neighborhoods);
+  if (!extractedStreet) {
+    const streetPatterns = [
+      /(?:Rua|R\.|Avenida|Av\.|Travessa|Tv\.|Alameda|Al\.|Rodovia|Rod\.)\s+([A-Za-zÀ-ÖØ-öø-ÿ0-9\s]+?)(?:,\s*n?º?\s*(\d+)|,\s*bairro|,\s*São José|$|\n)/i,
+      /(?:Rua|Avenida|Av\.|Rodovia)\s+([A-Za-zÀ-ÖØ-öø-ÿ0-9\s]+)/i
+    ];
+
+    for (const pat of streetPatterns) {
+      const match = cleanText.match(pat);
+      if (match && match[1]) {
+        extractedStreet = match[0].split(',')[0].trim();
+        if (match[2]) {
+          extractedNumber = match[2].trim();
+        }
+        break;
+      }
+    }
+  }
+
+  // Detect Closest São José Neighborhood or use URL matched neighborhood
+  const closestNeighborhood = detectedNeighborhoodFromUrl || findClosestNeighborhood(lat, lng, neighborhoods);
 
   return {
     success: true,
