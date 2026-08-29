@@ -182,7 +182,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         it.workerName.toLowerCase().trim() === mil.name.toLowerCase().trim()
       );
 
-      const dailyRate = payrollItem ? payrollItem.dailyRate : (mil.dailyRate || 150);
+      const dailyRate = payrollItem ? payrollItem.dailyRate : ((mil as any).dailyRate || 150);
       
       // Calcular dias trabalhados: se está na folha usa o valor da folha, senão calcula pelos dias de check-in
       const uniqueDays = new Set(milCheckIns.map(c => c.timestamp.split('T')[0] || c.timestamp.split(' ')[0])).size;
@@ -191,8 +191,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       const deductions = payrollItem ? (payrollItem.deductions || 0) : 0;
       const totalPay = payrollItem ? payrollItem.totalAmount : (daysWorked * dailyRate + bonus - deductions);
       const payrollStatus = payrollItem ? payrollItem.status : 'pendente';
-      const pixKey = payrollItem?.pixKey || mil.pixKey || '-';
-      const pixType = payrollItem?.pixType || mil.pixType || 'CPF';
+      const pixKey = payrollItem?.pixKey || (mil as any).pixKey || '-';
+      const pixType = payrollItem?.pixType || (mil as any).pixType || 'CPF';
 
       let statusLabel: 'Superou a Meta' | 'Na Meta' | 'Em Andamento' = 'Em Andamento';
       if (completionRate >= 100) statusLabel = 'Superou a Meta';
@@ -286,38 +286,22 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     }
   };
 
-  // Helper to generate a high-definition 2D vector map canvas for the neighborhood
-  const generateNeighborhoodMapCanvas = (
+  // Helper to generate a high-definition map canvas with real Google Maps tiles, painted streets and GPS pins
+  const generateNeighborhoodMapCanvas = async (
     bairro: Neighborhood,
     bCheckIns: StreetCheckIn[]
-  ): string => {
+  ): Promise<string> => {
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
     canvas.height = 680;
     const ctx = canvas.getContext('2d');
     if (!ctx) return '';
 
-    // Map Background - Sophisticated slate/gray cartographic base
-    ctx.fillStyle = '#f8fafc';
+    // Default background
+    ctx.fillStyle = '#f1f5f9';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Subtle grid lines (coordinates / tile grid)
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < canvas.width; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
-      ctx.stroke();
-    }
-    for (let y = 0; y < canvas.height; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
-      ctx.stroke();
-    }
-
-    // Determine Geo Bounds strictly centered around the check-in streets
+    // Determine Geo Bounds centered around the check-in streets or neighborhood center
     let minLat = 90;
     let maxLat = -90;
     let minLng = 180;
@@ -331,67 +315,121 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         if (chk.longitude > maxLng) maxLng = chk.longitude;
       });
     } else {
-      minLat = bairro.lat - 0.004;
-      maxLat = bairro.lat + 0.004;
-      minLng = bairro.lng - 0.006;
-      maxLng = bairro.lng + 0.006;
+      minLat = bairro.lat - 0.005;
+      maxLat = bairro.lat + 0.005;
+      minLng = bairro.lng - 0.007;
+      maxLng = bairro.lng + 0.007;
     }
 
-    const rawLatSpan = Math.max(maxLat - minLat, 0.003);
-    const rawLngSpan = Math.max(maxLng - minLng, 0.004);
-    
-    // Balanced padding margin so streets are centered and comfortably sized
-    const latSpan = rawLatSpan * 1.6;
-    const lngSpan = rawLngSpan * 1.6;
     const centerLat = (minLat + maxLat) / 2;
     const centerLng = (minLng + maxLng) / 2;
+    const rawLatSpan = Math.max(maxLat - minLat, 0.003);
+    const rawLngSpan = Math.max(maxLng - minLng, 0.004);
 
-    const bMinLat = centerLat - latSpan / 2;
-    const bMaxLat = centerLat + latSpan / 2;
-    const bMinLng = centerLng - lngSpan / 2;
-    const bMaxLng = centerLng + lngSpan / 2;
+    // Determine optimal Google Maps zoom level
+    let zoom = 15;
+    if (rawLatSpan > 0.03 || rawLngSpan > 0.04) zoom = 13;
+    else if (rawLatSpan > 0.015 || rawLngSpan > 0.02) zoom = 14;
+    else if (rawLatSpan < 0.004 && rawLngSpan < 0.005) zoom = 16;
 
-    const mapPad = 50;
-    const toX = (lng: number) => mapPad + ((lng - bMinLng) / (bMaxLng - bMinLng)) * (canvas.width - 2 * mapPad);
-    const toY = (lat: number) => mapPad + ((bMaxLat - lat) / (bMaxLat - bMinLat)) * (canvas.height - 2 * mapPad);
+    // Web Mercator conversions (EPSG:3857)
+    const latLngToWorldPixel = (lat: number, lng: number, z: number) => {
+      const scale = 256 * Math.pow(2, z);
+      const x = ((lng + 180) / 360) * scale;
+      const sinLat = Math.sin((lat * Math.PI) / 180);
+      const clampedSin = Math.min(Math.max(sinLat, -0.9999), 0.9999);
+      const y = (0.5 - Math.log((1 + clampedSin) / (1 - clampedSin)) / (4 * Math.PI)) * scale;
+      return { x, y };
+    };
 
-    // 1. Draw Background Base Roads Grid Network
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 8; i++) {
-      const yLine = 60 + i * 80;
-      ctx.beginPath();
-      ctx.moveTo(25, yLine + (i % 2 === 0 ? 10 : -10));
-      ctx.lineTo(canvas.width - 25, yLine + (i % 2 === 0 ? -10 : 10));
-      ctx.stroke();
+    const centerWorld = latLngToWorldPixel(centerLat, centerLng, zoom);
+    const topLeftWorldX = centerWorld.x - canvas.width / 2;
+    const topLeftWorldY = centerWorld.y - canvas.height / 2;
+
+    const toX = (lng: number, lat: number) => {
+      const pt = latLngToWorldPixel(lat, lng, zoom);
+      return pt.x - topLeftWorldX;
+    };
+    const toY = (lat: number, lng: number) => {
+      const pt = latLngToWorldPixel(lat, lng, zoom);
+      return pt.y - topLeftWorldY;
+    };
+
+    // Google Maps Tile loading
+    const minTileX = Math.floor(topLeftWorldX / 256);
+    const maxTileX = Math.floor((topLeftWorldX + canvas.width) / 256);
+    const minTileY = Math.floor(topLeftWorldY / 256);
+    const maxTileY = Math.floor((topLeftWorldY + canvas.height) / 256);
+
+    const tilePromises: Promise<{ img: HTMLImageElement; destX: number; destY: number } | null>[] = [];
+
+    for (let tx = minTileX; tx <= maxTileX; tx++) {
+      for (let ty = minTileY; ty <= maxTileY; ty++) {
+        const destX = tx * 256 - topLeftWorldX;
+        const destY = ty * 256 - topLeftWorldY;
+        const serverNum = Math.abs((tx + ty) % 4);
+        const url = `https://mt${serverNum}.google.com/vt/lyrs=m&x=${tx}&y=${ty}&z=${zoom}`;
+
+        const p = new Promise<{ img: HTMLImageElement; destX: number; destY: number } | null>((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve({ img, destX, destY });
+          img.onerror = () => resolve(null);
+          img.src = url;
+          setTimeout(() => resolve(null), 3000);
+        });
+        tilePromises.push(p);
+      }
     }
-    for (let j = 0; j < 12; j++) {
-      const xLine = 70 + j * 95;
-      ctx.beginPath();
-      ctx.moveTo(xLine + (j % 2 === 0 ? 12 : -12), 25);
-      ctx.lineTo(xLine + (j % 2 === 0 ? -12 : 12), canvas.height - 25);
-      ctx.stroke();
+
+    const loadedTiles = await Promise.all(tilePromises);
+    let tilesDrawn = 0;
+    loadedTiles.forEach(t => {
+      if (t) {
+        ctx.drawImage(t.img, t.destX, t.destY, 256, 256);
+        tilesDrawn++;
+      }
+    });
+
+    // Fallback cartographic grid if tiles fail to load
+    if (tilesDrawn === 0) {
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
     }
 
-    // 2. Draw Registered Streets in Vibrant RED
+    // 1. Draw Registered Streets in Vibrant RED
     bCheckIns.forEach(chk => {
       const hash = Array.from(chk.id + chk.streetName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const angle = ((hash % 180) * Math.PI) / 180;
-      const length = 0.0016 + (hash % 8) * 0.00015;
+      const length = 0.0018 + (hash % 8) * 0.00015;
       const dx = Math.cos(angle) * length;
       const dy = Math.sin(angle) * (length * 0.82);
 
-      const p1 = { x: toX(chk.longitude - dx), y: toY(chk.latitude - dy) };
-      const p2 = { x: toX(chk.longitude), y: toY(chk.latitude) };
-      const p3 = { x: toX(chk.longitude + dx), y: toY(chk.latitude + dy) };
+      const p1 = { x: toX(chk.longitude - dx, chk.latitude - dy), y: toY(chk.latitude - dy, chk.longitude - dx) };
+      const p2 = { x: toX(chk.longitude, chk.latitude), y: toY(chk.latitude, chk.longitude) };
+      const p3 = { x: toX(chk.longitude + dx, chk.latitude + dy), y: toY(chk.latitude + dy, chk.longitude + dx) };
 
       // Outer Red Glow
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
       ctx.lineTo(p2.x, p2.y);
       ctx.lineTo(p3.x, p3.y);
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
-      ctx.lineWidth = 15;
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+      ctx.lineWidth = 16;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
@@ -402,19 +440,19 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.lineTo(p2.x, p2.y);
       ctx.lineTo(p3.x, p3.y);
       ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 6.5;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
 
       // Street Name Tag
-      ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
+      ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
       const text = chk.streetName;
       const textWidth = ctx.measureText(text).width;
-      const labelX = p2.x + 14;
+      const labelX = p2.x + 16;
       const labelY = p2.y - 12;
 
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
       ctx.beginPath();
       ctx.roundRect(labelX - 4, labelY - 14, textWidth + 8, 19, 4);
       ctx.fill();
@@ -423,21 +461,21 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.fillText(text, labelX, labelY);
     });
 
-    // 3. Draw GPS Markers / Pins (📍)
+    // 2. Draw GPS Markers / Pins (📍)
     bCheckIns.forEach(chk => {
-      const px = toX(chk.longitude);
-      const py = toY(chk.latitude);
+      const px = toX(chk.longitude, chk.latitude);
+      const py = toY(chk.latitude, chk.longitude);
 
       // Pin Shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
       ctx.beginPath();
-      ctx.ellipse(px, py + 3, 7, 3, 0, 0, Math.PI * 2);
+      ctx.ellipse(px, py + 3, 8, 3.5, 0, 0, Math.PI * 2);
       ctx.fill();
 
       // Pin Outer
       ctx.fillStyle = '#dc2626';
       ctx.beginPath();
-      ctx.arc(px, py - 9, 11, 0, Math.PI * 2);
+      ctx.arc(px, py - 10, 12, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2.5;
@@ -446,51 +484,80 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       // Pin Center
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(px, py - 9, 4, 0, Math.PI * 2);
+      ctx.arc(px, py - 10, 4.5, 0, Math.PI * 2);
       ctx.fill();
 
       // Checkmark Badge
       ctx.fillStyle = '#10b981';
       ctx.beginPath();
-      ctx.arc(px + 8, py - 16, 5.5, 0, Math.PI * 2);
+      ctx.arc(px + 9, py - 18, 6, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      ctx.font = 'bold 7.5px Helvetica, Arial, sans-serif';
+      ctx.font = 'bold 8px Helvetica, Arial, sans-serif';
       ctx.fillStyle = '#ffffff';
-      ctx.fillText('✓', px + 6.5, py - 13.5);
+      ctx.fillText('✓', px + 7.2, py - 15.2);
     });
 
-    // 4. Map Legend Box
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    // 3. Top-Left Google Maps Branding Badge
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(20, canvas.height - 85, 380, 65, 8);
+    ctx.roundRect(16, 16, 340, 42, 6);
     ctx.fill();
     ctx.stroke();
 
-    ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
+    ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#1e293b';
+    ctx.fillText('🗺️ Google Maps • Vista Cartográfica Oficial', 26, 36);
+    ctx.font = '10px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`Bairro ${bairro.name.toUpperCase()} • São José - SC (Zoom ${zoom})`, 26, 50);
+
+    // 4. Bottom-Left Map Legend Box
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(16, canvas.height - 75, 420, 58, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 11.5px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#0f172a';
-    ctx.fillText(`LEGENDA TERRITORIAL • ${bairro.name.toUpperCase()}`, 34, canvas.height - 64);
+    ctx.fillText(`LEGENDA TERRITORIAL • ${bairro.name.toUpperCase()}`, 28, canvas.height - 56);
 
     // Red line legend item
     ctx.strokeStyle = '#dc2626';
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(34, canvas.height - 42);
-    ctx.lineTo(60, canvas.height - 42);
+    ctx.moveTo(28, canvas.height - 38);
+    ctx.lineTo(54, canvas.height - 38);
     ctx.stroke();
-    ctx.font = 'bold 11px Helvetica, Arial, sans-serif';
+    ctx.font = 'bold 10.5px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#991b1b';
-    ctx.fillText(`Ruas Cobertas no Bairro (${bCheckIns.length} vias auditadas)`, 68, canvas.height - 38);
+    ctx.fillText(`Ruas Cobertas (${bCheckIns.length} vias auditadas)`, 62, canvas.height - 34);
 
-    // Geo reference info
-    ctx.font = 'italic 10px Helvetica, Arial, sans-serif';
-    ctx.fillStyle = '#64748b';
-    ctx.fillText(`Centro Geográfico: Lat ${centerLat.toFixed(4)}, Lng ${centerLng.toFixed(4)} | Projeção WGS84`, canvas.width - 440, canvas.height - 18);
+    // Pin legend item
+    ctx.font = 'bold 10.5px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText(`📍 Pins Georreferenciados (Validação GPS)`, 250, canvas.height - 34);
+
+    // 5. Bottom-Right Coordinates Info Badge
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(canvas.width - 350, canvas.height - 34, 334, 22, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'italic 9.5px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText(`Centro: Lat ${centerLat.toFixed(4)}, Lng ${centerLng.toFixed(4)} | Projeção EPSG:3857`, canvas.width - 342, canvas.height - 20);
 
     return canvas.toDataURL('image/png');
   };
@@ -792,8 +859,30 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           doc.text(kpi.val, xPos, 39.5, { align: 'center' });
         });
 
-        // High-Definition Vector Map & Chart Generation for Page 1
-        const mapImgData = generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns);
+        // High-Definition Google Map & Chart Generation for Page 1
+        setExportFeedback(`Renderizando mapa do Google com ruas pintadas e pins de ${currentSelectedBairro.name}...`);
+        
+        let mapImgData = '';
+        const mapDomElement = document.getElementById('neighborhood-report-map-wrapper');
+        if (mapDomElement) {
+          try {
+            const mapCanvas = await html2canvas(mapDomElement, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: false,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            mapImgData = mapCanvas.toDataURL('image/png');
+          } catch (e) {
+            console.warn('Erro ao capturar mapa do DOM, usando gerador Google Maps:', e);
+          }
+        }
+        
+        if (!mapImgData) {
+          mapImgData = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns);
+        }
+
         const chartImgData = generateMaterialsChartCanvas(currentSelectedBairro, bairroCheckIns);
 
         const visualStartY = 47;
@@ -2693,6 +2782,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       {/* Edit Street Modal (allows editing street, neighborhood, date/time and GPS) */}
       {editingCheckIn && (
         <EditStreetModal
+          isOpen={!!editingCheckIn}
           checkIn={editingCheckIn}
           neighborhoods={neighborhoods}
           onClose={() => setEditingCheckIn(null)}

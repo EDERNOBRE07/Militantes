@@ -111,7 +111,8 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       });
 
       L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        maxZoom: 20
+        maxZoom: 20,
+        crossOrigin: true
       }).addTo(map);
 
       layerGroupRef.current = L.layerGroup().addTo(map);
