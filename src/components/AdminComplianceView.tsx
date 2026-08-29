@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ActivityAuditLog,
-  User
+  User,
+  DatabaseBackupPackage
 } from '../types';
 import { StorageService } from '../services/storageService';
 import {
@@ -10,11 +11,24 @@ import {
   Globe,
   Key,
   Download,
+  Upload,
   Copy,
   Check,
   Search,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  FileJson,
+  FileCode,
+  CheckCircle2,
+  AlertCircle,
+  FileUp,
+  HardDrive,
+  Users,
+  MapPin,
+  Truck,
+  Package,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 
 interface AdminComplianceViewProps {
@@ -23,15 +37,35 @@ interface AdminComplianceViewProps {
 }
 
 export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
+  currentUser,
   auditLogs
 }) => {
   const [activeTab, setActiveTab] = useState<'mysql' | 'hostinger' | 'lgpd' | 'rbac'>('mysql');
   const [copiedSql, setCopiedSql] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modals state
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  
+  // Import state
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [parsedBackup, setParsedBackup] = useState<DatabaseBackupPackage | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importMode, setImportMode] = useState<'replace' | 'merge'>('replace');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importSuccessResult, setImportSuccessResult] = useState<{ success: boolean; message: string; counts?: any } | null>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  
+  // Export feedback
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sqlDump = StorageService.generateMySQLDump();
+  const dbStats = StorageService.getDatabaseStatistics();
 
   const handleResetSystem = () => {
     StorageService.resetSystemToCleanState();
@@ -58,6 +92,112 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setExportFeedback('Esquema MySQL (.sql) baixado com sucesso!');
+    setTimeout(() => setExportFeedback(null), 4000);
+  };
+
+  const handleDownloadJsonBackup = () => {
+    try {
+      const backupData = StorageService.exportDatabaseBackup(currentUser.name || 'Coordenador Geral');
+      const jsonStr = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}h${pad(now.getMinutes())}`;
+      
+      link.href = url;
+      link.download = `backup_banco_militancia_sao_jose_${dateStr}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setExportFeedback(`Backup completo do banco (.json) baixado com sucesso! (${backupData.metadata.totalRecords} registros)`);
+      setTimeout(() => setExportFeedback(null), 5000);
+    } catch (err: any) {
+      setExportFeedback(`Erro ao gerar backup: ${err.message}`);
+      setTimeout(() => setExportFeedback(null), 5000);
+    }
+  };
+
+  const processUploadedFile = (file: File) => {
+    setImportError(null);
+    setImportSuccessResult(null);
+
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      setImportError('Por favor, selecione um arquivo de backup no formato JSON (.json).');
+      return;
+    }
+
+    setImportFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const parsed = JSON.parse(content);
+
+        // Check if file has any valid structure
+        const data = parsed.data || parsed;
+        const hasRecognizedData = 
+          Array.isArray(data.militancia_militants_v1) || 
+          Array.isArray(data.militants) || 
+          Array.isArray(data.militancia_checkins_v1) || 
+          Array.isArray(data.checkins) ||
+          Array.isArray(data.militancia_neighborhoods_v1) ||
+          Array.isArray(data.neighborhoods) ||
+          Array.isArray(data.militancia_stock_v1) ||
+          Array.isArray(data.stock);
+
+        if (!hasRecognizedData) {
+          setImportError('O arquivo selecionado não contém uma estrutura de dados compatível com o banco da militância.');
+          setParsedBackup(null);
+          return;
+        }
+
+        setParsedBackup(parsed);
+      } catch (err: any) {
+        setImportError(`Erro ao ler o arquivo JSON: ${err.message || 'Arquivo corrompido'}`);
+        setParsedBackup(null);
+      }
+    };
+    reader.onerror = () => {
+      setImportError('Não foi possível ler o arquivo selecionado.');
+      setParsedBackup(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleExecuteImport = () => {
+    if (!parsedBackup) return;
+
+    setIsImporting(true);
+    setImportError(null);
+
+    setTimeout(() => {
+      try {
+        const result = StorageService.importDatabaseBackup(parsedBackup, importMode, currentUser);
+        setIsImporting(false);
+
+        if (result.success) {
+          setImportSuccessResult(result);
+          setTimeout(() => {
+            setShowImportModal(false);
+            setImportFile(null);
+            setParsedBackup(null);
+            setImportSuccessResult(null);
+            window.location.reload();
+          }, 1800);
+        } else {
+          setImportError(result.message);
+        }
+      } catch (err: any) {
+        setIsImporting(false);
+        setImportError(`Falha durante a importação: ${err.message}`);
+      }
+    }, 600);
   };
 
   const filteredLogs = auditLogs.filter(log =>
@@ -73,35 +213,300 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
       {/* Top Banner */}
       <div className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
               Infraestrutura, Segurança & LGPD
             </span>
-            <span className="text-xs text-slate-500 font-medium">Hostinger Subdomínio & MySQL</span>
+            <span className="text-xs text-slate-500 font-medium">Hostinger MySQL & Backups</span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              {dbStats.totalRecords} Registros no Banco
+            </span>
           </div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Painel Administrativo & Conformidade</h2>
           <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
-            Configuração de subdomínio Hostinger, exportador de esquema MySQL com OAuth 2.0, auditoria de logs e gestão de consentimento LGPD.
+            Backup completo do banco de dados (JSON/SQL), restauração de dados, configuração de subdomínio Hostinger, auditoria de logs e gestão LGPD.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        {/* Action Buttons: Baixar Banco, Importar Banco e Zerar */}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => setShowResetModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs border border-rose-200 shadow-sm transition"
+            type="button"
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs transition"
           >
-            <RotateCcw className="w-4 h-4 text-rose-600" />
-            Zerar Dados do Sistema
+            <Upload className="w-4 h-4" />
+            Importar Banco de Dados
           </button>
+
           <button
-            onClick={handleDownloadSql}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition"
+            type="button"
+            onClick={handleDownloadJsonBackup}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition"
           >
             <Download className="w-4 h-4" />
-            Baixar schema.sql
+            Baixar Banco de Dados (.json)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowResetModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs border border-rose-200 shadow-xs transition"
+            title="Zerar dados do sistema para novo ciclo"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+            Zerar Dados
           </button>
         </div>
       </div>
+
+      {/* Export Feedback Toast */}
+      {exportFeedback && (
+        <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-semibold flex items-center justify-between animate-in fade-in duration-200 shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>{exportFeedback}</span>
+          </div>
+          <button
+            onClick={() => setExportFeedback(null)}
+            className="text-blue-600 hover:text-blue-800 text-xs px-2 py-0.5 rounded"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
+      {/* MODAL 1: IMPORTAR BANCO DE DADOS */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Importar Banco de Dados</h3>
+                  <p className="text-xs text-slate-500">Restaure check-ins, militantes, estoques e rotas a partir de um backup JSON</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportFile(null);
+                  setParsedBackup(null);
+                  setImportError(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Drag and Drop / File Input */}
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }}
+              onDragLeave={() => setIsDraggingFile(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingFile(false);
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  processUploadedFile(e.dataTransfer.files[0]);
+                }
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              className={`p-6 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
+                isDraggingFile
+                  ? 'border-emerald-500 bg-emerald-50/60 scale-[1.01]'
+                  : importFile
+                  ? 'border-emerald-300 bg-emerald-50/30'
+                  : 'border-slate-300 hover:border-blue-400 bg-slate-50/60 hover:bg-slate-50'
+              }`}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    processUploadedFile(e.target.files[0]);
+                  }
+                }}
+              />
+              <FileUp className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+              <p className="text-xs font-bold text-slate-800">
+                {importFile ? importFile.name : 'Clique para selecionar ou arraste o arquivo de backup (.json)'}
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1">
+                {importFile
+                  ? `${(importFile.size / 1024).toFixed(1)} KB pronto para validação`
+                  : 'Aceita arquivos gerados pela opção "Baixar Banco de Dados"'}
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {importError && (
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span>{importError}</span>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {importSuccessResult && (
+              <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-2">
+                <div className="flex items-center gap-2 font-bold text-emerald-800">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>{importSuccessResult.message}</span>
+                </div>
+                <p className="text-emerald-700 text-[11px]">
+                  Recarregando a interface para sincronizar todos os módulos em tempo real...
+                </p>
+              </div>
+            )}
+
+            {/* Preview of Parsed Data */}
+            {parsedBackup && !importSuccessResult && (
+              <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span className="text-xs font-bold text-slate-900">Pré-visualização do Backup</span>
+                  </div>
+                  {parsedBackup.metadata && (
+                    <span className="text-[10px] font-mono text-slate-500">
+                      Exportado em: {new Date(parsedBackup.metadata.exportedAt).toLocaleString('pt-BR')}
+                    </span>
+                  )}
+                </div>
+
+                {/* Counts Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  {(() => {
+                    const data: any = parsedBackup.data || parsedBackup;
+                    const checkinsCount = (data.militancia_checkins_v1 || data.checkins || []).length;
+                    const militantsCount = (data.militancia_militants_v1 || data.militants || []).length;
+                    const neighborhoodsCount = (data.militancia_neighborhoods_v1 || data.neighborhoods || []).length;
+                    const teamsCount = (data.militancia_teams_v1 || data.teams || []).length;
+                    const vansCount = (data.militancia_vans_v1 || data.vans || []).length;
+                    const stockCount = (data.militancia_stock_v1 || data.stock || []).length;
+                    const payrollsCount = (data.militancia_payrolls_v1 || data.payrolls || []).length;
+                    const adminsCount = (data.militancia_admins_v1 || data.admins || []).length;
+
+                    return (
+                      <>
+                        <div className="p-2 rounded-lg bg-white border border-slate-200">
+                          <span className="text-[10px] text-slate-500 block">Check-ins</span>
+                          <span className="text-sm font-bold text-blue-600">{checkinsCount}</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-200">
+                          <span className="text-[10px] text-slate-500 block">Militantes</span>
+                          <span className="text-sm font-bold text-purple-600">{militantsCount}</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-200">
+                          <span className="text-[10px] text-slate-500 block">Bairros</span>
+                          <span className="text-sm font-bold text-emerald-600">{neighborhoodsCount}</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-200">
+                          <span className="text-[10px] text-slate-500 block">Vans / Equipes</span>
+                          <span className="text-sm font-bold text-amber-600">{vansCount} / {teamsCount}</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-200">
+                          <span className="text-[10px] text-slate-500 block">Estoque</span>
+                          <span className="text-sm font-bold text-slate-800">{stockCount} itens</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-200">
+                          <span className="text-[10px] text-slate-500 block">Folhas Pagto</span>
+                          <span className="text-sm font-bold text-slate-800">{payrollsCount}</span>
+                        </div>
+                        <div className="p-2 rounded-lg bg-white border border-slate-200 col-span-2">
+                          <span className="text-[10px] text-slate-500 block">Responsável pelo Backup</span>
+                          <span className="text-xs font-semibold text-slate-800 truncate block">
+                            {parsedBackup.metadata?.exportedBy || 'Sistema Geral'}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Import Mode Switcher */}
+                <div className="pt-2 border-t border-slate-200 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 block">Modo de Restauração:</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setImportMode('replace')}
+                      className={`p-2.5 rounded-xl text-left border text-xs transition ${
+                        importMode === 'replace'
+                          ? 'border-blue-600 bg-blue-50/80 text-blue-900 font-bold'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="font-bold">Substituir Banco</div>
+                      <div className="text-[10px] font-normal text-slate-500 mt-0.5">
+                        Sobrescreve todos os dados existentes pela cópia do arquivo.
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setImportMode('merge')}
+                      className={`p-2.5 rounded-xl text-left border text-xs transition ${
+                        importMode === 'merge'
+                          ? 'border-blue-600 bg-blue-50/80 text-blue-900 font-bold'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="font-bold">Mesclar Dados</div>
+                      <div className="text-[10px] font-normal text-slate-500 mt-0.5">
+                        Adiciona novos registros preservando os atuais.
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportFile(null);
+                  setParsedBackup(null);
+                }}
+                disabled={isImporting}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExecuteImport}
+                disabled={!parsedBackup || isImporting || !!importSuccessResult}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5"
+              >
+                {isImporting ? (
+                  <>
+                    <RotateCcw className="w-4 h-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    Confirmar Importação
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Reset Confirmation Modal */}
       {showResetModal && (
@@ -115,6 +520,9 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
               <p className="text-xs text-slate-600 mt-2 leading-relaxed">
                 Esta ação redefinirá todos os check-ins de rua, contadores de materiais, quilometragens, progresso de bairros e transações para zero (0), deixando o sistema 100% limpo para os testes reais de campo.
               </p>
+              <div className="mt-3 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800 text-left">
+                💡 <strong>Recomendação:</strong> Utilize a opção <strong>"Baixar Banco de Dados (.json)"</strong> antes de zerar para manter uma cópia de segurança.
+              </div>
             </div>
 
             {resetSuccess ? (
@@ -136,7 +544,7 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
                 <button
                   type="button"
                   onClick={handleResetSystem}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-1.5"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Sim, Zerar Tudo
@@ -150,6 +558,7 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
       {/* Tabs */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2">
         <button
+          type="button"
           onClick={() => setActiveTab('mysql')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
             activeTab === 'mysql'
@@ -158,10 +567,11 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
           }`}
         >
           <Database className="w-4 h-4" />
-          Banco de Dados MySQL
+          Banco de Dados & Backups
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('hostinger')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
             activeTab === 'hostinger'
@@ -174,6 +584,7 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('rbac')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
             activeTab === 'rbac'
@@ -186,6 +597,7 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('lgpd')}
           className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
             activeTab === 'lgpd'
@@ -198,33 +610,129 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
         </button>
       </div>
 
-      {/* TAB 1: MySQL Schema */}
+      {/* TAB 1: MySQL Schema & Complete Backup Hub */}
       {activeTab === 'mysql' && (
-        <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                <Database className="w-4 h-4 text-blue-600" />
-                Script SQL Completo (MySQL 8.0+ / MariaDB)
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Tabelas otimizadas com índices para alta performance de geolocalização e relatórios
-              </p>
-            </div>
+        <div className="space-y-6">
+          
+          {/* Top Backup Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            {/* Card 1: Baixar Banco Completo (.JSON) */}
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-3">
+                  <FileJson className="w-5 h-5" />
+                </div>
+                <h4 className="font-bold text-sm text-slate-900">Baixar Banco de Dados (.json)</h4>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Exporta instantaneamente todos os dados da campanha: check-ins com fotos, militantes, rotas, estoque, folha de pagamento e logs.
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-slate-500 font-mono">
+                  <span>Tamanho aprox.: <strong>{dbStats.estimatedSizeKb} KB</strong></span>
+                  <span>•</span>
+                  <span><strong>{dbStats.totalRecords}</strong> registros</span>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2">
               <button
-                onClick={handleCopySql}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200 transition"
+                type="button"
+                onClick={handleDownloadJsonBackup}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition"
               >
-                {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedSql ? 'Copiado!' : 'Copiar SQL'}
+                <Download className="w-4 h-4" />
+                Baixar Backup (.json)
               </button>
             </div>
+
+            {/* Card 2: Importar Banco (.JSON) */}
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <h4 className="font-bold text-sm text-slate-900">Importar Banco de Dados</h4>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Carregue um arquivo de backup (.json) para restaurar check-ins de rua, cadastros e relatórios com suporte a substituição total ou mesclagem.
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-emerald-700 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Validação com preview antes de gravar
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowImportModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition"
+              >
+                <Upload className="w-4 h-4" />
+                Importar Backup (.json)
+              </button>
+            </div>
+
+            {/* Card 3: Baixar Schema MySQL (.SQL) */}
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center mb-3">
+                  <FileCode className="w-5 h-5" />
+                </div>
+                <h4 className="font-bold text-sm text-slate-900">Script MySQL Hostinger (.sql)</h4>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Arquivo SQL DDL pronto para executar no phpMyAdmin da Hostinger para criar as 9 tabelas relacionais do banco <code>u844537895_Militantes</code>.
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-purple-700 font-medium">
+                  <span>9 tabelas otimizadas com índices</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDownloadSql}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition"
+              >
+                <Download className="w-4 h-4" />
+                Baixar schema.sql
+              </button>
+            </div>
+
           </div>
 
-          <div className="relative rounded-lg bg-slate-900 border border-slate-800 p-4 font-mono text-xs text-slate-200 max-h-[480px] overflow-y-auto overflow-x-auto">
-            <pre>{sqlDump}</pre>
+          {/* Detailed SQL Code Viewer */}
+          <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  <Database className="w-4 h-4 text-blue-600" />
+                  Script SQL Completo (MySQL 8.0+ / MariaDB / Hostinger)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Tabelas otimizadas com índices para alta performance de geolocalização e relatórios
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopySql}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200 transition"
+                >
+                  {copiedSql ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedSql ? 'Copiado!' : 'Copiar SQL'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadSql}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs border border-blue-200 transition"
+                >
+                  <Download className="w-3.5 h-3.5 text-blue-600" />
+                  Download .sql
+                </button>
+              </div>
+            </div>
+
+            <div className="relative rounded-lg bg-slate-900 border border-slate-800 p-4 font-mono text-xs text-slate-200 max-h-[420px] overflow-y-auto overflow-x-auto">
+              <pre>{sqlDump}</pre>
+            </div>
           </div>
         </div>
       )}
@@ -387,7 +895,7 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
                   <td className="text-center text-slate-400">-</td>
                 </tr>
                 <tr className="hover:bg-slate-50">
-                  <td className="py-3 px-3 font-semibold text-slate-900">Exportação MySQL & LGPD</td>
+                  <td className="py-3 px-3 font-semibold text-slate-900">Exportação / Importação Banco & LGPD</td>
                   <td className="text-center text-emerald-700 font-bold">✓ Exclusivo</td>
                   <td className="text-center text-rose-600 font-medium">✗ Negado</td>
                   <td className="text-center text-rose-600 font-medium">✗ Negado</td>

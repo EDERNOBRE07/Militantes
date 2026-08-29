@@ -324,4 +324,62 @@ export interface HostingerConnectionStatus {
   error?: string;
 }
 
+export interface DatabaseBackupMetadata {
+  version: string;
+  systemName: string;
+  exportedAt: string;
+  exportedBy: string;
+  totalRecords: number;
+  environment: string;
+  checksum: string;
+  counts: {
+    militants: number;
+    teams: number;
+    vans: number;
+    neighborhoods: number;
+    checkins: number;
+    stockItems: number;
+    stockTransactions: number;
+    payrolls: number;
+    admins: number;
+    auditLogs: number;
+    calendarDays: number;
+    notifications: number;
+    users: number;
+  };
+}
+
+export interface DatabaseBackupPackage {
+  metadata: DatabaseBackupMetadata;
+  data: {
+    militancia_users_v1?: User[];
+    militancia_neighborhoods_v1?: Neighborhood[];
+    militancia_militants_v1?: Militant[];
+    militancia_teams_v1?: Team[];
+    militancia_vans_v1?: Van[];
+    militancia_van_routes_v1?: any[];
+    militancia_stock_v1?: StockItem[];
+    militancia_stock_tx_v1?: StockTransaction[];
+    militancia_checkins_v1?: StreetCheckIn[];
+    militancia_calendar_v1?: CampaignCalendarDay[];
+    militancia_payrolls_v1?: WeeklyPayroll[];
+    militancia_admins_v1?: AdminUser[];
+    militancia_audit_logs_v1?: ActivityAuditLog[];
+    militancia_notifications_v1?: PushNotification[];
+    users?: User[];
+    neighborhoods?: Neighborhood[];
+    militants?: Militant[];
+    teams?: Team[];
+    vans?: Van[];
+    stock?: StockItem[];
+    stockTransactions?: StockTransaction[];
+    checkins?: StreetCheckIn[];
+    calendar?: CampaignCalendarDay[];
+    payrolls?: WeeklyPayroll[];
+    admins?: AdminUser[];
+    auditLogs?: ActivityAuditLog[];
+    notifications?: PushNotification[];
+  };
+}
+
 

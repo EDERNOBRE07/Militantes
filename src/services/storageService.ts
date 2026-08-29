@@ -16,7 +16,9 @@ import {
   AdminUser,
   VanRouteLog,
   CheckInSyncResult,
-  HostingerConnectionStatus
+  HostingerConnectionStatus,
+  DatabaseBackupPackage,
+  DatabaseBackupMetadata
 } from '../types';
 import {
   INITIAL_NEIGHBORHOODS,
@@ -1428,6 +1430,274 @@ export class StorageService {
     };
     const logs = [newLog, ...this.getAuditLogs()];
     this.set(STORAGE_KEYS.AUDIT_LOGS, logs.slice(0, 200));
+  }
+
+  // Export Full Database Backup Package
+  static exportDatabaseBackup(exportedBy = 'Coordenador Geral'): DatabaseBackupPackage {
+    const users = this.getUsers();
+    const neighborhoods = this.getNeighborhoods();
+    const militants = this.getMilitants();
+    const teams = this.getTeams();
+    const vans = this.getVans();
+    const stock = this.getStock();
+    const stockTransactions = this.getStockTransactions();
+    const checkins = this.getCheckIns();
+    const calendar = this.getCalendar();
+    const payrolls = this.getPayrolls();
+    const admins = this.getAdmins();
+    const auditLogs = this.getAuditLogs();
+    const notifications = this.getNotifications();
+
+    const counts = {
+      militants: militants.length,
+      teams: teams.length,
+      vans: vans.length,
+      neighborhoods: neighborhoods.length,
+      checkins: checkins.length,
+      stockItems: stock.length,
+      stockTransactions: stockTransactions.length,
+      payrolls: payrolls.length,
+      admins: admins.length,
+      auditLogs: auditLogs.length,
+      calendarDays: calendar.length,
+      notifications: notifications.length,
+      users: users.length
+    };
+
+    const totalRecords = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    const backup: DatabaseBackupPackage = {
+      metadata: {
+        version: '1.0.0',
+        systemName: 'Sistema de Gestão Territorial de Militância - São José / SC',
+        exportedAt: new Date().toISOString(),
+        exportedBy,
+        totalRecords,
+        environment: 'Produção / Hostinger MySQL + Client Cache',
+        checksum: `CHK-${Date.now()}-${Math.floor(Math.random() * 899999 + 100000)}`,
+        counts
+      },
+      data: {
+        [STORAGE_KEYS.USERS]: users,
+        [STORAGE_KEYS.NEIGHBORHOODS]: neighborhoods,
+        [STORAGE_KEYS.MILITANTS]: militants,
+        [STORAGE_KEYS.TEAMS]: teams,
+        [STORAGE_KEYS.VANS]: vans,
+        [STORAGE_KEYS.STOCK]: stock,
+        [STORAGE_KEYS.STOCK_TX]: stockTransactions,
+        [STORAGE_KEYS.CHECKINS]: checkins,
+        [STORAGE_KEYS.CALENDAR]: calendar,
+        [STORAGE_KEYS.PAYROLLS]: payrolls,
+        [STORAGE_KEYS.ADMINS]: admins,
+        [STORAGE_KEYS.AUDIT_LOGS]: auditLogs,
+        [STORAGE_KEYS.NOTIFICATIONS]: notifications,
+        users,
+        neighborhoods,
+        militants,
+        teams,
+        vans,
+        stock,
+        stockTransactions,
+        checkins,
+        calendar,
+        payrolls,
+        admins,
+        auditLogs,
+        notifications
+      }
+    };
+
+    const currentUser = this.getCurrentUser();
+    this.logAudit(
+      currentUser,
+      'BACKUP_BANCO_EXPORTADO',
+      'RELATORIO',
+      `Backup completo do banco de dados exportado com sucesso (${totalRecords} registros totais).`
+    );
+
+    return backup;
+  }
+
+  // Import / Restore Database Backup Package
+  static importDatabaseBackup(
+    backupRaw: any,
+    mode: 'replace' | 'merge' = 'replace',
+    currentUser?: User
+  ): { success: boolean; message: string; counts?: any } {
+    try {
+      if (!backupRaw || typeof backupRaw !== 'object') {
+        return { success: false, message: 'Arquivo de backup inválido ou vazio.' };
+      }
+
+      // Resolve payload structure (either under .data or top-level keys)
+      const data = backupRaw.data && typeof backupRaw.data === 'object' ? backupRaw.data : backupRaw;
+
+      // Extract collections supporting both STORAGE_KEYS and friendly keys
+      const incomingUsers: User[] = data[STORAGE_KEYS.USERS] || data.users || [];
+      const incomingNeighborhoods: Neighborhood[] = data[STORAGE_KEYS.NEIGHBORHOODS] || data.neighborhoods || [];
+      const incomingMilitants: Militant[] = data[STORAGE_KEYS.MILITANTS] || data.militants || [];
+      const incomingTeams: Team[] = data[STORAGE_KEYS.TEAMS] || data.teams || [];
+      const incomingVans: Van[] = data[STORAGE_KEYS.VANS] || data.vans || [];
+      const incomingStock: StockItem[] = data[STORAGE_KEYS.STOCK] || data.stock || [];
+      const incomingStockTx: StockTransaction[] = data[STORAGE_KEYS.STOCK_TX] || data.stockTransactions || data.stock_tx || [];
+      const incomingCheckins: StreetCheckIn[] = data[STORAGE_KEYS.CHECKINS] || data.checkins || [];
+      const incomingCalendar: CampaignCalendarDay[] = data[STORAGE_KEYS.CALENDAR] || data.calendar || [];
+      const incomingPayrolls: WeeklyPayroll[] = data[STORAGE_KEYS.PAYROLLS] || data.payrolls || [];
+      const incomingAdmins: AdminUser[] = data[STORAGE_KEYS.ADMINS] || data.admins || [];
+      const incomingAuditLogs: ActivityAuditLog[] = data[STORAGE_KEYS.AUDIT_LOGS] || data.auditLogs || [];
+      const incomingNotifications: PushNotification[] = data[STORAGE_KEYS.NOTIFICATIONS] || data.notifications || [];
+
+      // Validate that at least some core collections exist
+      const hasCoreData =
+        Array.isArray(incomingMilitants) ||
+        Array.isArray(incomingCheckins) ||
+        Array.isArray(incomingNeighborhoods) ||
+        Array.isArray(incomingStock) ||
+        Array.isArray(incomingTeams) ||
+        Array.isArray(incomingPayrolls);
+
+      if (!hasCoreData) {
+        return {
+          success: false,
+          message: 'O arquivo não contém coleções reconhecidas da base de dados de militância.'
+        };
+      }
+
+      const activeUser = currentUser || this.getCurrentUser();
+
+      if (mode === 'replace') {
+        if (incomingUsers.length > 0) this.set(STORAGE_KEYS.USERS, incomingUsers, false);
+        if (incomingNeighborhoods.length > 0) this.set(STORAGE_KEYS.NEIGHBORHOODS, incomingNeighborhoods, false);
+        if (incomingMilitants.length > 0) this.set(STORAGE_KEYS.MILITANTS, incomingMilitants, false);
+        if (incomingTeams.length > 0) this.set(STORAGE_KEYS.TEAMS, incomingTeams, false);
+        if (incomingVans.length > 0) this.set(STORAGE_KEYS.VANS, incomingVans, false);
+        if (incomingStock.length > 0) this.set(STORAGE_KEYS.STOCK, incomingStock, false);
+        if (incomingStockTx.length > 0) this.set(STORAGE_KEYS.STOCK_TX, incomingStockTx, false);
+        if (incomingCheckins.length > 0) this.set(STORAGE_KEYS.CHECKINS, incomingCheckins, false);
+        if (incomingCalendar.length > 0) this.set(STORAGE_KEYS.CALENDAR, incomingCalendar, false);
+        if (incomingPayrolls.length > 0) this.set(STORAGE_KEYS.PAYROLLS, incomingPayrolls, false);
+        if (incomingAdmins.length > 0) this.set(STORAGE_KEYS.ADMINS, incomingAdmins, false);
+        if (incomingNotifications.length > 0) this.set(STORAGE_KEYS.NOTIFICATIONS, incomingNotifications, false);
+        if (incomingAuditLogs.length > 0) this.set(STORAGE_KEYS.AUDIT_LOGS, incomingAuditLogs, false);
+      } else {
+        // Merge mode: combine without duplicating IDs
+        const mergeById = <T extends { id: string }>(current: T[], incoming: T[]): T[] => {
+          const map = new Map<string, T>();
+          current.forEach(item => map.set(item.id, item));
+          incoming.forEach(item => map.set(item.id, item));
+          return Array.from(map.values());
+        };
+
+        if (incomingUsers.length > 0) this.set(STORAGE_KEYS.USERS, mergeById(this.getUsers(), incomingUsers), false);
+        if (incomingNeighborhoods.length > 0) this.set(STORAGE_KEYS.NEIGHBORHOODS, mergeById(this.getNeighborhoods(), incomingNeighborhoods), false);
+        if (incomingMilitants.length > 0) this.set(STORAGE_KEYS.MILITANTS, mergeById(this.getMilitants(), incomingMilitants), false);
+        if (incomingTeams.length > 0) this.set(STORAGE_KEYS.TEAMS, mergeById(this.getTeams(), incomingTeams), false);
+        if (incomingVans.length > 0) this.set(STORAGE_KEYS.VANS, mergeById(this.getVans(), incomingVans), false);
+        if (incomingStock.length > 0) this.set(STORAGE_KEYS.STOCK, mergeById(this.getStock(), incomingStock), false);
+        if (incomingStockTx.length > 0) this.set(STORAGE_KEYS.STOCK_TX, mergeById(this.getStockTransactions(), incomingStockTx), false);
+        if (incomingCheckins.length > 0) this.set(STORAGE_KEYS.CHECKINS, mergeById(this.getCheckIns(), incomingCheckins), false);
+        if (incomingCalendar.length > 0) this.set(STORAGE_KEYS.CALENDAR, mergeById(this.getCalendar(), incomingCalendar), false);
+        if (incomingPayrolls.length > 0) this.set(STORAGE_KEYS.PAYROLLS, mergeById(this.getPayrolls(), incomingPayrolls), false);
+        if (incomingAdmins.length > 0) this.set(STORAGE_KEYS.ADMINS, mergeById(this.getAdmins(), incomingAdmins), false);
+        if (incomingNotifications.length > 0) this.set(STORAGE_KEYS.NOTIFICATIONS, mergeById(this.getNotifications(), incomingNotifications), false);
+      }
+
+      // Log the restore event
+      this.logAudit(
+        activeUser,
+        'IMPORTACAO_BANCO_DADOS',
+        'CADASTROS',
+        `Importação de banco de dados concluída em modo "${mode}". ${incomingCheckins.length} check-ins, ${incomingMilitants.length} militantes restaurados.`
+      );
+
+      // Trigger push to remote Hostinger
+      this.pushAllToRemote();
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+      }
+
+      const importedCounts = {
+        militants: incomingMilitants.length,
+        checkins: incomingCheckins.length,
+        neighborhoods: incomingNeighborhoods.length,
+        teams: incomingTeams.length,
+        vans: incomingVans.length,
+        stockItems: incomingStock.length,
+        payrolls: incomingPayrolls.length,
+        admins: incomingAdmins.length
+      };
+
+      return {
+        success: true,
+        message: `Banco de dados importado com sucesso!`,
+        counts: importedCounts
+      };
+    } catch (err: any) {
+      console.error('Import database error:', err);
+      return {
+        success: false,
+        message: `Erro ao processar arquivo de backup: ${err.message || 'Formato JSON inválido'}`
+      };
+    }
+  }
+
+  // Get Summary Database Stats
+  static getDatabaseStatistics(): {
+    totalRecords: number;
+    estimatedSizeKb: number;
+    counts: {
+      militants: number;
+      teams: number;
+      vans: number;
+      neighborhoods: number;
+      checkins: number;
+      stockItems: number;
+      payrolls: number;
+      admins: number;
+      auditLogs: number;
+    };
+  } {
+    const militants = this.getMilitants();
+    const teams = this.getTeams();
+    const vans = this.getVans();
+    const neighborhoods = this.getNeighborhoods();
+    const checkins = this.getCheckIns();
+    const stock = this.getStock();
+    const payrolls = this.getPayrolls();
+    const admins = this.getAdmins();
+    const auditLogs = this.getAuditLogs();
+
+    const counts = {
+      militants: militants.length,
+      teams: teams.length,
+      vans: vans.length,
+      neighborhoods: neighborhoods.length,
+      checkins: checkins.length,
+      stockItems: stock.length,
+      payrolls: payrolls.length,
+      admins: admins.length,
+      auditLogs: auditLogs.length
+    };
+
+    const totalRecords = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    let totalChars = 0;
+    try {
+      for (const key in localStorage) {
+        if (key.startsWith('militancia_')) {
+          totalChars += (localStorage.getItem(key) || '').length;
+        }
+      }
+    } catch {}
+
+    const estimatedSizeKb = Math.max(1, Math.round(totalChars / 1024));
+
+    return {
+      totalRecords,
+      estimatedSizeKb,
+      counts
+    };
   }
 
   // Generate MySQL Schema & Migration Dump
