@@ -54,7 +54,7 @@ export const MilitantSummaryCard: React.FC<MilitantSummaryCardProps> = ({
   const [showQuickAdjuster, setShowQuickAdjuster] = useState<boolean>(false);
 
   // Calculate totals from check-ins + baseline
-  const streetsCoveredToday = checkIns.length > 0 ? checkIns.length : militant.totalStreetsCovered;
+  const streetsCoveredToday = Math.max(checkIns.length, militant.totalStreetsCovered || 0);
   
   const totalAbordagens = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0) 
     || (militant.deliveredMaterials.abordagens || 0);
@@ -92,6 +92,19 @@ export const MilitantSummaryCard: React.FC<MilitantSummaryCardProps> = ({
     abordagens: totalAbordagens,
     comercio: totalComercios
   });
+
+  // Sync state when props change
+  React.useEffect(() => {
+    setCurrentAdjustedMaterials({
+      santinhos: totalSantinhos,
+      colinhas: totalColinhas,
+      adesivos: totalAdesivoBola + totalAdesivoParachoque,
+      adesivo_bola: totalAdesivoBola,
+      adesivo_parachoque: totalAdesivoParachoque,
+      abordagens: totalAbordagens,
+      comercio: totalComercios
+    });
+  }, [totalSantinhos, totalColinhas, totalAdesivoBola, totalAdesivoParachoque, totalAbordagens, totalComercios]);
 
   const handleIncrement = (key: keyof MaterialCount, delta: number) => {
     setCurrentAdjustedMaterials(prev => {
