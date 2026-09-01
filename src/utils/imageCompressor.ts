@@ -1,6 +1,6 @@
 /**
  * Utilitário de Compressão e Otimização de Imagens para Campo
- * Reduz fotos de celulares (3MB - 15MB) para ~60KB - 120KB com alta nitidez visual
+ * Reduz fotos de celulares (3MB - 15MB) para ~30KB - 60KB com excelente nitidez visual
  * Garante persistência instantânea no LocalStorage e envio ultrarrápido para MySQL/PHP
  */
 
@@ -17,8 +17,8 @@ export interface CompressedImageResult {
  */
 export async function compressImageFile(
   file: File | Blob,
-  maxDimension = 1080,
-  quality = 0.75
+  maxDimension = 800,
+  quality = 0.70
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -47,8 +47,8 @@ export async function compressImageFile(
           }
 
           const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width = Math.max(1, width);
+          canvas.height = Math.max(1, height);
 
           const ctx = canvas.getContext('2d');
           if (!ctx) {
@@ -84,15 +84,15 @@ export async function compressImageFile(
  */
 export async function compressBase64IfNeeded(
   dataUrl: string,
-  maxDimension = 1080,
-  quality = 0.75
+  maxDimension = 800,
+  quality = 0.70
 ): Promise<string> {
   if (!dataUrl || !dataUrl.startsWith('data:image')) {
     return dataUrl; // URL externa ou formato já tratado
   }
 
-  // Se já tiver tamanho inferior a 150KB (aproximadamente 200.000 caracteres base64), não precisa recomprimir
-  if (dataUrl.length < 200000) {
+  // Se já tiver tamanho inferior a 45KB (~60.000 caracteres base64), não precisa recomprimir
+  if (dataUrl.length < 60000) {
     return dataUrl;
   }
 
@@ -114,8 +114,8 @@ export async function compressBase64IfNeeded(
         }
 
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width = Math.max(1, width);
+        canvas.height = Math.max(1, height);
         const ctx = canvas.getContext('2d');
         if (!ctx) {
           resolve(dataUrl);

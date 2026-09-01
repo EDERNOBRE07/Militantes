@@ -207,41 +207,44 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
     );
   };
 
-  const handleApplyGoogleMapsLink = () => {
-    if (!googleMapsUrlInput.trim()) {
+  const handleApplyGoogleMapsLink = (textToParse?: string) => {
+    const rawInput = typeof textToParse === 'string' ? textToParse : googleMapsUrlInput;
+    if (!rawInput.trim()) {
       setLocationFeedback({
         type: 'error',
         text: 'Por favor, cole um link do Google Maps ou coordenadas.'
       });
-      return;
+      return false;
     }
 
-    const parsed = parseWhatsAppLocationText(googleMapsUrlInput, neighborhoods);
+    const parsed = parseWhatsAppLocationText(rawInput, neighborhoods);
     if (!parsed.success || parsed.lat === undefined || parsed.lng === undefined) {
       setLocationFeedback({
         type: 'error',
         text: parsed.error || 'Não foi possível extrair coordenadas do link fornecido.'
       });
-      return;
+      return false;
     }
 
-    setLatitude(Number(parsed.lat.toFixed(6)));
-    setLongitude(Number(parsed.lng.toFixed(6)));
+    const newLat = Number(parsed.lat.toFixed(6));
+    const newLng = Number(parsed.lng.toFixed(6));
+    setLatitude(newLat);
+    setLongitude(newLng);
     setAccuracyMeters(parsed.accuracy || 3);
 
-    const feedbackParts = [`Localização atualizada: Lat ${parsed.lat.toFixed(6)}, Lng ${parsed.lng.toFixed(6)}.`];
+    const feedbackParts = [`✓ Localização atualizada: Lat ${newLat}, Lng ${newLng}.`];
 
     // If street name was detected in Google Maps URL (e.g. /place/R.+Águas+de+Chapecó)
     if (parsed.extractedStreet && parsed.extractedStreet.length > 2) {
       setStreetName(parsed.extractedStreet);
-      feedbackParts.push(`Rua identificada: "${parsed.extractedStreet}".`);
+      feedbackParts.push(`Rua: "${parsed.extractedStreet}".`);
     }
 
     // If neighborhood was detected
     if (parsed.suggestedNeighborhoodId) {
       setNeighborhoodId(parsed.suggestedNeighborhoodId);
       if (parsed.suggestedNeighborhoodName) {
-        feedbackParts.push(`Bairro identificado: ${parsed.suggestedNeighborhoodName}.`);
+        feedbackParts.push(`Bairro: ${parsed.suggestedNeighborhoodName}.`);
       }
     }
 
@@ -249,6 +252,26 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
       type: 'success',
       text: feedbackParts.join(' ')
     });
+    return true;
+  };
+
+  const handleLinkInputChange = (val: string) => {
+    setGoogleMapsUrlInput(val);
+    if (!val.trim()) {
+      setLocationFeedback(null);
+      return;
+    }
+
+    // If text looks like a full Google Maps URL, coordinates, or place link, auto-parse immediately
+    if (
+      val.includes('maps') || 
+      val.includes('goo.gl') || 
+      val.includes('@') || 
+      val.includes('/place/') || 
+      /[-+]?\d{1,3}\.\d+,\s*[-+]?\d{1,3}\.\d+/.test(val)
+    ) {
+      handleApplyGoogleMapsLink(val);
+    }
   };
 
   const handleAddPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -262,7 +285,7 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
       const compressedList: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const compressed = await compressImageFile(file, 1080, 0.75);
+        const compressed = await compressImageFile(file, 800, 0.70);
         if (compressed) {
           compressedList.push(compressed);
         }
@@ -312,7 +335,27 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
     setIsSaving(true);
     setErrorMsg(null);
     try {
-      const selectedNeigh = neighborhoods.find(n => n.id === neighborhoodId) || neighborhoods[0];
+      let finalLat = Number(latitude);
+      let finalLng = Number(longitude);
+      let finalStreet = streetName.trim();
+      let finalNeighId = neighborhoodId;
+
+      // If user pasted a link in googleMapsUrlInput, ensure it is parsed and applied before saving
+      if (googleMapsUrlInput.trim()) {
+        const parsed = parseWhatsAppLocationText(googleMapsUrlInput, neighborhoods);
+        if (parsed.success && parsed.lat !== undefined && parsed.lng !== undefined) {
+          finalLat = Number(parsed.lat.toFixed(6));
+          finalLng = Number(parsed.lng.toFixed(6));
+          if (parsed.extractedStreet && parsed.extractedStreet.length > 2) {
+            finalStreet = parsed.extractedStreet;
+          }
+          if (parsed.suggestedNeighborhoodId) {
+            finalNeighId = parsed.suggestedNeighborhoodId;
+          }
+        }
+      }
+
+      const selectedNeigh = neighborhoods.find(n => n.id === finalNeighId) || neighborhoods[0];
 
       // Format clean timestamp YYYY-MM-DD HH:mm:ss
       const safeHours = Math.max(0, Math.min(23, Number(recordHours) || 0));
@@ -323,19 +366,19 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
 
       // Ensure all photos are lightweight and compressed before storing
       const sanitizedPhotos = await Promise.all(
-        photos.map(p => compressBase64IfNeeded(p, 1080, 0.75))
+        photos.map(p => compressBase64IfNeeded(p, 800, 0.70))
       );
 
       const updated: StreetCheckIn = {
         ...checkIn,
-        streetName: streetName.trim(),
+        streetName: finalStreet,
         houseNumberRange: houseNumberRange.trim() || 'Trecho Geral',
-        neighborhoodId: selectedNeigh?.id || neighborhoodId,
+        neighborhoodId: selectedNeigh?.id || finalNeighId,
         neighborhoodName: selectedNeigh?.name || checkIn.neighborhoodName,
         timestamp: formattedTimestamp,
-        latitude,
-        longitude,
-        accuracyMeters,
+        latitude: finalLat,
+        longitude: finalLng,
+        accuracyMeters: Number(accuracyMeters) || 5,
         photos: sanitizedPhotos,
         materialsDelivered: { ...materials },
         observations: observations.trim(),
@@ -596,7 +639,13 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
                   <input
                     type="text"
                     value={googleMapsUrlInput}
-                    onChange={(e) => setGoogleMapsUrlInput(e.target.value)}
+                    onChange={(e) => handleLinkInputChange(e.target.value)}
+                    onPaste={(e) => {
+                      const pasted = e.clipboardData.getData('text');
+                      if (pasted) {
+                        setTimeout(() => handleLinkInputChange(pasted), 50);
+                      }
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -608,7 +657,7 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
                   />
                   <button
                     type="button"
-                    onClick={handleApplyGoogleMapsLink}
+                    onClick={() => handleApplyGoogleMapsLink()}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
                   >
                     <Sparkles className="w-3 h-3" />

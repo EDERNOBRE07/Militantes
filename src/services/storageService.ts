@@ -98,8 +98,22 @@ export class StorageService {
       if (triggerRemotePush && key !== STORAGE_KEYS.AUTH_SESSION && key !== STORAGE_KEYS.CURRENT_USER && key !== STORAGE_KEYS.OFFLINE_QUEUE) {
         this.scheduleRemotePush(key, value);
       }
-    } catch (e) {
-      console.error('Storage set error:', e);
+    } catch (e: any) {
+      console.warn('Storage set notice (retrying with storage optimization):', e);
+      // If localStorage is near 5MB quota limit, optimize cached photo payloads
+      try {
+        if (key === STORAGE_KEYS.CHECKINS && Array.isArray(value)) {
+          const optimized = (value as StreetCheckIn[]).map(chk => ({
+            ...chk,
+            photos: (chk.photos || []).slice(0, 4) // cap max stored photos per item if full
+          }));
+          localStorage.setItem(key, JSON.stringify(optimized));
+        } else {
+          localStorage.setItem(key, JSON.stringify(value));
+        }
+      } catch (innerErr) {
+        console.error('Storage set critical error after quota purge:', innerErr);
+      }
     }
   }
 
@@ -730,17 +744,22 @@ export class StorageService {
   static async updateCheckIn(updatedCheckIn: StreetCheckIn): Promise<void> {
     const neighborhoods = this.getNeighborhoods();
     
-    // Calibrate coordinates only if missing or zero
-    if (!isCoordinateInsideSaoJose(updatedCheckIn.latitude, updatedCheckIn.longitude)) {
+    // Only calibrate coordinates if completely missing, NaN or zero
+    const lat = Number(updatedCheckIn.latitude);
+    const lng = Number(updatedCheckIn.longitude);
+    if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
       const resolved = resolveExactStreetCoordinates(updatedCheckIn.streetName, updatedCheckIn.neighborhoodId, neighborhoods);
       updatedCheckIn.latitude = resolved.lat;
       updatedCheckIn.longitude = resolved.lng;
+    } else {
+      updatedCheckIn.latitude = lat;
+      updatedCheckIn.longitude = lng;
     }
 
     const allCheckins = this.getCheckIns();
     const idx = allCheckins.findIndex(c => c.id === updatedCheckIn.id);
     if (idx !== -1) {
-      allCheckins[idx] = { ...updatedCheckIn };
+      allCheckins[idx] = { ...allCheckins[idx], ...updatedCheckIn };
     } else {
       allCheckins.unshift({ ...updatedCheckIn });
     }

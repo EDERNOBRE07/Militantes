@@ -693,30 +693,37 @@ export const MilitantSummaryCard: React.FC<MilitantSummaryCardProps> = ({
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
                     <a
-                      href={`https://www.google.com/maps?q=${chk.latitude},${chk.longitude}`}
+                      href={`https://www.google.com/maps?q=${Number(chk.latitude || 0)},${Number(chk.longitude || 0)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 hover:underline"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 hover:text-blue-900 hover:underline bg-blue-50/60 px-2 py-0.5 rounded-md border border-blue-100"
+                      title="Abrir localização exata no Google Maps"
                     >
-                      <MapPin className="w-3 h-3" />
-                      GPS: {chk.latitude.toFixed(4)}, {chk.longitude.toFixed(4)}
-                      <ExternalLink className="w-2.5 h-2.5" />
+                      <MapPin className="w-3 h-3 text-rose-600" />
+                      GPS: {Number(chk.latitude || 0).toFixed(5)}, {Number(chk.longitude || 0).toFixed(5)}
+                      <ExternalLink className="w-2.5 h-2.5 ml-0.5 text-blue-500" />
                     </a>
 
-                    {chk.photos && chk.photos.length > 0 && onSelectPhotoZoom && (
-                      <div className="flex items-center gap-1">
+                    {chk.photos && chk.photos.length > 0 ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-500 flex items-center gap-0.5">
+                          📷 {chk.photos.length}
+                        </span>
                         {chk.photos.map((ph, pIdx) => (
                           <img
                             key={pIdx}
                             src={ph}
-                            alt="Foto"
-                            onClick={() => onSelectPhotoZoom(ph)}
-                            className="w-6 h-6 rounded object-cover cursor-pointer ring-1 ring-slate-200 hover:opacity-80"
+                            alt={`Foto comprovação ${pIdx + 1}`}
+                            onClick={() => onSelectPhotoZoom && onSelectPhotoZoom(ph)}
+                            className="w-7 h-7 rounded-lg object-cover cursor-pointer ring-1 ring-slate-300 hover:ring-2 hover:ring-blue-500 hover:scale-110 transition shadow-2xs"
+                            title="Clique para ampliar foto de campo"
                           />
                         ))}
                       </div>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 italic">Sem fotos</span>
                     )}
                   </div>
                 </div>
