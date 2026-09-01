@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Neighborhood,
   Militant,
@@ -10,6 +10,7 @@ import { StorageService } from '../services/storageService';
 import { MilitantSummaryCard } from './MilitantSummaryCard';
 import { WhatsAppLocationInput } from './WhatsAppLocationInput';
 import { EditStreetModal } from './EditStreetModal';
+import { compressImageFile, compressBase64IfNeeded } from '../utils/imageCompressor';
 import {
   Camera,
   MapPin,
@@ -46,7 +47,9 @@ import {
   Calendar,
   AlertCircle,
   RefreshCw,
-  Wifi
+  Wifi,
+  Loader2,
+  ImageIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -72,6 +75,19 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   const [activeTab, setActiveTab] = useState<'dashboard_militantes' | 'novo_checkin' | 'meu_historico'>(
     isCoordination ? 'dashboard_militantes' : 'novo_checkin'
   );
+
+  // Local check-ins state with real-time listener for instant re-renders
+  const [allCheckIns, setAllCheckIns] = useState<StreetCheckIn[]>(() => StorageService.getCheckIns());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setAllCheckIns(StorageService.getCheckIns());
+    };
+    window.addEventListener('militancia_data_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('militancia_data_updated', handleUpdate);
+    };
+  }, []);
 
   // Search and filter state for Coordination Dashboard
   const [militantSearch, setMilitantSearch] = useState('');
@@ -102,6 +118,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   const [houseNumberRange, setHouseNumberRange] = useState<string>('');
   const [observations, setObservations] = useState<string>('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [isCompressingPhoto, setIsCompressingPhoto] = useState(false);
   const [isCapturingGps, setIsCapturingGps] = useState(false);
   const [isTransmitting, setIsTransmitting] = useState(false);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number; accuracy: number }>({
@@ -194,7 +211,6 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   };
 
   const selectedNeighborhood = neighborhoods.find(n => n.id === selectedNeighborhoodId) || neighborhoods[0];
-  const allCheckIns = StorageService.getCheckIns();
 
   // Street Suggestions for São José Neighborhoods
   const sampleStreetsByBairro: Record<string, string[]> = {
@@ -271,16 +287,32 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
     });
   };
 
-  const handleAddPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files[0]) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setPhotos(prev => [...prev, event.target!.result as string]);
+    if (!files || files.length === 0) return;
+
+    setIsCompressingPhoto(true);
+    try {
+      const compressedList: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const compressed = await compressImageFile(file, 1080, 0.75);
+        if (compressed) {
+          compressedList.push(compressed);
         }
-      };
-      reader.readAsDataURL(files[0]);
+      }
+      if (compressedList.length > 0) {
+        setPhotos(prev => [...prev, ...compressedList]);
+      }
+    } catch (err: any) {
+      setFeedbackMsg({
+        text: 'Erro ao processar imagem.',
+        details: err?.message || 'Tente selecionar outro arquivo de foto.',
+        isError: true
+      });
+    } finally {
+      setIsCompressingPhoto(false);
+      e.target.value = '';
     }
   };
 
@@ -317,6 +349,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   const handleConfirmDeleteStreet = () => {
     if (!deletingCheckIn) return;
     StorageService.deleteCheckIn(deletingCheckIn.id);
+    setAllCheckIns(StorageService.getCheckIns());
     setFeedbackMsg({
       text: `✓ Registro da rua "${deletingCheckIn.streetName}" apagado com sucesso!`,
       details: 'O histórico e as contagens de ruas foram atualizadas.'
@@ -327,6 +360,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
 
   const handleSaveEditedStreet = async (updatedCheckIn: StreetCheckIn) => {
     await StorageService.updateCheckIn(updatedCheckIn);
+    setAllCheckIns(StorageService.getCheckIns());
     setFeedbackMsg({
       text: `✓ Registro da rua "${updatedCheckIn.streetName}" atualizado com sucesso!`,
       details: 'Fotos, localização GPS e materiais foram salvos e sincronizados.'
@@ -351,6 +385,11 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
 
     setIsTransmitting(true);
 
+    // Ensure all uploaded photos are compressed
+    const sanitizedPhotos = await Promise.all(
+      photos.map(p => compressBase64IfNeeded(p, 1080, 0.75))
+    );
+
     const newCheckIn: StreetCheckIn = {
       id: `chk-${Date.now()}`,
       militantId: activeMilitant.id,
@@ -364,7 +403,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       latitude: gpsCoords.lat,
       longitude: gpsCoords.lng,
       accuracyMeters: gpsCoords.accuracy,
-      photos: photos.length > 0 ? photos : ['https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80'],
+      photos: sanitizedPhotos,
       materialsDelivered: { ...materials },
       observations: observations.trim(),
       status: 'validado',
@@ -373,6 +412,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
 
     // Primary API persistence and direct Hostinger MySQL transmission
     const res = await StorageService.onCheckInCreated(newCheckIn);
+    setAllCheckIns(StorageService.getCheckIns());
     setIsTransmitting(false);
 
     if (res.status === 'synced_mysql') {
@@ -405,15 +445,15 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
     setStreetName(nextStreet);
     setHouseNumberRange('');
     setObservations('');
-    setPhotos(['https://images.unsplash.com/photo-1577495508048-b635879837f1?w=600&auto=format&fit=crop&q=80']);
+    setPhotos([]);
     setMaterials({
-      santinhos: 150,
-      adesivos: 25,
-      adesivo_bola: 8,
-      adesivo_parachoque: 4,
-      colinhas: 100,
-      abordagens: 15,
-      comercio: 4
+      santinhos: 0,
+      adesivos: 0,
+      adesivo_bola: 0,
+      adesivo_parachoque: 0,
+      colinhas: 0,
+      abordagens: 0,
+      comercio: 0
     });
 
     onCheckInCreated();
@@ -1148,7 +1188,13 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
                   <Camera className="w-4 h-4 text-blue-600" />
                   Fotos de Comprovação de Campo ({photos.length})
                 </label>
-                <span className="text-[11px] text-slate-500">Obrigatório para o relatório semanal</span>
+                {isCompressingPhoto ? (
+                  <span className="text-[11px] text-blue-600 font-semibold flex items-center gap-1">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Otimizando fotos...
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-slate-500">Compressão HD automática ativa</span>
+                )}
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1166,15 +1212,29 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
                   </div>
                 ))}
 
-                {/* Upload Button Box */}
-                <label className="flex flex-col items-center justify-center h-28 rounded-xl border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/50 cursor-pointer transition p-2 text-center">
-                  <Upload className="w-5 h-5 text-blue-600 mb-1" />
-                  <span className="text-xs font-semibold text-slate-800">Tirar / Enviar Foto</span>
-                  <span className="text-[10px] text-slate-500">JPG, PNG</span>
+                {/* Botão Tirar Foto na Câmera */}
+                <label className="flex flex-col items-center justify-center h-28 rounded-xl border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-100/50 cursor-pointer transition p-2 text-center">
+                  <Camera className="w-5 h-5 text-blue-600 mb-1" />
+                  <span className="text-xs font-bold text-blue-900">Tirar Foto</span>
+                  <span className="text-[10px] text-blue-600 font-medium">Câmera Celular</span>
                   <input
                     type="file"
                     accept="image/*"
                     capture="environment"
+                    onChange={handleAddPhoto}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Botão Galeria de Fotos */}
+                <label className="flex flex-col items-center justify-center h-28 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 cursor-pointer transition p-2 text-center">
+                  <ImageIcon className="w-5 h-5 text-slate-600 mb-1" />
+                  <span className="text-xs font-semibold text-slate-800">Galeria</span>
+                  <span className="text-[10px] text-slate-500">Múltiplas Fotos</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
                     onChange={handleAddPhoto}
                     className="hidden"
                   />

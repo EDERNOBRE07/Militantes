@@ -125,6 +125,72 @@ if ($method === 'POST') {
                 $obs, $fotos, $statusAudit
             ]);
 
+            // Atualiza também o app_sync_state para manter a sincronização mútua com sync.php
+            try {
+                $checkinObj = [
+                    'id' => $id,
+                    'militantId' => $militanteId,
+                    'militantName' => $militanteNome,
+                    'teamId' => $equipeId,
+                    'neighborhoodId' => $bairroId,
+                    'neighborhoodName' => $bairroNome,
+                    'streetName' => $nomeRua,
+                    'houseNumberRange' => $faixaNumeracao,
+                    'timestamp' => $timestamp,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'accuracyMeters' => $precisaoGps,
+                    'materialsDelivered' => [
+                        'santinhos' => $santinhos,
+                        'adesivos' => $adesivos,
+                        'adesivo_bola' => $adesivoBola,
+                        'adesivo_parachoque' => $adesivoParachoque,
+                        'colinhas' => $colinhas,
+                        'abordagens' => $abordagens,
+                        'comercio' => $comercio
+                    ],
+                    'observations' => $obs,
+                    'photos' => is_string($fotos) ? json_decode($fotos, true) : (is_array($fotos) ? $fotos : []),
+                    'status' => $statusAudit,
+                    'synced' => true
+                ];
+
+                $stmtGetState = $pdo->prepare("SELECT json_data FROM app_sync_state WHERE key_name = 'militancia_checkins_v1'");
+                $stmtGetState->execute();
+                $existingStateRow = $stmtGetState->fetch();
+                $existingCheckins = $existingStateRow ? json_decode($existingStateRow['json_data'], true) : [];
+                if (!is_array($existingCheckins)) {
+                    $existingCheckins = [];
+                }
+
+                // Atualiza ou insere no topo
+                $foundIdx = -1;
+                foreach ($existingCheckins as $i => $item) {
+                    if (isset($item['id']) && $item['id'] === $id) {
+                        $foundIdx = $i;
+                        break;
+                    }
+                }
+
+                if ($foundIdx >= 0) {
+                    $existingCheckins[$foundIdx] = $checkinObj;
+                } else {
+                    array_unshift($existingCheckins, $checkinObj);
+                }
+
+                $stmtSaveState = $pdo->prepare("
+                    INSERT INTO app_sync_state (key_name, json_data, updated_at, device_info)
+                    VALUES ('militancia_checkins_v1', ?, NOW(), 'Checkin API')
+                    ON DUPLICATE KEY UPDATE
+                        json_data = VALUES(json_data),
+                        updated_at = NOW(),
+                        device_info = VALUES(device_info)
+                ");
+                $stmtSaveState->execute([json_encode($existingCheckins, JSON_UNESCAPED_UNICODE)]);
+            } catch (Exception $eSync) {
+                // Silencioso se app_sync_state falhar, pois o dado principal já foi salvo em checkins_ruas
+            }
+
             echo json_encode([
                 'status' => 'success',
                 'message' => 'Check-in gravado com sucesso no MySQL Hostinger (u844537895_Militantes).',

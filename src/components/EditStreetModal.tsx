@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StreetCheckIn, Neighborhood, MaterialCount } from '../types';
 import { parseWhatsAppLocationText } from '../utils/whatsappLocationParser';
+import { compressImageFile, compressBase64IfNeeded } from '../utils/imageCompressor';
 import {
   X,
   MapPin,
@@ -25,7 +26,9 @@ import {
   Sparkles,
   Navigation,
   Calendar,
-  Clock
+  Clock,
+  Loader2,
+  ImageIcon
 } from 'lucide-react';
 
 interface EditStreetModalProps {
@@ -52,6 +55,7 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
   const [longitude, setLongitude] = useState<number>(checkIn.longitude || -48.6190);
   const [accuracyMeters, setAccuracyMeters] = useState<number>(checkIn.accuracyMeters || 5);
   const [photos, setPhotos] = useState<string[]>(checkIn.photos || []);
+  const [isCompressingPhoto, setIsCompressingPhoto] = useState(false);
   const [materials, setMaterials] = useState<MaterialCount>({
     santinhos: checkIn.materialsDelivered?.santinhos || 0,
     adesivos: checkIn.materialsDelivered?.adesivos || 0,
@@ -247,19 +251,31 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
     });
   };
 
-  const handleAddPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const file = files[0];
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setPhotos(prev => [...prev, event.target!.result as string]);
+    setIsCompressingPhoto(true);
+    setErrorMsg(null);
+
+    try {
+      const compressedList: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const compressed = await compressImageFile(file, 1080, 0.75);
+        if (compressed) {
+          compressedList.push(compressed);
+        }
       }
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+      if (compressedList.length > 0) {
+        setPhotos(prev => [...prev, ...compressedList]);
+      }
+    } catch (err: any) {
+      setErrorMsg('Erro ao processar imagem: ' + (err?.message || 'Arquivo inválido'));
+    } finally {
+      setIsCompressingPhoto(false);
+      e.target.value = '';
+    }
   };
 
   const handleRemovePhoto = (index: number) => {
@@ -284,14 +300,17 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
     setRecordSeconds(now.getSeconds());
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
     if (!streetName.trim()) {
       setErrorMsg('O nome da rua é obrigatório.');
       return;
     }
 
     setIsSaving(true);
+    setErrorMsg(null);
     try {
       const selectedNeigh = neighborhoods.find(n => n.id === neighborhoodId) || neighborhoods[0];
 
@@ -301,6 +320,11 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
       const safeSeconds = Math.max(0, Math.min(59, Number(recordSeconds) || 0));
       const safeDate = recordDate && recordDate.includes('-') ? recordDate : '2026-08-28';
       const formattedTimestamp = `${safeDate} ${String(safeHours).padStart(2, '0')}:${String(safeMinutes).padStart(2, '0')}:${String(safeSeconds).padStart(2, '0')}`;
+
+      // Ensure all photos are lightweight and compressed before storing
+      const sanitizedPhotos = await Promise.all(
+        photos.map(p => compressBase64IfNeeded(p, 1080, 0.75))
+      );
 
       const updated: StreetCheckIn = {
         ...checkIn,
@@ -312,7 +336,7 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
         latitude,
         longitude,
         accuracyMeters,
-        photos: photos,
+        photos: sanitizedPhotos,
         materialsDelivered: { ...materials },
         observations: observations.trim(),
         status
@@ -661,7 +685,13 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
                 <Camera className="w-3.5 h-3.5 text-blue-600" />
                 Fotos de Comprovação de Campo ({photos.length})
               </label>
-              <span className="text-[11px] text-slate-500">Incluir nova foto ou excluir anteriores</span>
+              {isCompressingPhoto ? (
+                <span className="text-[11px] text-blue-600 font-semibold flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Otimizando foto...
+                </span>
+              ) : (
+                <span className="text-[11px] text-slate-500">Compressão HD automática ativa</span>
+              )}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -679,15 +709,29 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
                 </div>
               ))}
 
-              {/* Botão para Enviar Nova Foto */}
-              <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/50 cursor-pointer transition p-2 text-center">
-                <Upload className="w-4 h-4 text-blue-600 mb-1" />
-                <span className="text-xs font-semibold text-slate-800">Adicionar Foto</span>
-                <span className="text-[10px] text-slate-400">Câmera / Galeria</span>
+              {/* Botão para Tirar Foto na Câmera */}
+              <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-100/50 cursor-pointer transition p-2 text-center">
+                <Camera className="w-4 h-4 text-blue-600 mb-1" />
+                <span className="text-xs font-bold text-blue-900">Tirar Foto</span>
+                <span className="text-[10px] text-blue-600 font-medium">Câmera Celular</span>
                 <input
                   type="file"
                   accept="image/*"
                   capture="environment"
+                  onChange={handleAddPhoto}
+                  className="hidden"
+                />
+              </label>
+
+              {/* Botão para Enviar da Galeria / Arquivos */}
+              <label className="flex flex-col items-center justify-center h-24 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 cursor-pointer transition p-2 text-center">
+                <ImageIcon className="w-4 h-4 text-slate-600 mb-1" />
+                <span className="text-xs font-semibold text-slate-800">Galeria</span>
+                <span className="text-[10px] text-slate-500">Múltiplas Fotos</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
                   onChange={handleAddPhoto}
                   className="hidden"
                 />
