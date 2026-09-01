@@ -312,7 +312,7 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
         latitude,
         longitude,
         accuracyMeters,
-        photos: photos.length > 0 ? photos : checkIn.photos,
+        photos: photos,
         materialsDelivered: { ...materials },
         observations: observations.trim(),
         status

@@ -220,6 +220,7 @@ export default function App() {
             teams={teams}
             checkIns={checkIns}
             neighborhoods={neighborhoods}
+            onCheckInUpdated={reloadData}
           />
         )}
 

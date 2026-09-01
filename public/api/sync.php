@@ -272,6 +272,85 @@ if ($method === 'POST') {
             }
         }
 
+        // Se foram enviados check-ins de ruas, atualiza também a tabela relacional checkins_ruas
+        $checkInsList = null;
+        if (isset($payload['collections']['militancia_checkins_v1'])) {
+            $checkInsList = $payload['collections']['militancia_checkins_v1'];
+        } elseif (isset($payload['collections']['checkins'])) {
+            $checkInsList = $payload['collections']['checkins'];
+        } elseif (isset($payload['key']) && in_array($payload['key'], ['militancia_checkins_v1', 'checkins']) && isset($payload['data'])) {
+            $checkInsList = $payload['data'];
+        }
+
+        if (is_array($checkInsList)) {
+            $stmtChk = $pdo->prepare("
+                INSERT INTO checkins_ruas (
+                    id, militante_id, militante_nome, equipe_id, bairro_id, bairro_nome, 
+                    nome_rua, faixa_numeracao, timestamp_checkin, latitude, longitude, 
+                    precisao_gps_metros, qtd_santinhos, qtd_adesivos, qtd_adesivo_bola, 
+                    qtd_adesivo_parachoque, qtd_colinhas, qtd_abordagens, qtd_comercio, 
+                    observacoes, fotos_json, status_auditoria
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, 
+                    ?, ?, ?, ?, ?, 
+                    ?, ?, ?, ?, 
+                    ?, ?, ?, ?, 
+                    ?, ?, ?
+                ) ON DUPLICATE KEY UPDATE
+                    militante_id = VALUES(militante_id),
+                    militante_nome = VALUES(militante_nome),
+                    equipe_id = VALUES(equipe_id),
+                    bairro_id = VALUES(bairro_id),
+                    bairro_nome = VALUES(bairro_nome),
+                    nome_rua = VALUES(nome_rua),
+                    faixa_numeracao = VALUES(faixa_numeracao),
+                    timestamp_checkin = VALUES(timestamp_checkin),
+                    latitude = VALUES(latitude),
+                    longitude = VALUES(longitude),
+                    precisao_gps_metros = VALUES(precisao_gps_metros),
+                    qtd_santinhos = VALUES(qtd_santinhos),
+                    qtd_adesivos = VALUES(qtd_adesivos),
+                    qtd_adesivo_bola = VALUES(qtd_adesivo_bola),
+                    qtd_adesivo_parachoque = VALUES(qtd_adesivo_parachoque),
+                    qtd_colinhas = VALUES(qtd_colinhas),
+                    qtd_abordagens = VALUES(qtd_abordagens),
+                    qtd_comercio = VALUES(qtd_comercio),
+                    observacoes = VALUES(observacoes),
+                    fotos_json = VALUES(fotos_json),
+                    status_auditoria = VALUES(status_auditoria)
+            ");
+
+            foreach ($checkInsList as $chk) {
+                if (isset($chk['id']) && isset($chk['streetName'])) {
+                    $mats = $chk['materialsDelivered'] ?? [];
+                    $stmtChk->execute([
+                        $chk['id'],
+                        $chk['militantId'] ?? 'mil-01',
+                        $chk['militantName'] ?? 'Militante',
+                        $chk['teamId'] ?? 'team-alpha',
+                        $chk['neighborhoodId'] ?? 'kobrasol',
+                        $chk['neighborhoodName'] ?? 'Kobrasol',
+                        $chk['streetName'] ?? 'Rua de Campo',
+                        $chk['houseNumberRange'] ?? 'Trecho Geral',
+                        $chk['timestamp'] ?? date('Y-m-d H:i:s'),
+                        floatval($chk['latitude'] ?? -27.5962),
+                        floatval($chk['longitude'] ?? -48.6190),
+                        floatval($chk['accuracyMeters'] ?? 4.0),
+                        intval($mats['santinhos'] ?? 0),
+                        intval($mats['adesivos'] ?? 0),
+                        intval($mats['adesivo_bola'] ?? 0),
+                        intval($mats['adesivo_parachoque'] ?? 0),
+                        intval($mats['colinhas'] ?? 0),
+                        intval($mats['abordagens'] ?? 0),
+                        intval($mats['comercio'] ?? 0),
+                        $chk['observations'] ?? '',
+                        json_encode($chk['photos'] ?? []),
+                        $chk['status'] ?? 'validado'
+                    ]);
+                }
+            }
+        }
+
         $pdo->commit();
 
         echo json_encode([

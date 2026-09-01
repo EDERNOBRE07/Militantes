@@ -729,7 +729,8 @@ export class StorageService {
 
   static async updateCheckIn(updatedCheckIn: StreetCheckIn): Promise<void> {
     const neighborhoods = this.getNeighborhoods();
-    // Calibrate coordinates if missing or invalid
+    
+    // Calibrate coordinates only if missing or zero
     if (!isCoordinateInsideSaoJose(updatedCheckIn.latitude, updatedCheckIn.longitude)) {
       const resolved = resolveExactStreetCoordinates(updatedCheckIn.streetName, updatedCheckIn.neighborhoodId, neighborhoods);
       updatedCheckIn.latitude = resolved.lat;
@@ -739,67 +740,126 @@ export class StorageService {
     const allCheckins = this.getCheckIns();
     const idx = allCheckins.findIndex(c => c.id === updatedCheckIn.id);
     if (idx !== -1) {
-      allCheckins[idx] = updatedCheckIn;
+      allCheckins[idx] = { ...updatedCheckIn };
     } else {
-      allCheckins.unshift(updatedCheckIn);
+      allCheckins.unshift({ ...updatedCheckIn });
     }
+    
+    // Persist immediately in local storage
     this.set(STORAGE_KEYS.CHECKINS, allCheckins);
 
     // Also update offline queue if present
     const queue = this.get<StreetCheckIn[]>(STORAGE_KEYS.OFFLINE_QUEUE, []);
     const qIdx = queue.findIndex(c => c.id === updatedCheckIn.id);
     if (qIdx !== -1) {
-      queue[qIdx] = updatedCheckIn;
+      queue[qIdx] = { ...updatedCheckIn };
       this.set(STORAGE_KEYS.OFFLINE_QUEUE, queue);
     }
+
+    // Recalculate stats for all neighborhoods from fresh checkins
+    const updatedNeighborhoods = neighborhoods.map(n => {
+      const nCheckins = allCheckins.filter(c => c.neighborhoodId === n.id);
+      const uniqueStreets = new Set(nCheckins.map(c => (c.streetName || '').toLowerCase().trim())).size;
+      return {
+        ...n,
+        completedStreets: Math.min(n.totalStreets, uniqueStreets || nCheckins.length),
+        deliveredMaterials: {
+          santinhos: nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.santinhos || 0), 0),
+          adesivos: nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivos || 0), 0),
+          adesivo_bola: nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_bola || 0), 0),
+          adesivo_parachoque: nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_parachoque || 0), 0),
+          colinhas: nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.colinhas || 0), 0),
+          abordagens: nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.abordagens || 0), 0),
+          comercio: nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.comercio || 0), 0)
+        }
+      };
+    });
+    this.set(STORAGE_KEYS.NEIGHBORHOODS, updatedNeighborhoods);
+
+    // Recalculate stats for militants from fresh checkins
+    const militants = this.getMilitants();
+    const updatedMilitants = militants.map(m => {
+      const mCheckins = allCheckins.filter(c => c.militantId === m.id || c.militantName === m.name);
+      return {
+        ...m,
+        completedStreets: mCheckins.length,
+        deliveredMaterials: {
+          santinhos: mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.santinhos || 0), 0),
+          adesivos: mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivos || 0), 0),
+          adesivo_bola: mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_bola || 0), 0),
+          adesivo_parachoque: mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_parachoque || 0), 0),
+          colinhas: mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.colinhas || 0), 0),
+          abordagens: mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.abordagens || 0), 0),
+          comercio: mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.comercio || 0), 0)
+        }
+      };
+    });
+    this.set(STORAGE_KEYS.MILITANTS, updatedMilitants);
 
     const user = this.getCurrentUser();
     this.logAudit(
       user,
       'EDICAO_CHECKIN_RUA',
       'CHECKIN_RUA',
-      `Rua/Check-in ${updatedCheckIn.streetName} (${updatedCheckIn.neighborhoodName}) de ${updatedCheckIn.militantName} foi atualizado (fotos/localização/materiais).`
+      `Rua/Check-in ${updatedCheckIn.streetName} (${updatedCheckIn.neighborhoodName}) de ${updatedCheckIn.militantName} foi atualizado com sucesso.`
     );
 
-    // Transmit update to remote MySQL if online
+    // Dispatch real-time event to update all active views and components
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
+
+    // Transmit update to Hostinger MySQL endpoints
     if (typeof window !== 'undefined' && navigator.onLine) {
+      const payload = {
+        action: 'SAVE_STREET_CHECKIN',
+        db: 'u844537895_Militantes',
+        user: 'u844537895_Militantes',
+        host: 'militancia.mastervisionmarketing.com',
+        data: {
+          id: updatedCheckIn.id,
+          militante_id: updatedCheckIn.militantId,
+          militante_nome: updatedCheckIn.militantName,
+          equipe_id: updatedCheckIn.teamId,
+          bairro_id: updatedCheckIn.neighborhoodId,
+          bairro_nome: updatedCheckIn.neighborhoodName,
+          nome_rua: updatedCheckIn.streetName,
+          faixa_numeracao: updatedCheckIn.houseNumberRange,
+          timestamp_checkin: updatedCheckIn.timestamp,
+          latitude: updatedCheckIn.latitude,
+          longitude: updatedCheckIn.longitude,
+          precisao_gps_metros: updatedCheckIn.accuracyMeters,
+          qtd_santinhos: updatedCheckIn.materialsDelivered.santinhos,
+          qtd_adesivos: updatedCheckIn.materialsDelivered.adesivos,
+          qtd_adesivo_bola: updatedCheckIn.materialsDelivered.adesivo_bola,
+          qtd_adesivo_parachoque: updatedCheckIn.materialsDelivered.adesivo_parachoque,
+          qtd_colinhas: updatedCheckIn.materialsDelivered.colinhas,
+          qtd_abordagens: updatedCheckIn.materialsDelivered.abordagens || 0,
+          qtd_comercio: updatedCheckIn.materialsDelivered.comercio || 0,
+          observacoes: updatedCheckIn.observations || '',
+          fotos_json: JSON.stringify(updatedCheckIn.photos || []),
+          status_auditoria: updatedCheckIn.status || 'validado'
+        }
+      };
+
+      // Try sending to local proxy /api/checkin and remote endpoint in parallel/fallback
       try {
-        const payload = {
-          action: 'SAVE_STREET_CHECKIN',
-          db: 'u844537895_Militantes',
-          user: 'u844537895_Militantes',
-          host: 'militancia.mastervisionmarketing.com',
-          data: {
-            id: updatedCheckIn.id,
-            militante_id: updatedCheckIn.militantId,
-            militante_nome: updatedCheckIn.militantName,
-            equipe_id: updatedCheckIn.teamId,
-            bairro_id: updatedCheckIn.neighborhoodId,
-            bairro_nome: updatedCheckIn.neighborhoodName,
-            nome_rua: updatedCheckIn.streetName,
-            faixa_numeracao: updatedCheckIn.houseNumberRange,
-            timestamp_checkin: updatedCheckIn.timestamp,
-            latitude: updatedCheckIn.latitude,
-            longitude: updatedCheckIn.longitude,
-            precisao_gps_metros: updatedCheckIn.accuracyMeters,
-            qtd_santinhos: updatedCheckIn.materialsDelivered.santinhos,
-            qtd_adesivos: updatedCheckIn.materialsDelivered.adesivos,
-            qtd_adesivo_bola: updatedCheckIn.materialsDelivered.adesivo_bola,
-            qtd_adesivo_parachoque: updatedCheckIn.materialsDelivered.adesivo_parachoque,
-            qtd_colinhas: updatedCheckIn.materialsDelivered.colinhas,
-            qtd_abordagens: updatedCheckIn.materialsDelivered.abordagens || 0,
-            qtd_comercio: updatedCheckIn.materialsDelivered.comercio || 0,
-            observacoes: updatedCheckIn.observations,
-            fotos_json: JSON.stringify(updatedCheckIn.photos),
-            status_auditoria: updatedCheckIn.status
-          }
-        };
-        fetch('https://militancia.mastervisionmarketing.com/api/checkin.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).catch(() => {});
+        await Promise.any([
+          fetch('/api/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }),
+          fetch('https://militancia.mastervisionmarketing.com/api/checkin.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+        ]).catch(() => {});
       } catch {}
+
+      // Push full collection update
+      this.scheduleRemotePush(STORAGE_KEYS.CHECKINS, allCheckins);
     }
   }
 
