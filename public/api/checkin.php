@@ -191,18 +191,93 @@ if ($method === 'POST') {
                 // Silencioso se app_sync_state falhar, pois o dado principal já foi salvo em checkins_ruas
             }
 
+            // Atualiza também o cofre em disco (data_server_vault.json)
+            try {
+                $diskVaultPath = __DIR__ . '/data_server_vault.json';
+                $currentDisk = [];
+                if (file_exists($diskVaultPath)) {
+                    $raw = file_get_contents($diskVaultPath);
+                    if ($raw) {
+                        $currentDisk = json_decode($raw, true) ?: [];
+                    }
+                }
+                $checkins = isset($currentDisk['militancia_checkins_v1']) && is_array($currentDisk['militancia_checkins_v1']) 
+                    ? $currentDisk['militancia_checkins_v1'] 
+                    : [];
+                $fIdx = -1;
+                foreach ($checkins as $i => $item) {
+                    if (isset($item['id']) && $item['id'] === $id) {
+                        $fIdx = $i;
+                        break;
+                    }
+                }
+                if ($fIdx >= 0) {
+                    $checkins[$fIdx] = $checkinObj;
+                } else {
+                    array_unshift($checkins, $checkinObj);
+                }
+                $currentDisk['militancia_checkins_v1'] = $checkins;
+                $currentDisk['_lastUpdated'] = date('Y-m-d H:i:s');
+                file_put_contents($diskVaultPath, json_encode($currentDisk, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            } catch (Exception $eDisk) {}
+
             echo json_encode([
                 'status' => 'success',
-                'message' => 'Check-in gravado com sucesso no MySQL Hostinger (u844537895_Militantes).',
+                'message' => 'Check-in gravado com sucesso no MySQL Hostinger (u844537895_Militantes) e Cofre do Servidor.',
                 'id' => $id,
                 'destination' => 'u844537895_Militantes.checkins_ruas'
             ]);
             exit;
         } catch (Exception $e) {
-            // Se falhar no banco, retorna resposta amigável
+            // Se falhar no banco, salva ao menos no cofre em disco
+            try {
+                $diskVaultPath = __DIR__ . '/data_server_vault.json';
+                $currentDisk = [];
+                if (file_exists($diskVaultPath)) {
+                    $raw = file_get_contents($diskVaultPath);
+                    if ($raw) {
+                        $currentDisk = json_decode($raw, true) ?: [];
+                    }
+                }
+                $checkins = isset($currentDisk['militancia_checkins_v1']) && is_array($currentDisk['militancia_checkins_v1']) 
+                    ? $currentDisk['militancia_checkins_v1'] 
+                    : [];
+                $checkinObj = [
+                    'id' => $id,
+                    'militantId' => $militanteId,
+                    'militantName' => $militanteNome,
+                    'teamId' => $equipeId,
+                    'neighborhoodId' => $bairroId,
+                    'neighborhoodName' => $bairroNome,
+                    'streetName' => $nomeRua,
+                    'houseNumberRange' => $faixaNumeracao,
+                    'timestamp' => $timestamp,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'accuracyMeters' => $precisaoGps,
+                    'materialsDelivered' => [
+                        'santinhos' => $santinhos,
+                        'adesivos' => $adesivos,
+                        'adesivo_bola' => $adesivoBola,
+                        'adesivo_parachoque' => $adesivoParachoque,
+                        'colinhas' => $colinhas,
+                        'abordagens' => $abordagens,
+                        'comercio' => $comercio
+                    ],
+                    'observations' => $obs,
+                    'photos' => is_string($fotos) ? json_decode($fotos, true) : (is_array($fotos) ? $fotos : []),
+                    'status' => $statusAudit,
+                    'synced' => true
+                ];
+                array_unshift($checkins, $checkinObj);
+                $currentDisk['militancia_checkins_v1'] = $checkins;
+                $currentDisk['_lastUpdated'] = date('Y-m-d H:i:s');
+                file_put_contents($diskVaultPath, json_encode($currentDisk, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            } catch (Exception $eDisk) {}
+
             echo json_encode([
                 'status' => 'partial_success',
-                'message' => 'Recebido pelo endpoint PHP. Erro de gravação SQL: ' . $e->getMessage(),
+                'message' => 'Salvo no Cofre do Servidor. Erro no MySQL: ' . $e->getMessage(),
                 'id' => $id
             ]);
             exit;

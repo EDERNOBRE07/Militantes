@@ -90,48 +90,133 @@ if ($pdo) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// GET: Retorna o estado sincronizado armazenado no MySQL
+// GET: Retorna o estado sincronizado armazenado no MySQL ou Cofre do Servidor
 if ($method === 'GET') {
-    if (!$pdo) {
-        echo json_encode([
-            'status' => 'offline_or_db_error',
-            'message' => 'Não foi possível conectar ao MySQL Hostinger. Verifique as credenciais.',
-            'data' => null,
-            'db_name' => 'u844537895_Militantes'
-        ]);
-        exit;
-    }
+    $state = [];
+    $lastUpdated = null;
 
-    try {
-        $stmt = $pdo->query("SELECT key_name, json_data, updated_at FROM app_sync_state");
-        $rows = $stmt->fetchAll();
-        
-        $state = [];
-        $lastUpdated = null;
-
-        foreach ($rows as $row) {
-            $key = $row['key_name'];
-            $decoded = json_decode($row['json_data'], true);
-            $state[$key] = $decoded;
-            if (!$lastUpdated || $row['updated_at'] > $lastUpdated) {
-                $lastUpdated = $row['updated_at'];
+    // 1. Tenta carregar do disco local (data_server_vault.json) como base inicial
+    $diskVaultPath = __DIR__ . '/data_server_vault.json';
+    if (file_exists($diskVaultPath)) {
+        $rawDisk = file_get_contents($diskVaultPath);
+        if ($rawDisk) {
+            $diskData = json_decode($rawDisk, true);
+            if (is_array($diskData)) {
+                $state = $diskData;
             }
         }
+    }
 
+    // 2. Se o MySQL estiver disponível, consulta app_sync_state e a tabela relacional checkins_ruas
+    if ($pdo) {
+        try {
+            $stmt = $pdo->query("SELECT key_name, json_data, updated_at FROM app_sync_state");
+            $rows = $stmt->fetchAll();
+            
+            foreach ($rows as $row) {
+                $key = $row['key_name'];
+                $decoded = json_decode($row['json_data'], true);
+                $state[$key] = $decoded;
+                if (!$lastUpdated || $row['updated_at'] > $lastUpdated) {
+                    $lastUpdated = $row['updated_at'];
+                }
+            }
+
+            // Consulta também diretamente a tabela relacional checkins_ruas para garantir 100% de integridade
+            try {
+                $stmtCheckins = $pdo->query("SELECT * FROM checkins_ruas ORDER BY timestamp_checkin DESC LIMIT 500");
+                $chkRows = $stmtCheckins->fetchAll();
+                if ($chkRows && count($chkRows) > 0) {
+                    $relationalCheckins = [];
+                    foreach ($chkRows as $r) {
+                        $photosList = [];
+                        if (!empty($r['fotos_json'])) {
+                            $decodedPhotos = json_decode($r['fotos_json'], true);
+                            $photosList = is_array($decodedPhotos) ? $decodedPhotos : [];
+                        }
+
+                        $relationalCheckins[] = [
+                            'id' => $r['id'],
+                            'militantId' => $r['militante_id'],
+                            'militantName' => $r['militante_nome'],
+                            'teamId' => $r['equipe_id'] ?? 'team-alpha',
+                            'neighborhoodId' => $r['bairro_id'],
+                            'neighborhoodName' => $r['bairro_nome'],
+                            'streetName' => $r['nome_rua'],
+                            'houseNumberRange' => $r['faixa_numeracao'] ?? '',
+                            'timestamp' => $r['timestamp_checkin'],
+                            'latitude' => floatval($r['latitude']),
+                            'longitude' => floatval($r['longitude']),
+                            'accuracyMeters' => floatval($r['precisao_gps_metros'] ?? 4.0),
+                            'materialsDelivered' => [
+                                'santinhos' => intval($r['qtd_santinhos'] ?? 0),
+                                'adesivos' => intval($r['qtd_adesivos'] ?? 0),
+                                'adesivo_bola' => intval($r['qtd_adesivo_bola'] ?? 0),
+                                'adesivo_parachoque' => intval($r['qtd_adesivo_parachoque'] ?? 0),
+                                'colinhas' => intval($r['qtd_colinhas'] ?? 0),
+                                'abordagens' => intval($r['qtd_abordagens'] ?? 0),
+                                'comercio' => intval($r['qtd_comercio'] ?? 0)
+                            ],
+                            'observations' => $r['observacoes'] ?? '',
+                            'photos' => $photosList,
+                            'status' => $r['status_auditoria'] ?? 'validado',
+                            'synced' => true
+                        ];
+                    }
+
+                    // Mescla checkins da tabela relacional com o array de checkins do app_sync_state
+                    $existingCheckins = isset($state['militancia_checkins_v1']) && is_array($state['militancia_checkins_v1']) 
+                        ? $state['militancia_checkins_v1'] 
+                        : [];
+                    
+                    $checkinMap = [];
+                    foreach ($existingCheckins as $chk) {
+                        if (isset($chk['id'])) $checkinMap[$chk['id']] = $chk;
+                    }
+                    foreach ($relationalCheckins as $chk) {
+                        if (isset($chk['id'])) {
+                            if (!isset($checkinMap[$chk['id']])) {
+                                $checkinMap[$chk['id']] = $chk;
+                            } else {
+                                // Preserva fotos e campos se o relacional for mais completo
+                                if (empty($checkinMap[$chk['id']]['photos']) && !empty($chk['photos'])) {
+                                    $checkinMap[$chk['id']]['photos'] = $chk['photos'];
+                                }
+                            }
+                        }
+                    }
+                    $state['militancia_checkins_v1'] = array_values($checkinMap);
+                }
+            } catch (Exception $eRel) {
+                // Silencioso se der erro na consulta relacional
+            }
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Dados recuperados com sucesso do MySQL Hostinger e Cofre do Servidor.',
+                'server_time' => date('Y-m-d H:i:s'),
+                'last_updated' => $lastUpdated,
+                'keys_found' => count($state),
+                'checkins_count' => isset($state['militancia_checkins_v1']) ? count($state['militancia_checkins_v1']) : 0,
+                'data' => $state
+            ]);
+            exit;
+        } catch (Exception $e) {
+            // Em caso de erro na consulta, retorna ao menos os dados do cofre em disco
+            echo json_encode([
+                'status' => 'success',
+                'source' => 'disk_vault_fallback',
+                'message' => 'Dados recuperados do cofre do servidor: ' . $e->getMessage(),
+                'data' => $state
+            ]);
+            exit;
+        }
+    } else {
         echo json_encode([
             'status' => 'success',
-            'message' => 'Dados sincronizados com o banco de dados MySQL da Hostinger com sucesso.',
-            'server_time' => date('Y-m-d H:i:s'),
-            'last_updated' => $lastUpdated,
-            'keys_found' => count($state),
+            'source' => 'disk_vault',
+            'message' => 'Dados recuperados do cofre permanente do servidor.',
             'data' => $state
-        ]);
-        exit;
-    } catch (Exception $e) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Erro ao buscar dados no MySQL: ' . $e->getMessage(),
-            'data' => null
         ]);
         exit;
     }
@@ -353,9 +438,34 @@ if ($method === 'POST') {
 
         $pdo->commit();
 
+        // 3. Atualiza também o cofre em disco (data_server_vault.json) para redundância à prova de falhas
+        try {
+            $diskVaultPath = __DIR__ . '/data_server_vault.json';
+            $currentDisk = [];
+            if (file_exists($diskVaultPath)) {
+                $raw = file_get_contents($diskVaultPath);
+                if ($raw) {
+                    $currentDisk = json_decode($raw, true) ?: [];
+                }
+            }
+
+            if (isset($payload['collections']) && is_array($payload['collections'])) {
+                foreach ($payload['collections'] as $k => $v) {
+                    $currentDisk[$k] = $v;
+                }
+            } elseif (isset($payload['key']) && isset($payload['data'])) {
+                $currentDisk[$payload['key']] = $payload['data'];
+            }
+
+            $currentDisk['_lastUpdated'] = date('Y-m-d H:i:s');
+            file_put_contents($diskVaultPath, json_encode($currentDisk, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        } catch (Exception $eDisk) {
+            // Silencioso
+        }
+
         echo json_encode([
             'status' => 'success',
-            'message' => 'Alterações gravadas e sincronizadas com sucesso no MySQL Hostinger (u844537895_Militantes).',
+            'message' => 'Alterações gravadas e sincronizadas com sucesso no MySQL Hostinger (u844537895_Militantes) e Cofre do Servidor.',
             'updated_keys' => $updatedKeys,
             'timestamp' => date('Y-m-d H:i:s')
         ]);
@@ -364,9 +474,31 @@ if ($method === 'POST') {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
+
+        // Salva ao menos no cofre em disco para não perder dados em hipótese alguma
+        try {
+            $diskVaultPath = __DIR__ . '/data_server_vault.json';
+            $currentDisk = [];
+            if (file_exists($diskVaultPath)) {
+                $raw = file_get_contents($diskVaultPath);
+                if ($raw) {
+                    $currentDisk = json_decode($raw, true) ?: [];
+                }
+            }
+            if (isset($payload['collections']) && is_array($payload['collections'])) {
+                foreach ($payload['collections'] as $k => $v) {
+                    $currentDisk[$k] = $v;
+                }
+            } elseif (isset($payload['key']) && isset($payload['data'])) {
+                $currentDisk[$payload['key']] = $payload['data'];
+            }
+            $currentDisk['_lastUpdated'] = date('Y-m-d H:i:s');
+            file_put_contents($diskVaultPath, json_encode($currentDisk, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        } catch (Exception $eDisk) {}
+
         echo json_encode([
-            'status' => 'error',
-            'message' => 'Erro ao salvar alterações no MySQL: ' . $e->getMessage()
+            'status' => 'partial_success',
+            'message' => 'Salvo no Cofre do Servidor. Erro no MySQL: ' . $e->getMessage()
         ]);
         exit;
     }

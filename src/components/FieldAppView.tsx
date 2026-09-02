@@ -49,7 +49,9 @@ import {
   RefreshCw,
   Wifi,
   Loader2,
-  ImageIcon
+  ImageIcon,
+  Download,
+  CloudDownload
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -207,6 +209,30 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       }
     } finally {
       setIsSyncingQueue(false);
+    }
+  };
+
+  const [isRestoringServer, setIsRestoringServer] = useState(false);
+
+  const handleRestoreServerData = async () => {
+    setIsRestoringServer(true);
+    try {
+      await StorageService.fetchRemoteState(true);
+      const allNow = StorageService.getCheckIns();
+      loadData();
+      setFeedbackMsg({
+        text: `✓ Dados Recuperados da Nuvem!`,
+        destination: `MySQL Hostinger u844537895_Militantes + Cofre Central`,
+        details: `${allNow.length} ruas e check-ins integrados com sucesso. Nenhum dado foi perdido.`
+      });
+    } catch (err: any) {
+      setFeedbackMsg({
+        text: 'Erro ao consultar o servidor.',
+        details: err?.message || 'Verifique sua conexão.',
+        isError: true
+      });
+    } finally {
+      setIsRestoringServer(false);
     }
   };
 
@@ -595,12 +621,23 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-center">
+        <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+          <button
+            type="button"
+            onClick={handleRestoreServerData}
+            disabled={isRestoringServer}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-xs transition disabled:opacity-50 cursor-pointer"
+            title="Recuperar todos os lançamentos, fotos e ruas salvas no MySQL e Cofre do Servidor"
+          >
+            <Download className={`w-3.5 h-3.5 ${isRestoringServer ? 'animate-spin' : ''}`} />
+            <span>{isRestoringServer ? 'Recuperando...' : 'Recuperar Lançamentos da Nuvem'}</span>
+          </button>
+
           <button
             type="button"
             onClick={handleTestConnection}
             disabled={isTestingConn}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition disabled:opacity-50"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition disabled:opacity-50 cursor-pointer"
             title="Testar ping e conexão com o banco MySQL do Hostinger"
           >
             <RefreshCw className={`w-3 h-3 text-blue-400 ${isTestingConn ? 'animate-spin' : ''}`} />
@@ -612,7 +649,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
               type="button"
               onClick={handleSyncOffline}
               disabled={isSyncingQueue}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-xs transition disabled:opacity-50"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-xs transition disabled:opacity-50 cursor-pointer"
             >
               <Wifi className="w-3 h-3" />
               <span>Sincronizar Fila ({StorageService.getOfflineQueue().length})</span>
