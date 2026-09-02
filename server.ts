@@ -14,6 +14,20 @@ async function startServer() {
 
   const VAULT_FILE_PATH = path.join(process.cwd(), 'data_server_vault.json');
 
+  // Active SSE connections for instant real-time broadcasts across all users/devices
+  const sseClients = new Set<express.Response>();
+
+  const broadcastRealTimeUpdate = (type: string, data: any) => {
+    const payload = `data: ${JSON.stringify({ type, data, timestamp: new Date().toISOString() })}\n\n`;
+    for (const client of sseClients) {
+      try {
+        client.write(payload);
+      } catch {
+        sseClients.delete(client);
+      }
+    }
+  };
+
   const readServerVault = (): Record<string, any> => {
     try {
       if (fs.existsSync(VAULT_FILE_PATH)) {
@@ -26,13 +40,99 @@ async function startServer() {
     return {};
   };
 
-  const writeServerVault = (data: Record<string, any>): void => {
+  // Deep non-destructive merge for multi-user and multi-device concurrency
+  const mergeVaultData = (current: Record<string, any>, incoming: Record<string, any>): Record<string, any> => {
+    const result: Record<string, any> = { ...current };
+
+    for (const [key, incomingValue] of Object.entries(incoming)) {
+      if (key.startsWith('_')) continue;
+
+      if (Array.isArray(incomingValue)) {
+        const currentArray = Array.isArray(result[key]) ? result[key] : [];
+        const itemMap = new Map<string, any>();
+
+        // 1. Index all existing server items
+        currentArray.forEach((item: any) => {
+          if (item && item.id) {
+            itemMap.set(String(item.id), item);
+          }
+        });
+
+        // 2. Merge incoming items non-destructively
+        incomingValue.forEach((incomingItem: any) => {
+          if (incomingItem && incomingItem.id) {
+            const idStr = String(incomingItem.id);
+            const existingItem = itemMap.get(idStr);
+
+            if (!existingItem) {
+              // New record created by another device/user -> add it!
+              itemMap.set(idStr, incomingItem);
+            } else {
+              // Both have it -> merge properties safely
+              let merged = { ...existingItem, ...incomingItem };
+
+              // Special handling for Check-ins: preserve photos and most complete data
+              if (key === 'militancia_checkins_v1') {
+                const existingPhotos = Array.isArray(existingItem.photos) ? existingItem.photos : [];
+                const incomingPhotos = Array.isArray(incomingItem.photos) ? incomingItem.photos : [];
+                const finalPhotos = incomingPhotos.length > 0 ? incomingPhotos : existingPhotos;
+
+                merged = {
+                  ...existingItem,
+                  ...incomingItem,
+                  photos: finalPhotos,
+                  observations: incomingItem.observations || existingItem.observations || '',
+                  latitude: Number(incomingItem.latitude) || Number(existingItem.latitude) || -27.5962,
+                  longitude: Number(incomingItem.longitude) || Number(existingItem.longitude) || -48.6190,
+                  status: incomingItem.status || existingItem.status || 'validado',
+                  synced: true
+                };
+              }
+
+              itemMap.set(idStr, merged);
+            }
+          }
+        });
+
+        // Convert map back to array and preserve newest first for checkins/logs
+        const mergedList = Array.from(itemMap.values());
+        if (key === 'militancia_checkins_v1' || key === 'militancia_audit_logs_v1' || key === 'militancia_notifications_v1') {
+          mergedList.sort((a, b) => {
+            const timeA = new Date(a.timestamp || a.timestamp_checkin || a.created_at || 0).getTime();
+            const timeB = new Date(b.timestamp || b.timestamp_checkin || b.created_at || 0).getTime();
+            return timeB - timeA;
+          });
+        }
+        result[key] = mergedList;
+      } else if (incomingValue && typeof incomingValue === 'object') {
+        result[key] = { ...(result[key] || {}), ...incomingValue };
+      } else if (incomingValue !== undefined) {
+        result[key] = incomingValue;
+      }
+    }
+
+    result._lastServerSavedAt = new Date().toISOString();
+    return result;
+  };
+
+  const writeServerVault = (data: Record<string, any>): Record<string, any> => {
     try {
       const current = readServerVault();
-      const updated = { ...current, ...data, _lastServerSavedAt: new Date().toISOString() };
+      const updated = mergeVaultData(current, data);
       fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updated, null, 2), 'utf-8');
+      
+      // Also write to public copy for static availability
+      try {
+        const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+        if (fs.existsSync(path.dirname(publicVaultPath))) {
+          fs.writeFileSync(publicVaultPath, JSON.stringify(updated, null, 2), 'utf-8');
+        }
+      } catch {}
+
+      return updated;
     } catch (e) {
       console.error('Error writing server vault file:', e);
+      return readServerVault();
     }
   };
 
@@ -97,6 +197,34 @@ async function startServer() {
   app.get('/api/checkin/test-hostinger', handleTestHostinger);
   app.get('/api/teste_conexao.php', handleTestHostinger);
 
+  // Real-time Server-Sent Events (SSE) stream for instantaneous cross-device synchronization
+  app.get('/api/sync/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    sseClients.add(res);
+
+    // Send initial handshake
+    res.write(`data: ${JSON.stringify({ type: 'connected', message: 'SSE Real-Time Sync Active', timestamp: new Date().toISOString() })}\n\n`);
+
+    // Keep-alive heartbeat every 15s
+    const keepAlive = setInterval(() => {
+      try {
+        res.write(`: heartbeat\n\n`);
+      } catch {
+        clearInterval(keepAlive);
+        sseClients.delete(res);
+      }
+    }, 15000);
+
+    req.on('close', () => {
+      clearInterval(keepAlive);
+      sseClients.delete(res);
+    });
+  });
+
   // Check-in API endpoint (POST /api/checkin and /api/checkin.php)
   const handleCheckInPost = async (req: express.Request, res: express.Response) => {
     const checkInData = req.body;
@@ -109,10 +237,10 @@ async function startServer() {
       });
     }
 
+    let savedCheckin: any = null;
+
     // 1. Persist immediately to server disk vault with normalized structure
     try {
-      const vault = readServerVault();
-      const checkins: any[] = vault['militancia_checkins_v1'] || [];
       const itemData = checkInData.data || checkInData;
 
       if (itemData && itemData.id) {
@@ -128,17 +256,17 @@ async function startServer() {
         }
 
         const normalized: any = {
-          id: itemData.id,
-          militantId: itemData.militantId || itemData.militante_id,
-          militantName: itemData.militantName || itemData.militante_nome,
+          id: String(itemData.id),
+          militantId: itemData.militantId || itemData.militante_id || 'mil-01',
+          militantName: itemData.militantName || itemData.militante_nome || 'Militante',
           teamId: itemData.teamId || itemData.equipe_id || 'team-1787840837258',
-          neighborhoodId: itemData.neighborhoodId || itemData.bairro_id,
-          neighborhoodName: itemData.neighborhoodName || itemData.bairro_nome,
-          streetName: itemData.streetName || itemData.nome_rua,
+          neighborhoodId: itemData.neighborhoodId || itemData.bairro_id || 'forquilhinhas',
+          neighborhoodName: itemData.neighborhoodName || itemData.bairro_nome || 'Forquilhinhas',
+          streetName: itemData.streetName || itemData.nome_rua || 'Rua Geral',
           houseNumberRange: itemData.houseNumberRange || itemData.faixa_numeracao || 'Trecho Geral',
-          timestamp: itemData.timestamp || itemData.timestamp_checkin,
-          latitude: Number(itemData.latitude),
-          longitude: Number(itemData.longitude),
+          timestamp: itemData.timestamp || itemData.timestamp_checkin || new Date().toISOString(),
+          latitude: Number(itemData.latitude) || -27.5962,
+          longitude: Number(itemData.longitude) || -48.6190,
           accuracyMeters: Number(itemData.accuracyMeters || itemData.precisao_gps_metros || 4.2),
           photos: photosList,
           materialsDelivered: itemData.materialsDelivered || {
@@ -155,22 +283,24 @@ async function startServer() {
           synced: true
         };
 
-        const existingIdx = checkins.findIndex((c: any) => c.id === itemData.id);
-        if (existingIdx >= 0) {
-          checkins[existingIdx] = { ...checkins[existingIdx], ...normalized };
-        } else {
-          checkins.unshift(normalized);
-        }
-        writeServerVault({ militancia_checkins_v1: checkins });
+        savedCheckin = normalized;
+
+        // Write safely via non-destructive merge
+        writeServerVault({
+          militancia_checkins_v1: [normalized]
+        });
+
+        // Broadcast instant update to all other connected clients
+        broadcastRealTimeUpdate('checkin_created', normalized);
       }
     } catch (e) {
       console.error('Server vault checkin save error:', e);
     }
 
-    // 2. Dispatch to Hostinger MySQL
+    // 2. Dispatch in background to Hostinger MySQL
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const hostingerResponse = await fetch(targetUrl, {
         method: 'POST',
@@ -191,7 +321,7 @@ async function startServer() {
           destination: 'Hostinger MySQL + Server Vault',
           message: 'Check-in persistido no cofre do servidor e no MySQL da Hostinger.',
           hostingerResponse: responseData,
-          checkIn: checkInData
+          checkIn: savedCheckin || checkInData
         });
       } else {
         return res.json({
@@ -199,7 +329,7 @@ async function startServer() {
           status: 'synced_local_vault',
           destination: 'Cofre Local do Servidor',
           message: 'Check-in garantido no cofre do servidor Node.',
-          checkIn: checkInData
+          checkIn: savedCheckin || checkInData
         });
       }
     } catch (error: any) {
@@ -208,7 +338,7 @@ async function startServer() {
         status: 'synced_local_vault',
         destination: 'Cofre Local do Servidor (Offline / Timeout)',
         message: 'Check-in gravado no cofre em disco com 100% de integridade.',
-        checkIn: checkInData
+        checkIn: savedCheckin || checkInData
       });
     }
   };
@@ -234,11 +364,19 @@ async function startServer() {
 
       if (hostingerResponse.ok) {
         const data = await hostingerResponse.json();
-        // Merge remote and server vault checkins
+        // Merge remote and server vault checkins non-destructively
         const remoteCheckins = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
         const mergedMap = new Map();
-        remoteCheckins.forEach((c: any) => mergedMap.set(c.id, c));
-        localCheckins.forEach((c: any) => mergedMap.set(c.id, { ...mergedMap.get(c.id), ...c }));
+        localCheckins.forEach((c: any) => {
+          if (c && c.id) mergedMap.set(String(c.id), c);
+        });
+        remoteCheckins.forEach((c: any) => {
+          if (c && c.id) {
+            const idStr = String(c.id);
+            const exist = mergedMap.get(idStr);
+            mergedMap.set(idStr, exist ? { ...c, ...exist } : c);
+          }
+        });
         const mergedList = Array.from(mergedMap.values());
         return res.json({ status: 'success', data: mergedList });
       }
@@ -256,12 +394,14 @@ async function startServer() {
     const syncData = req.body;
     const targetUrl = 'https://militancia.mastervisionmarketing.com/api/sync.php';
 
-    // 1. Save immediately to disk vault on Node server
+    // 1. Save and merge immediately to disk vault on Node server
     try {
       if (syncData.key && syncData.data !== undefined) {
         writeServerVault({ [syncData.key]: syncData.data });
+        broadcastRealTimeUpdate('collection_updated', { key: syncData.key });
       } else if (syncData.collections && typeof syncData.collections === 'object') {
         writeServerVault(syncData.collections);
+        broadcastRealTimeUpdate('all_collections_updated', { count: Object.keys(syncData.collections).length });
       }
     } catch (err) {
       console.error('Error saving to server disk vault:', err);
@@ -270,7 +410,7 @@ async function startServer() {
     // 2. Dispatch in parallel to Hostinger MySQL
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
 
       const hostingerResponse = await fetch(targetUrl, {
         method: 'POST',

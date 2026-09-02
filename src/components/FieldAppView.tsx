@@ -418,7 +418,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
     );
 
     const newCheckIn: StreetCheckIn = {
-      id: `chk-${Date.now()}`,
+      id: `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}-${(activeMilitant.id || 'm').replace(/[^a-zA-Z0-9]/g, '')}`,
       militantId: activeMilitant.id,
       militantName: activeMilitant.name,
       teamId: activeMilitant.teamId || 'team-alpha',
