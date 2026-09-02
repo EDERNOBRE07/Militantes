@@ -219,7 +219,8 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
     try {
       await StorageService.fetchRemoteState(true);
       const allNow = StorageService.getCheckIns();
-      loadData();
+      setAllCheckIns(allNow);
+      onCheckInCreated();
       setFeedbackMsg({
         text: `✓ Dados Recuperados da Nuvem!`,
         destination: `MySQL Hostinger u844537895_Militantes + Cofre Central`,

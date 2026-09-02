@@ -401,12 +401,41 @@ export class StorageService {
     if (!localStorage.getItem(STORAGE_KEYS.NEIGHBORHOODS)) {
       this.set(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS, false);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.MILITANTS)) {
+
+    const currentMilitants = this.get<Militant[]>(STORAGE_KEYS.MILITANTS, []);
+    if (!currentMilitants || currentMilitants.length === 0) {
       this.set(STORAGE_KEYS.MILITANTS, INITIAL_MILITANTS, false);
+    } else {
+      const miltMap = new Map<string, Militant>();
+      currentMilitants.forEach(m => miltMap.set(m.id, m));
+      INITIAL_MILITANTS.forEach(initM => {
+        if (!miltMap.has(initM.id)) {
+          miltMap.set(initM.id, initM);
+        }
+      });
+      const combinedM = Array.from(miltMap.values());
+      if (combinedM.length !== currentMilitants.length) {
+        this.set(STORAGE_KEYS.MILITANTS, combinedM, false);
+      }
     }
-    if (!localStorage.getItem(STORAGE_KEYS.TEAMS)) {
+
+    const currentTeams = this.get<Team[]>(STORAGE_KEYS.TEAMS, []);
+    if (!currentTeams || currentTeams.length === 0) {
       this.set(STORAGE_KEYS.TEAMS, INITIAL_TEAMS, false);
+    } else {
+      const teamMap = new Map<string, Team>();
+      currentTeams.forEach(t => teamMap.set(t.id, t));
+      INITIAL_TEAMS.forEach(initT => {
+        if (!teamMap.has(initT.id)) {
+          teamMap.set(initT.id, initT);
+        }
+      });
+      const combinedT = Array.from(teamMap.values());
+      if (combinedT.length !== currentTeams.length) {
+        this.set(STORAGE_KEYS.TEAMS, combinedT, false);
+      }
     }
+
     if (!localStorage.getItem(STORAGE_KEYS.VANS)) {
       this.set(STORAGE_KEYS.VANS, INITIAL_VANS, false);
     }

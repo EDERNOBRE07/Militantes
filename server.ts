@@ -109,18 +109,60 @@ async function startServer() {
       });
     }
 
-    // 1. Persist immediately to server disk vault
+    // 1. Persist immediately to server disk vault with normalized structure
     try {
       const vault = readServerVault();
       const checkins: any[] = vault['militancia_checkins_v1'] || [];
       const itemData = checkInData.data || checkInData;
-      const existingIdx = checkins.findIndex((c: any) => c.id === itemData.id);
-      if (existingIdx >= 0) {
-        checkins[existingIdx] = { ...checkins[existingIdx], ...itemData };
-      } else {
-        checkins.unshift(itemData);
+
+      if (itemData && itemData.id) {
+        let photosList: string[] = [];
+        if (Array.isArray(itemData.photos)) {
+          photosList = itemData.photos;
+        } else if (itemData.fotos_json) {
+          try {
+            photosList = typeof itemData.fotos_json === 'string' ? JSON.parse(itemData.fotos_json) : itemData.fotos_json;
+          } catch {
+            photosList = [];
+          }
+        }
+
+        const normalized: any = {
+          id: itemData.id,
+          militantId: itemData.militantId || itemData.militante_id,
+          militantName: itemData.militantName || itemData.militante_nome,
+          teamId: itemData.teamId || itemData.equipe_id || 'team-1787840837258',
+          neighborhoodId: itemData.neighborhoodId || itemData.bairro_id,
+          neighborhoodName: itemData.neighborhoodName || itemData.bairro_nome,
+          streetName: itemData.streetName || itemData.nome_rua,
+          houseNumberRange: itemData.houseNumberRange || itemData.faixa_numeracao || 'Trecho Geral',
+          timestamp: itemData.timestamp || itemData.timestamp_checkin,
+          latitude: Number(itemData.latitude),
+          longitude: Number(itemData.longitude),
+          accuracyMeters: Number(itemData.accuracyMeters || itemData.precisao_gps_metros || 4.2),
+          photos: photosList,
+          materialsDelivered: itemData.materialsDelivered || {
+            santinhos: Number(itemData.qtd_santinhos || 0),
+            adesivos: Number(itemData.qtd_adesivos || 0),
+            adesivo_bola: Number(itemData.qtd_adesivo_bola || 0),
+            adesivo_parachoque: Number(itemData.qtd_adesivo_parachoque || 0),
+            colinhas: Number(itemData.qtd_colinhas || 0),
+            abordagens: Number(itemData.qtd_abordagens || 0),
+            comercio: Number(itemData.qtd_comercio || 0)
+          },
+          observations: itemData.observations || itemData.observacoes || '',
+          status: itemData.status || itemData.status_auditoria || 'validado',
+          synced: true
+        };
+
+        const existingIdx = checkins.findIndex((c: any) => c.id === itemData.id);
+        if (existingIdx >= 0) {
+          checkins[existingIdx] = { ...checkins[existingIdx], ...normalized };
+        } else {
+          checkins.unshift(normalized);
+        }
+        writeServerVault({ militancia_checkins_v1: checkins });
       }
-      writeServerVault({ militancia_checkins_v1: checkins });
     } catch (e) {
       console.error('Server vault checkin save error:', e);
     }
