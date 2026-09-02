@@ -506,6 +506,170 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     lat: -27.6230,
     lng: -48.6870,
     type: 'rua'
+  },
+
+  // RUAS CADASTRADAS PELAS EQUIPES DE CAMPO (DAIANA, LUCIANO, MILENA)
+  {
+    name: 'Rua Manoel Francisco de Souza',
+    aliases: ['rua manoel francisco de souza', 'manoel francisco de souza', 'manoel francisco'],
+    neighborhoodId: 'forquilhinhas',
+    neighborhoodName: 'Forquilhinhas',
+    lat: -27.6042,
+    lng: -48.6530,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Allan Kardec',
+    aliases: ['rua allan kardec', 'allan kardec', 'kardec'],
+    neighborhoodId: 'forquilhinhas',
+    neighborhoodName: 'Forquilhinhas',
+    lat: -27.6078,
+    lng: -48.6552,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Aimoré',
+    aliases: ['rua aimore', 'aimore', 'rua aimoré'],
+    neighborhoodId: 'forquilhinhas',
+    neighborhoodName: 'Forquilhinhas',
+    lat: -27.6095,
+    lng: -48.6515,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Águas de Chapecó',
+    aliases: ['rua aguas de chapeco', 'aguas de chapeco', 'aguas de chapecó'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5815,
+    lng: -48.6290,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Lagoa da Conceição',
+    aliases: ['rua lagoa da conceicao', 'lagoa da conceicao', 'lagoa da conceição'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5832,
+    lng: -48.6315,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Pântano do Sul',
+    aliases: ['rua pantano do sul', 'pantano do sul', 'pântano do sul'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5840,
+    lng: -48.6328,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Daniela',
+    aliases: ['rua daniela', 'daniela'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5825,
+    lng: -48.6305,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Giancarlo Griss Costa',
+    aliases: ['rua giancarlo griss costa', 'giancarlo griss costa', 'giancarlo griss'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5855,
+    lng: -48.6280,
+    type: 'rua'
+  },
+  {
+    name: 'Rua das Violetas',
+    aliases: ['rua das violetas', 'das violetas', 'violetas'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5870,
+    lng: -48.6335,
+    type: 'rua'
+  },
+  {
+    name: 'Rua dos Jasmins',
+    aliases: ['rua rua dos jasmins', 'rua dos jasmins', 'dos jasmins', 'jasmins'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5862,
+    lng: -48.6340,
+    type: 'rua'
+  },
+  {
+    name: 'Rua das Papoulas',
+    aliases: ['rua das papoulas', 'das papoulas', 'papoulas'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5880,
+    lng: -48.6345,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Cândido Amaro Damásio',
+    aliases: ['rua rua candido amaro damasio', 'candido amaro damasio', 'candido amaro'],
+    neighborhoodId: 'bela_vista',
+    neighborhoodName: 'Bela Vista',
+    lat: -27.5895,
+    lng: -48.6310,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Antenor Valentin da Silva',
+    aliases: ['rua antenor valentin da silva', 'antenor valentin da silva', 'antenor valentin'],
+    neighborhoodId: 'ipiranga',
+    neighborhoodName: 'Ipiranga',
+    lat: -27.5910,
+    lng: -48.6395,
+    type: 'rua'
+  },
+  {
+    name: 'Rua José Bartolomeu Vieira',
+    aliases: ['rua jose bartolomeu vieira', 'jose bartolomeu vieira', 'bartolomeu vieira'],
+    neighborhoodId: 'forquilhinhas',
+    neighborhoodName: 'Forquilhinhas',
+    lat: -27.6055,
+    lng: -48.6540,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Vitorino José Luiz',
+    aliases: ['rua vitorino jose luiz', 'vitorino jose luiz', 'vitorino luiz'],
+    neighborhoodId: 'forquilhas',
+    neighborhoodName: 'Forquilhas',
+    lat: -27.6080,
+    lng: -48.6650,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Alexandre Plueinsk',
+    aliases: ['rua alexandre plueinsk', 'alexandre plueinsk', 'alexandre plucinski'],
+    neighborhoodId: 'forquilhas',
+    neighborhoodName: 'Forquilhas',
+    lat: -27.6065,
+    lng: -48.6680,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Bernardino Freitas de Agostinho',
+    aliases: ['rua bernadino freitas de agostinho', 'bernadino freitas de agostinho', 'bernardino freitas'],
+    neighborhoodId: 'forquilhinhas',
+    neighborhoodName: 'Forquilhinhas',
+    lat: -27.6035,
+    lng: -48.6510,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Túlio Rodrigues Martins',
+    aliases: ['rua tulio rodrigues martins', 'tulio rodrigues martins', 'tulio martins'],
+    neighborhoodId: 'forquilhas',
+    neighborhoodName: 'Forquilhas',
+    lat: -27.6050,
+    lng: -48.6635,
+    type: 'rua'
   }
 ];
 

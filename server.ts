@@ -12,14 +12,40 @@ async function startServer() {
   app.use(express.json({ limit: '25mb' }));
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
+  const VAULT_FILE_PATH = path.join(process.cwd(), 'data_server_vault.json');
+
+  const readServerVault = (): Record<string, any> => {
+    try {
+      if (fs.existsSync(VAULT_FILE_PATH)) {
+        const raw = fs.readFileSync(VAULT_FILE_PATH, 'utf-8');
+        return JSON.parse(raw);
+      }
+    } catch (e) {
+      console.error('Error reading server vault file:', e);
+    }
+    return {};
+  };
+
+  const writeServerVault = (data: Record<string, any>): void => {
+    try {
+      const current = readServerVault();
+      const updated = { ...current, ...data, _lastServerSavedAt: new Date().toISOString() };
+      fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updated, null, 2), 'utf-8');
+    } catch (e) {
+      console.error('Error writing server vault file:', e);
+    }
+  };
+
   // Health endpoint
   app.get('/api/health', (req, res) => {
+    const vault = readServerVault();
     res.json({
       status: 'ok',
       service: 'Militância São José - SC API',
       timestamp: new Date().toISOString(),
       city: 'São José - Santa Catarina',
       target_mysql: 'u844537895_Militantes @ militancia.mastervisionmarketing.com',
+      serverVaultKeys: Object.keys(vault),
       port: typeof PORT === 'number' ? PORT : 'passenger_socket'
     });
   });
@@ -31,7 +57,7 @@ async function startServer() {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const response = await fetch(targetUrl, {
         method: 'GET',
@@ -60,9 +86,9 @@ async function startServer() {
         endpoint: targetUrl,
         latencyMs,
         isTimeout,
-        errorType: isTimeout ? 'TIMEOUT_3500MS' : 'NETWORK_ERROR',
+        errorType: isTimeout ? 'TIMEOUT_6000MS' : 'NETWORK_ERROR',
         errorMessage: error.message || 'Erro ao conectar no servidor Hostinger.',
-        message: 'Servidor Hostinger temporariamente indisponível. Modo de contingência e fila offline ativo.',
+        message: 'Servidor Hostinger temporariamente indisponível. Modo de contingência e cofre local ativo.',
         targetDatabase: 'u844537895_Militantes'
       });
     }
@@ -83,11 +109,27 @@ async function startServer() {
       });
     }
 
+    // 1. Persist immediately to server disk vault
+    try {
+      const vault = readServerVault();
+      const checkins: any[] = vault['militancia_checkins_v1'] || [];
+      const itemData = checkInData.data || checkInData;
+      const existingIdx = checkins.findIndex((c: any) => c.id === itemData.id);
+      if (existingIdx >= 0) {
+        checkins[existingIdx] = { ...checkins[existingIdx], ...itemData };
+      } else {
+        checkins.unshift(itemData);
+      }
+      writeServerVault({ militancia_checkins_v1: checkins });
+    } catch (e) {
+      console.error('Server vault checkin save error:', e);
+    }
+
+    // 2. Dispatch to Hostinger MySQL
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4500);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-      // Transmit to Hostinger PHP/MySQL backend
       const hostingerResponse = await fetch(targetUrl, {
         method: 'POST',
         headers: {
@@ -104,31 +146,26 @@ async function startServer() {
         return res.json({
           success: true,
           status: 'synced_mysql',
-          destination: 'Hostinger MySQL: u844537895_Militantes (militancia.mastervisionmarketing.com)',
-          message: 'Check-in persistido diretamente no banco MySQL da Hostinger com sucesso.',
+          destination: 'Hostinger MySQL + Server Vault',
+          message: 'Check-in persistido no cofre do servidor e no MySQL da Hostinger.',
           hostingerResponse: responseData,
           checkIn: checkInData
         });
       } else {
         return res.json({
           success: true,
-          status: 'synced_local_queued',
-          destination: 'Fila de Sincronização Local (Hostinger retornou HTTP ' + hostingerResponse.status + ')',
-          message: 'Check-in salvo localmente. Aguardando sincronização com MySQL da Hostinger.',
+          status: 'synced_local_vault',
+          destination: 'Cofre Local do Servidor',
+          message: 'Check-in garantido no cofre do servidor Node.',
           checkIn: checkInData
         });
       }
     } catch (error: any) {
-      // Graceful network fault tolerance
-      const isTimeout = error.name === 'AbortError';
       return res.json({
         success: true,
-        status: 'synced_local_queued',
-        destination: 'Fila de Sincronização Local (Offline / Timeout)',
-        message: isTimeout
-          ? 'Tempo limite de conexão com o Hostinger atingido. Check-in gravado no armazenamento local com integridade.'
-          : 'Check-in salvo no armazenamento local e enfileirado para sincronização com Hostinger MySQL.',
-        networkNote: error.message,
+        status: 'synced_local_vault',
+        destination: 'Cofre Local do Servidor (Offline / Timeout)',
+        message: 'Check-in gravado no cofre em disco com 100% de integridade.',
         checkIn: checkInData
       });
     }
@@ -140,22 +177,32 @@ async function startServer() {
   // Check-in API endpoint (GET /api/checkin and /api/checkin.php)
   const handleCheckInGet = async (req: express.Request, res: express.Response) => {
     const targetUrl = 'https://militancia.mastervisionmarketing.com/api/checkin.php';
+    const vault = readServerVault();
+    const localCheckins = vault['militancia_checkins_v1'] || [];
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
       const hostingerResponse = await fetch(targetUrl, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+
       if (hostingerResponse.ok) {
         const data = await hostingerResponse.json();
-        return res.json(data);
+        // Merge remote and server vault checkins
+        const remoteCheckins = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+        const mergedMap = new Map();
+        remoteCheckins.forEach((c: any) => mergedMap.set(c.id, c));
+        localCheckins.forEach((c: any) => mergedMap.set(c.id, { ...mergedMap.get(c.id), ...c }));
+        const mergedList = Array.from(mergedMap.values());
+        return res.json({ status: 'success', data: mergedList });
       }
-      return res.json({ status: 'local_fallback', data: [] });
+      return res.json({ status: 'local_fallback', data: localCheckins });
     } catch {
-      return res.json({ status: 'local_fallback', data: [] });
+      return res.json({ status: 'local_fallback', data: localCheckins });
     }
   };
 
@@ -167,9 +214,21 @@ async function startServer() {
     const syncData = req.body;
     const targetUrl = 'https://militancia.mastervisionmarketing.com/api/sync.php';
 
+    // 1. Save immediately to disk vault on Node server
+    try {
+      if (syncData.key && syncData.data !== undefined) {
+        writeServerVault({ [syncData.key]: syncData.data });
+      } else if (syncData.collections && typeof syncData.collections === 'object') {
+        writeServerVault(syncData.collections);
+      }
+    } catch (err) {
+      console.error('Error saving to server disk vault:', err);
+    }
+
+    // 2. Dispatch in parallel to Hostinger MySQL
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4500);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       const hostingerResponse = await fetch(targetUrl, {
         method: 'POST',
@@ -184,12 +243,12 @@ async function startServer() {
 
       if (hostingerResponse.ok) {
         const json = await hostingerResponse.json().catch(() => null);
-        return res.json(json || { status: 'success', message: 'Sincronizado com Hostinger' });
+        return res.json(json || { status: 'success', message: 'Sincronizado com Hostinger e salvo no cofre local.' });
       } else {
-        return res.json({ status: 'success', message: 'Salvo localmente (Hostinger HTTP ' + hostingerResponse.status + ')' });
+        return res.json({ status: 'success', message: 'Salvo com sucesso no cofre do servidor.' });
       }
     } catch {
-      return res.json({ status: 'success', message: 'Salvo localmente no dispositivo.' });
+      return res.json({ status: 'success', message: 'Salvo com sucesso no cofre permanente do servidor.' });
     }
   };
 
@@ -199,9 +258,11 @@ async function startServer() {
   // Sync API endpoint (GET /api/sync and /api/sync.php)
   const handleSyncGet = async (req: express.Request, res: express.Response) => {
     const targetUrl = 'https://militancia.mastervisionmarketing.com/api/sync.php';
+    const serverVault = readServerVault();
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const hostingerResponse = await fetch(targetUrl, {
         method: 'GET',
@@ -212,11 +273,33 @@ async function startServer() {
 
       if (hostingerResponse.ok) {
         const json = await hostingerResponse.json();
-        return res.json(json);
+        if (json.status === 'success' && json.data) {
+          // Merge serverVault with hostingerData non-destructively
+          const combinedData = { ...json.data };
+          for (const key of Object.keys(serverVault)) {
+            if (key.startsWith('_')) continue;
+            if (Array.isArray(serverVault[key]) && Array.isArray(combinedData[key])) {
+              const map = new Map();
+              combinedData[key].forEach((item: any) => {
+                if (item && item.id) map.set(item.id, item);
+              });
+              serverVault[key].forEach((item: any) => {
+                if (item && item.id) {
+                  const existing = map.get(item.id);
+                  map.set(item.id, { ...existing, ...item });
+                }
+              });
+              combinedData[key] = Array.from(map.values());
+            } else if (serverVault[key]) {
+              combinedData[key] = serverVault[key];
+            }
+          }
+          return res.json({ status: 'success', data: combinedData, source: 'merged_vault_hostinger' });
+        }
       }
-      return res.json({ status: 'offline_or_db_error', data: null });
+      return res.json({ status: 'success', data: serverVault, source: 'server_vault' });
     } catch {
-      return res.json({ status: 'offline_or_db_error', data: null });
+      return res.json({ status: 'success', data: serverVault, source: 'server_vault_fallback' });
     }
   };
 

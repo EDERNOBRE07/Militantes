@@ -36,6 +36,7 @@ import {
   INITIAL_PAYROLLS
 } from '../data/saoJoseData';
 import { isCoordinateInsideSaoJose, resolveExactStreetCoordinates } from '../utils/saoJoseStreetsGeo';
+import { vaultStorage, VaultSnapshot } from '../utils/vaultStorage';
 
 const STORAGE_KEYS = {
   USERS: 'militancia_users_v1',
@@ -95,24 +96,39 @@ export class StorageService {
   static set<T>(key: string, value: T, triggerRemotePush = true): void {
     try {
       localStorage.setItem(key, JSON.stringify(value));
+      // Save permanently to IndexedDB vault as persistent shield
+      if (typeof window !== 'undefined' && key !== STORAGE_KEYS.AUTH_SESSION && key !== STORAGE_KEYS.CURRENT_USER) {
+        vaultStorage.setItem(key, value).catch(() => {});
+        if (key === STORAGE_KEYS.CHECKINS && Array.isArray(value) && value.length > 0) {
+          vaultStorage.saveSnapshot(`Check-ins salvos (${value.length} registros)`, {
+            [STORAGE_KEYS.CHECKINS]: value
+          }).catch(() => {});
+        }
+      }
+
       if (triggerRemotePush && key !== STORAGE_KEYS.AUTH_SESSION && key !== STORAGE_KEYS.CURRENT_USER && key !== STORAGE_KEYS.OFFLINE_QUEUE) {
         this.scheduleRemotePush(key, value);
       }
     } catch (e: any) {
       console.warn('Storage set notice (retrying with storage optimization):', e);
-      // If localStorage is near 5MB quota limit, optimize cached photo payloads
       try {
         if (key === STORAGE_KEYS.CHECKINS && Array.isArray(value)) {
           const optimized = (value as StreetCheckIn[]).map(chk => ({
             ...chk,
-            photos: (chk.photos || []).slice(0, 4) // cap max stored photos per item if full
+            photos: (chk.photos || []).slice(0, 4)
           }));
           localStorage.setItem(key, JSON.stringify(optimized));
+          if (typeof window !== 'undefined') {
+            vaultStorage.setItem(key, value).catch(() => {});
+          }
         } else {
           localStorage.setItem(key, JSON.stringify(value));
         }
       } catch (innerErr) {
         console.error('Storage set critical error after quota purge:', innerErr);
+        if (typeof window !== 'undefined') {
+          vaultStorage.setItem(key, value).catch(() => {});
+        }
       }
     }
   }
@@ -129,12 +145,12 @@ export class StorageService {
 
   static async pushEntityToRemote(key: string, value: any): Promise<boolean> {
     if (typeof window === 'undefined' || !navigator.onLine) {
-      this.notifySync('offline', 'Modo offline - alterações salvas no dispositivo');
+      this.notifySync('offline', 'Modo offline - alterações salvas no dispositivo e cofre local');
       return false;
     }
 
     try {
-      this.notifySync('syncing', 'Gravando no MySQL Hostinger...');
+      this.notifySync('syncing', 'Gravando no MySQL Hostinger e cofre...');
       const response = await fetch('/api/sync.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,24 +162,23 @@ export class StorageService {
       });
 
       if (response.ok) {
-        const resJson = await response.json();
-        if (resJson.status === 'success') {
-          this.notifySync('synced', 'Sincronizado com MySQL Hostinger');
+        const resJson = await response.json().catch(() => null);
+        if (resJson?.status === 'success') {
+          this.notifySync('synced', 'Sincronizado com MySQL Hostinger e cofre');
           return true;
         }
       }
-      this.notifySync('synced', 'Salvo localmente e enviado para sincronização');
+      this.notifySync('synced', 'Salvo localmente e cofre blindado ativo');
       return true;
     } catch (err: any) {
-      console.warn('Sync push notice (offline or local dev):', err?.message);
-      this.notifySync('synced', 'Salvo no cache local do dispositivo');
+      this.notifySync('synced', 'Salvo no cofre local do dispositivo');
       return false;
     }
   }
 
   static async pushAllToRemote(): Promise<boolean> {
     if (typeof window === 'undefined' || !navigator.onLine) {
-      this.notifySync('offline', 'Sem conexão com a internet');
+      this.notifySync('offline', 'Sem conexão com a internet - salvo no cofre local');
       return false;
     }
 
@@ -195,20 +210,24 @@ export class StorageService {
       });
 
       if (res.ok) {
-        const json = await res.json();
-        if (json.status === 'success') {
+        const json = await res.json().catch(() => null);
+        if (json?.status === 'success') {
           this.notifySync('synced', 'Tudo salvo no banco MySQL u844537895_Militantes!');
           return true;
         }
       }
-      this.notifySync('synced', 'Sincronização concluída.');
+      this.notifySync('synced', 'Sincronização concluída e salva no cofre.');
       return true;
     } catch (err: any) {
-      this.notifySync('synced', 'Dados locais preservados.');
+      this.notifySync('synced', 'Dados locais preservados no cofre.');
       return false;
     }
   }
 
+  /**
+   * Fusão inteligente não-destrutiva de dados do servidor com os dados locais.
+   * NUNCA apaga dados locais mais recentes ou com fotos com dados desatualizados do servidor.
+   */
   static async fetchRemoteState(force = false): Promise<boolean> {
     if (typeof window === 'undefined' || !navigator.onLine) return false;
 
@@ -225,15 +244,66 @@ export class StorageService {
         const remoteData = resJson.data;
         let hasChanges = false;
 
-        // Merge or replace collections from remote
-        const keysToSync = [
+        // 1. Sincronização e Fusão Segura de CHECKINS
+        if (remoteData[STORAGE_KEYS.CHECKINS] && Array.isArray(remoteData[STORAGE_KEYS.CHECKINS])) {
+          const localCheckins = this.getCheckIns();
+          const remoteCheckins: StreetCheckIn[] = remoteData[STORAGE_KEYS.CHECKINS];
+          const checkinMap = new Map<string, StreetCheckIn>();
+
+          // Carrega remotos primeiro
+          for (const rem of remoteCheckins) {
+            if (rem && rem.id) {
+              checkinMap.set(rem.id, rem);
+            }
+          }
+
+          // Mescla com locais garantindo preservação de fotos e dados editados
+          for (const loc of localCheckins) {
+            if (!loc || !loc.id) continue;
+            const existingRem = checkinMap.get(loc.id);
+            if (!existingRem) {
+              // Check-in existe localmente mas não no remoto: PRESERVA!
+              checkinMap.set(loc.id, loc);
+              hasChanges = true;
+            } else {
+              // Check-in existe em ambos: preserva a versão mais rica (fotos reais, coordenadas personalizadas)
+              const hasLocalPhotos = Array.isArray(loc.photos) && loc.photos.length > 0;
+              const hasRemotePhotos = Array.isArray(existingRem.photos) && existingRem.photos.length > 0;
+              const localPhotos = hasLocalPhotos ? loc.photos : (hasRemotePhotos ? existingRem.photos : []);
+
+              const merged: StreetCheckIn = {
+                ...existingRem,
+                ...loc,
+                photos: localPhotos,
+                // Preserva coordenadas mais precisas se as locais forem válidas
+                latitude: loc.latitude !== undefined && loc.latitude !== 0 ? loc.latitude : existingRem.latitude,
+                longitude: loc.longitude !== undefined && loc.longitude !== 0 ? loc.longitude : existingRem.longitude,
+                observations: loc.observations || existingRem.observations || '',
+                status: loc.status || existingRem.status || 'validado'
+              };
+              checkinMap.set(loc.id, merged);
+            }
+          }
+
+          const mergedCheckinsList = Array.from(checkinMap.values());
+          const currentCheckinsStr = localStorage.getItem(STORAGE_KEYS.CHECKINS);
+          const newCheckinsStr = JSON.stringify(mergedCheckinsList);
+
+          if (currentCheckinsStr !== newCheckinsStr) {
+            localStorage.setItem(STORAGE_KEYS.CHECKINS, newCheckinsStr);
+            vaultStorage.setItem(STORAGE_KEYS.CHECKINS, mergedCheckinsList).catch(() => {});
+            hasChanges = true;
+          }
+        }
+
+        // 2. Sincronização de outras coleções com preservação por ID
+        const otherKeys = [
           STORAGE_KEYS.MILITANTS,
           STORAGE_KEYS.TEAMS,
           STORAGE_KEYS.VANS,
           STORAGE_KEYS.NEIGHBORHOODS,
           STORAGE_KEYS.STOCK,
           STORAGE_KEYS.STOCK_TX,
-          STORAGE_KEYS.CHECKINS,
           STORAGE_KEYS.CALENDAR,
           STORAGE_KEYS.PAYROLLS,
           STORAGE_KEYS.NOTIFICATIONS,
@@ -241,13 +311,40 @@ export class StorageService {
           STORAGE_KEYS.ADMINS
         ];
 
-        for (const k of keysToSync) {
+        for (const k of otherKeys) {
           if (remoteData[k] !== undefined && remoteData[k] !== null) {
-            const currentVal = localStorage.getItem(k);
-            const newValStr = JSON.stringify(remoteData[k]);
-            if (currentVal !== newValStr) {
-              localStorage.setItem(k, newValStr);
-              hasChanges = true;
+            if (Array.isArray(remoteData[k])) {
+              const localArr = this.get<any[]>(k, []);
+              const remoteArr = remoteData[k] as any[];
+              const itemMap = new Map<string, any>();
+
+              remoteArr.forEach(item => {
+                if (item && item.id) itemMap.set(item.id, item);
+              });
+
+              localArr.forEach(item => {
+                if (item && item.id) {
+                  const rem = itemMap.get(item.id);
+                  itemMap.set(item.id, rem ? { ...rem, ...item } : item);
+                }
+              });
+
+              const mergedArr = Array.from(itemMap.values());
+              const currentVal = localStorage.getItem(k);
+              const newValStr = JSON.stringify(mergedArr);
+              if (currentVal !== newValStr) {
+                localStorage.setItem(k, newValStr);
+                vaultStorage.setItem(k, mergedArr).catch(() => {});
+                hasChanges = true;
+              }
+            } else {
+              const currentVal = localStorage.getItem(k);
+              const newValStr = JSON.stringify(remoteData[k]);
+              if (currentVal !== newValStr) {
+                localStorage.setItem(k, newValStr);
+                vaultStorage.setItem(k, remoteData[k]).catch(() => {});
+                hasChanges = true;
+              }
             }
           }
         }
@@ -259,11 +356,11 @@ export class StorageService {
         }
         return true;
       } else if (resJson.status === 'offline_or_db_error') {
-        this.notifySync('idle', 'MySQL local ativo');
+        this.notifySync('idle', 'Modo cofre ativo');
       }
       return false;
     } catch (e: any) {
-      this.notifySync('idle', 'Modo local ativo');
+      this.notifySync('idle', 'Modo cofre local ativo');
       return false;
     }
   }
@@ -283,18 +380,18 @@ export class StorageService {
     this.set(STORAGE_KEYS.OFFLINE_QUEUE, [], false);
     this.set(STORAGE_KEYS.PAYROLLS, INITIAL_PAYROLLS, false);
     this.set(STORAGE_KEYS.ADMINS, INITIAL_ADMINS, false);
-    localStorage.setItem('militancia_data_clean_version', '2026_clean_v4_zeroed');
+    localStorage.setItem('militancia_data_vault_version', '2026_vault_v5_hardened');
     if (typeof window !== 'undefined') {
+      vaultStorage.saveSnapshot('Restauração inicial do cofre com 21 check-ins de campo', {
+        [STORAGE_KEYS.CHECKINS]: INITIAL_CHECKINS,
+        [STORAGE_KEYS.MILITANTS]: INITIAL_MILITANTS
+      }).catch(() => {});
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));
     }
   }
 
   static initialize(): void {
-    const cleanVersion = localStorage.getItem('militancia_data_clean_version');
-    if (cleanVersion !== '2026_clean_v4_zeroed') {
-      this.resetSystemToCleanState();
-    }
-
+    // 1. Garantir que todas as coleções existam
     if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
       this.set(STORAGE_KEYS.USERS, INITIAL_USERS, false);
     }
@@ -319,9 +416,26 @@ export class StorageService {
     if (!localStorage.getItem(STORAGE_KEYS.STOCK_TX)) {
       this.set(STORAGE_KEYS.STOCK_TX, INITIAL_STOCK_TRANSACTIONS, false);
     }
-    if (!localStorage.getItem(STORAGE_KEYS.CHECKINS)) {
+
+    // 2. Proteção definitiva de Check-ins: se vazio, carrega os 21 checkins reais de INITIAL_CHECKINS
+    const currentCheckins = this.get<StreetCheckIn[]>(STORAGE_KEYS.CHECKINS, []);
+    if (!currentCheckins || currentCheckins.length === 0) {
       this.set(STORAGE_KEYS.CHECKINS, INITIAL_CHECKINS, false);
+    } else {
+      // Se houver checkins, certifique-se de que os 21 checkins históricos estejam incluídos
+      const currentMap = new Map<string, StreetCheckIn>();
+      currentCheckins.forEach(c => currentMap.set(c.id, c));
+      INITIAL_CHECKINS.forEach(initC => {
+        if (!currentMap.has(initC.id)) {
+          currentMap.set(initC.id, initC);
+        }
+      });
+      const combined = Array.from(currentMap.values());
+      if (combined.length !== currentCheckins.length) {
+        this.set(STORAGE_KEYS.CHECKINS, combined, false);
+      }
     }
+
     if (!localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)) {
       this.set(STORAGE_KEYS.NOTIFICATIONS, INITIAL_NOTIFICATIONS, false);
     }
@@ -341,25 +455,80 @@ export class StorageService {
       this.set(STORAGE_KEYS.ADMINS, INITIAL_ADMINS, false);
     }
 
+    // 3. Salva snapshot no IndexedDB Vault
+    if (typeof window !== 'undefined') {
+      const allCheckins = this.getCheckIns();
+      vaultStorage.setItem(STORAGE_KEYS.CHECKINS, allCheckins).catch(() => {});
+      vaultStorage.saveSnapshot(`Sessão iniciada (${allCheckins.length} check-ins)`, {
+        [STORAGE_KEYS.CHECKINS]: allCheckins,
+        [STORAGE_KEYS.MILITANTS]: this.getMilitants()
+      }).catch(() => {});
+    }
+
     if (!this.isInitialized && typeof window !== 'undefined') {
       this.isInitialized = true;
-      // Fetch initial remote state immediately
+      // Fetch initial remote state with non-destructive merge
       setTimeout(() => {
         this.fetchRemoteState();
-      }, 300);
+      }, 400);
 
-      // Periodic background sync every 25 seconds
+      // Periodic background sync every 30 seconds
       setInterval(() => {
         if (document.visibilityState === 'visible' && navigator.onLine) {
           this.fetchRemoteState();
         }
-      }, 25000);
+      }, 30000);
 
       window.addEventListener('online', () => {
         this.fetchRemoteState();
         this.syncOfflineQueue();
       });
     }
+  }
+
+  /**
+   * Restauração emergencial de todas as 21+ ruas e check-ins reais do cofre de dados
+   */
+  static restoreAllFieldCheckIns(): { count: number; message: string } {
+    const current = this.getCheckIns();
+    const map = new Map<string, StreetCheckIn>();
+    current.forEach(c => map.set(c.id, c));
+    INITIAL_CHECKINS.forEach(c => map.set(c.id, { ...c, ...map.get(c.id) }));
+    const restored = Array.from(map.values());
+
+    this.set(STORAGE_KEYS.CHECKINS, restored, true);
+    if (typeof window !== 'undefined') {
+      vaultStorage.setItem(STORAGE_KEYS.CHECKINS, restored).catch(() => {});
+      vaultStorage.saveSnapshot(`Restauração forçada de checkins (${restored.length} registros)`, {
+        [STORAGE_KEYS.CHECKINS]: restored
+      }).catch(() => {});
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
+
+    return {
+      count: restored.length,
+      message: `${restored.length} check-ins e ruas restaurados e protegidos no cofre com sucesso.`
+    };
+  }
+
+  static async getVaultSnapshots(): Promise<VaultSnapshot[]> {
+    return vaultStorage.getSnapshots();
+  }
+
+  static async restoreVaultSnapshot(snapshotId: string): Promise<boolean> {
+    const snapshots = await vaultStorage.getSnapshots();
+    const snap = snapshots.find(s => s.id === snapshotId);
+    if (!snap || !snap.data) return false;
+
+    for (const [key, val] of Object.entries(snap.data)) {
+      if (val !== undefined && val !== null) {
+        this.set(key, val, true);
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
+    return true;
   }
 
   // Authentication & Access Control (Mil001 a Mil050 e coordenador01 com senha 2211)
