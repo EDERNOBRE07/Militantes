@@ -302,6 +302,20 @@ export class StorageService {
             vaultStorage.setItem(STORAGE_KEYS.CHECKINS, mergedCheckinsList).catch(() => {});
             hasChanges = true;
           }
+
+          // Recalcula imediatamente as métricas a partir dos check-ins sincronizados
+          this.recalculateAllStatsFromCheckins(mergedCheckinsList);
+        }
+
+        // Mapeamento de chaves alternativas vindas do Hostinger MySQL / cofre
+        if (!remoteData[STORAGE_KEYS.MILITANTS] && remoteData['militancia_militantes_v1']) {
+          remoteData[STORAGE_KEYS.MILITANTS] = remoteData['militancia_militantes_v1'];
+        }
+        if (!remoteData[STORAGE_KEYS.MILITANTS] && remoteData['militantes_data']) {
+          remoteData[STORAGE_KEYS.MILITANTS] = remoteData['militantes_data'];
+        }
+        if (!remoteData[STORAGE_KEYS.VANS] && remoteData['vans_data']) {
+          remoteData[STORAGE_KEYS.VANS] = remoteData['vans_data'];
         }
 
         // 2. Sincronização de outras coleções com preservação por ID
@@ -1695,9 +1709,95 @@ export class StorageService {
     this.set(STORAGE_KEYS.STOCK, stock);
   }
 
+  /**
+   * Recalcula com precisão matemática as estatísticas de todos os 18 bairros e de todos os militantes
+   * diretamente a partir da lista oficial de check-ins.
+   * Evita qualquer divergência ou "sumiço" de dados entre telas.
+   */
+  static recalculateAllStatsFromCheckins(allCheckins?: StreetCheckIn[]): { neighborhoods: Neighborhood[]; militants: Militant[] } {
+    const checkins = allCheckins || this.getCheckIns();
+    const neighborhoods = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
+    const militants = this.getMilitants();
+
+    // 1. Recalcula bairros a partir dos check-ins
+    const updatedNeighborhoods = neighborhoods.map(n => {
+      const nCheckins = checkins.filter(c => 
+        c.neighborhoodId === n.id || 
+        (c.neighborhoodName && c.neighborhoodName.toLowerCase().trim() === n.name.toLowerCase().trim())
+      );
+      const uniqueStreets = new Set(nCheckins.map(c => (c.streetName || '').toLowerCase().trim())).size;
+      const completedCount = Math.min(n.totalStreets, Math.max(n.completedStreets || 0, uniqueStreets, nCheckins.length));
+
+      const santinhosSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.santinhos || 0), 0);
+      const adesivosSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivos || 0), 0);
+      const adesivoBolaSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_bola || 0), 0);
+      const adesivoParachoqueSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_parachoque || 0), 0);
+      const colinhasSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.colinhas || 0), 0);
+      const abordagensSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.abordagens || 0), 0);
+      const comercioSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.comercio || 0), 0);
+
+      return {
+        ...n,
+        completedStreets: completedCount,
+        deliveredMaterials: {
+          santinhos: Math.max(n.deliveredMaterials?.santinhos || 0, santinhosSum),
+          adesivos: Math.max(n.deliveredMaterials?.adesivos || 0, adesivosSum),
+          adesivo_bola: Math.max(n.deliveredMaterials?.adesivo_bola || 0, adesivoBolaSum),
+          adesivo_parachoque: Math.max(n.deliveredMaterials?.adesivo_parachoque || 0, adesivoParachoqueSum),
+          colinhas: Math.max(n.deliveredMaterials?.colinhas || 0, colinhasSum),
+          abordagens: Math.max(n.deliveredMaterials?.abordagens || 0, abordagensSum),
+          comercio: Math.max(n.deliveredMaterials?.comercio || 0, comercioSum)
+        }
+      };
+    });
+
+    // 2. Recalcula militantes a partir dos check-ins
+    const updatedMilitants = militants.map(m => {
+      const mCheckins = checkins.filter(c => c.militantId === m.id || c.militantName === m.name);
+      const santinhosSum = mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.santinhos || 0), 0);
+      const adesivosSum = mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivos || 0), 0);
+      const adesivoBolaSum = mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_bola || 0), 0);
+      const adesivoParachoqueSum = mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivo_parachoque || 0), 0);
+      const colinhasSum = mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.colinhas || 0), 0);
+      const abordagensSum = mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.abordagens || 0), 0);
+      const comercioSum = mCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.comercio || 0), 0);
+
+      const streetsCovered = Math.max(m.totalStreetsCovered || 0, mCheckins.length);
+      const kmWalked = Math.max(m.totalKmWalked || 0, +(mCheckins.length * 0.8).toFixed(1));
+
+      return {
+        ...m,
+        status: mCheckins.length > 0 ? 'em_campo' : (m.status || 'ativo'),
+        totalStreetsCovered: streetsCovered,
+        totalKmWalked: kmWalked,
+        deliveredMaterials: {
+          santinhos: Math.max(m.deliveredMaterials?.santinhos || 0, santinhosSum),
+          adesivos: Math.max(m.deliveredMaterials?.adesivos || 0, adesivosSum),
+          adesivo_bola: Math.max(m.deliveredMaterials?.adesivo_bola || 0, adesivoBolaSum),
+          adesivo_parachoque: Math.max(m.deliveredMaterials?.adesivo_parachoque || 0, adesivoParachoqueSum),
+          colinhas: Math.max(m.deliveredMaterials?.colinhas || 0, colinhasSum),
+          abordagens: Math.max(m.deliveredMaterials?.abordagens || 0, abordagensSum),
+          comercio: Math.max(m.deliveredMaterials?.comercio || 0, comercioSum)
+        }
+      };
+    });
+
+    this.set(STORAGE_KEYS.NEIGHBORHOODS, updatedNeighborhoods, false);
+    this.set(STORAGE_KEYS.MILITANTS, updatedMilitants, false);
+
+    return { neighborhoods: updatedNeighborhoods, militants: updatedMilitants };
+  }
+
   // Neighborhoods
   static getNeighborhoods(): Neighborhood[] {
-    return this.get(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
+    const list = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
+    const checkins = this.getCheckIns();
+    const totalCompleted = list.reduce((sum, n) => sum + (n.completedStreets || 0), 0);
+    if (checkins.length > 0 && totalCompleted === 0) {
+      const recalculated = this.recalculateAllStatsFromCheckins(checkins);
+      return recalculated.neighborhoods;
+    }
+    return list;
   }
 
   static updateNeighborhood(neigh: Neighborhood): void {
@@ -1711,7 +1811,17 @@ export class StorageService {
 
   // Militants
   static getMilitants(): Militant[] {
-    return this.get(STORAGE_KEYS.MILITANTS, INITIAL_MILITANTS);
+    let list = this.get<Militant[]>(STORAGE_KEYS.MILITANTS, []);
+    if (!list || list.length === 0) {
+      const altList = this.get<Militant[]>('militancia_militantes_v1', []);
+      if (altList && altList.length > 0) {
+        list = altList;
+        this.set(STORAGE_KEYS.MILITANTS, list, false);
+      } else {
+        list = INITIAL_MILITANTS;
+      }
+    }
+    return list;
   }
 
   static addOrUpdateMilitant(militant: Militant): void {

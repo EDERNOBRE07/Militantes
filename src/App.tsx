@@ -32,6 +32,12 @@ export default function App() {
   // Ensure default storage structures exist
   useEffect(() => {
     StorageService.initialize();
+    reloadData();
+
+    // Fetch latest remote state from Hostinger MySQL on startup
+    StorageService.fetchRemoteState(true).then(() => {
+      reloadData();
+    });
 
     const handleDataUpdated = () => {
       reloadData();
@@ -66,8 +72,9 @@ export default function App() {
   const [notifications, setNotifications] = useState<PushNotification[]>(() => StorageService.getNotifications());
   const [auditLogs, setAuditLogs] = useState<ActivityAuditLog[]>(() => StorageService.getAuditLogs());
 
-  // Function to reload all data from storage
+  // Function to reload all data from storage with automatic recalculation
   const reloadData = () => {
+    StorageService.recalculateAllStatsFromCheckins();
     setNeighborhoods(StorageService.getNeighborhoods());
     setMilitants(StorageService.getMilitants());
     setTeams(StorageService.getTeams());

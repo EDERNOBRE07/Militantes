@@ -22,7 +22,7 @@ export default defineConfig((): UserConfig => {
       assetsDir: 'assets',
       sourcemap: false,
       emptyOutDir: true,
-      target: 'es2020',
+      target: ['es2017', 'safari11', 'ios11'],
       minify: 'esbuild',
       rollupOptions: {
         output: {

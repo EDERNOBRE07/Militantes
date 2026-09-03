@@ -476,6 +476,18 @@ async function startServer() {
               combinedData[key] = serverVault[key];
             }
           }
+          // Ensure militant collections are mirrored
+          if (combinedData['militancia_militantes_v1'] && !combinedData['militancia_militants_v1']) {
+            combinedData['militancia_militants_v1'] = combinedData['militancia_militantes_v1'];
+          } else if (combinedData['militancia_militants_v1'] && !combinedData['militancia_militantes_v1']) {
+            combinedData['militancia_militantes_v1'] = combinedData['militancia_militants_v1'];
+          }
+
+          // Persist the merged data into the server vault file
+          try {
+            writeServerVault(combinedData);
+          } catch {}
+
           return res.json({ status: 'success', data: combinedData, source: 'merged_vault_hostinger' });
         }
       }
