@@ -49,7 +49,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const legacyEnv = detectLegacySafariSierra();
 
-  // Enriquecimento e consolidação direta dos 24 bairros com base nos check-ins em tempo real
+  // Enriquecimento e consolidação direta dos 28 bairros com base nos check-ins em tempo real
   const enrichedBairros = neighborhoods.map(b => {
     const bCheckins = checkIns.filter(c => 
       c.neighborhoodId === b.id || 
@@ -150,7 +150,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Controle de Militância & Cobertura Territorial
             </h1>
             <p className="text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
-              Monitoramento da distribuição de materiais rua a rua em todos os 24 bairros com dados oficiais do Censo IBGE / PMSJ, validação com foto por GPS e logística de vans.
+              Monitoramento da distribuição de materiais rua a rua em todos os 28 bairros oficiais e área rural com dados do Atlas Escolar PMSJ (2020) / IFSC / IBGE, validação com foto por GPS e logística de vans.
             </p>
           </div>
 

@@ -1,603 +1,1824 @@
 import { Neighborhood } from '../types';
 
 /**
- * 24 Bairros Oficiais do Município de São José - Santa Catarina
- * Fonte Oficial: Prefeitura Municipal de São José (https://saojose.sc.gov.br/a-cidade/)
- * Censo Demográfico IBGE 2022 / Cadastro Eleitoral TRE-SC 2026
+ * 28 Bairros Oficiais do Município de São José - Santa Catarina + Área Rural
+ * Referência Cartográfica Oficial:
+ * - "São José (SC) - Bairros (2020)": Atlas Escolar Digital de São José (SC)
+ * - Coordenação: Prof. Paulo Amorim (IFSC Câmpus São José)
+ * - Fontes Cartográficas: IBGE (2021) e PMSJ (2020)
+ * - Datum: SIRGAS 2000 / EPSG: 4674
  * 
- * Bairros com perímetros geográficos vetoriais precisos (desenho geográfico real,
- * e separação estrita e inequívoca entre o bairro Areias e o bairro Bosque das Mansões).
+ * Lista Completa Oficial dos 28 Bairros da Legenda:
+ * 1. Alto Forquilhas
+ * 2. Areias
+ * 3. Barreiros
+ * 4. Bela Vista
+ * 5. Bosque das Mansões
+ * 6. Campinas
+ * 7. Centro
+ * 8. Colônia Santana
+ * 9. Distrito Industrial
+ * 10. Fazenda Santo Antônio
+ * 11. Flor de Nápolis (Nº 1 no mapa)
+ * 12. Forquilhas
+ * 13. Forquilhinha
+ * 14. Ipiranga
+ * 15. Jardim Cidade de Florianópolis (Nº 2 no mapa)
+ * 16. Jardim Santiago
+ * 17. Kobrasol
+ * 18. Nossa Senhora do Rosário
+ * 19. Pedregal
+ * 20. Picadas do Sul
+ * 21. Ponta de Baixo
+ * 22. Potecas
+ * 23. Praia Comprida
+ * 24. Real Parque
+ * 25. Roçado
+ * 26. São Luiz
+ * 27. Serraria
+ * 28. Sertão do Maruim
+ * + Área Rural (zona sudoeste demarcada no mapa)
  */
 export const OFFICIAL_SAO_JOSE_NEIGHBORHOODS: Neighborhood[] = [
   {
-    id: 'kobrasol',
-    name: 'Kobrasol',
-    zone: 'Distrito Campinas',
-    population: 18640,
-    households: 7850,
-    votersEstimated: 15400,
-    totalStreets: 68,
-    completedStreets: 0,
-    lat: -27.5955,
-    lng: -48.6185,
-    priority: 'Alta',
-    polygon: [
-      [-27.5905, -48.6235],
-      [-27.5898, -48.6162],
-      [-27.5915, -48.6120],
-      [-27.5958, -48.6125],
-      [-27.6010, -48.6150],
-      [-27.6005, -48.6210],
-      [-27.5975, -48.6248],
-      [-27.5935, -48.6245]
-    ],
-    targetMaterials: { santinhos: 35000, adesivos: 4000, adesivo_bola: 1800, adesivo_parachoque: 900, colinhas: 22000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-alpha'
+    "id": "alto_forquilhas",
+    "name": "Alto Forquilhas",
+    "zone": "Distrito Forquilhinha",
+    "population": 5200,
+    "households": 1850,
+    "votersEstimated": 4100,
+    "completedStreets": 0,
+    "totalStreets": 48,
+    "priority": "Média",
+    "lat": -27.552,
+    "lng": -48.692,
+    "officialColor": "#a881d8",
+    "assignedTeamId": "team-fox",
+    "targetMaterials": {
+      "santinhos": 12000,
+      "adesivos": 1500,
+      "adesivo_bola": 600,
+      "adesivo_parachoque": 300,
+      "colinhas": 8000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.518,
+        -48.705
+      ],
+      [
+        -27.525,
+        -48.665
+      ],
+      [
+        -27.54,
+        -48.65
+      ],
+      [
+        -27.555,
+        -48.652
+      ],
+      [
+        -27.568,
+        -48.646
+      ],
+      [
+        -27.57,
+        -48.654
+      ],
+      [
+        -27.576,
+        -48.668
+      ],
+      [
+        -27.578,
+        -48.685
+      ],
+      [
+        -27.57,
+        -48.72
+      ],
+      [
+        -27.545,
+        -48.73
+      ]
+    ]
   },
   {
-    id: 'campinas',
-    name: 'Campinas',
-    zone: 'Distrito Campinas',
-    population: 16800,
-    households: 7100,
-    votersEstimated: 14100,
-    totalStreets: 62,
-    completedStreets: 0,
-    lat: -27.6015,
-    lng: -48.6205,
-    priority: 'Alta',
-    polygon: [
-      [-27.5975, -48.6248],
-      [-27.6005, -48.6210],
-      [-27.6010, -48.6150],
-      [-27.6062, -48.6165],
-      [-27.6075, -48.6225],
-      [-27.6050, -48.6268],
-      [-27.6010, -48.6260]
-    ],
-    targetMaterials: { santinhos: 32000, adesivos: 3800, adesivo_bola: 1600, adesivo_parachoque: 850, colinhas: 20000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-alpha'
+    "id": "areias",
+    "name": "Areias",
+    "zone": "Distrito Barreiros",
+    "population": 22300,
+    "households": 8600,
+    "votersEstimated": 17800,
+    "completedStreets": 0,
+    "totalStreets": 86,
+    "priority": "Alta",
+    "lat": -27.573,
+    "lng": -48.636,
+    "officialColor": "#ece657",
+    "assignedTeamId": "team-bravo",
+    "targetMaterials": {
+      "santinhos": 40000,
+      "adesivos": 4800,
+      "adesivo_bola": 2200,
+      "adesivo_parachoque": 1100,
+      "colinhas": 26000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.562,
+        -48.636
+      ],
+      [
+        -27.566,
+        -48.628
+      ],
+      [
+        -27.574,
+        -48.628
+      ],
+      [
+        -27.58,
+        -48.632
+      ],
+      [
+        -27.583,
+        -48.638
+      ],
+      [
+        -27.578,
+        -48.644
+      ],
+      [
+        -27.568,
+        -48.646
+      ],
+      [
+        -27.555,
+        -48.652
+      ]
+    ]
   },
   {
-    id: 'barreiros',
-    name: 'Barreiros',
-    zone: 'Distrito Barreiros',
-    population: 27950,
-    households: 11200,
-    votersEstimated: 22800,
-    totalStreets: 114,
-    completedStreets: 0,
-    lat: -27.5720,
-    lng: -48.6100,
-    priority: 'Alta',
-    polygon: [
-      [-27.5620, -48.6160],
-      [-27.5615, -48.6045],
-      [-27.5670, -48.5980],
-      [-27.5780, -48.5990],
-      [-27.5840, -48.6080],
-      [-27.5815, -48.6185],
-      [-27.5730, -48.6205],
-      [-27.5675, -48.6180]
-    ],
-    targetMaterials: { santinhos: 50000, adesivos: 6000, adesivo_bola: 2800, adesivo_parachoque: 1400, colinhas: 34000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-bravo'
+    "id": "barreiros",
+    "name": "Barreiros",
+    "zone": "Distrito Barreiros",
+    "population": 27950,
+    "households": 11200,
+    "votersEstimated": 22800,
+    "completedStreets": 0,
+    "totalStreets": 114,
+    "priority": "Alta",
+    "lat": -27.575,
+    "lng": -48.608,
+    "officialColor": "#9884e8",
+    "assignedTeamId": "team-charlie",
+    "targetMaterials": {
+      "santinhos": 50000,
+      "adesivos": 6000,
+      "adesivo_bola": 2800,
+      "adesivo_parachoque": 1400,
+      "colinhas": 32000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.566,
+        -48.6
+      ],
+      [
+        -27.574,
+        -48.594
+      ],
+      [
+        -27.585,
+        -48.602
+      ],
+      [
+        -27.589,
+        -48.608
+      ],
+      [
+        -27.584,
+        -48.613
+      ],
+      [
+        -27.574,
+        -48.613
+      ],
+      [
+        -27.569,
+        -48.606
+      ]
+    ]
   },
   {
-    id: 'praia_comprida',
-    name: 'Praia Comprida',
-    zone: 'Distrito Sede',
-    population: 7200,
-    households: 2850,
-    votersEstimated: 5900,
-    totalStreets: 42,
-    completedStreets: 0,
-    lat: -27.6135,
-    lng: -48.6245,
-    priority: 'Média',
-    polygon: [
-      [-27.6065, -48.6260],
-      [-27.6060, -48.6215],
-      [-27.6095, -48.6185],
-      [-27.6145, -48.6190],
-      [-27.6190, -48.6215],
-      [-27.6195, -48.6275],
-      [-27.6155, -48.6295],
-      [-27.6105, -48.6285]
-    ],
-    targetMaterials: { santinhos: 14000, adesivos: 1600, adesivo_bola: 700, adesivo_parachoque: 350, colinhas: 9000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-delta'
+    "id": "bela_vista",
+    "name": "Bela Vista",
+    "zone": "Distrito Barreiros",
+    "population": 14200,
+    "households": 5400,
+    "votersEstimated": 11600,
+    "completedStreets": 0,
+    "totalStreets": 64,
+    "priority": "Alta",
+    "lat": -27.568,
+    "lng": -48.623,
+    "officialColor": "#76e053",
+    "assignedTeamId": "team-bravo",
+    "targetMaterials": {
+      "santinhos": 28000,
+      "adesivos": 3200,
+      "adesivo_bola": 1400,
+      "adesivo_parachoque": 700,
+      "colinhas": 18000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.562,
+        -48.616
+      ],
+      [
+        -27.565,
+        -48.612
+      ],
+      [
+        -27.572,
+        -48.615
+      ],
+      [
+        -27.575,
+        -48.62
+      ],
+      [
+        -27.574,
+        -48.628
+      ],
+      [
+        -27.566,
+        -48.628
+      ],
+      [
+        -27.564,
+        -48.625
+      ]
+    ]
   },
   {
-    id: 'centro',
-    name: 'Centro',
-    zone: 'Distrito Sede',
-    population: 8400,
-    households: 3200,
-    votersEstimated: 6850,
-    totalStreets: 48,
-    completedStreets: 0,
-    lat: -27.6160,
-    lng: -48.6275,
-    priority: 'Média',
-    polygon: [
-      [-27.6145, -48.6295],
-      [-27.6150, -48.6235],
-      [-27.6180, -48.6220],
-      [-27.6215, -48.6240],
-      [-27.6230, -48.6290],
-      [-27.6210, -48.6335],
-      [-27.6175, -48.6325]
-    ],
-    targetMaterials: { santinhos: 16000, adesivos: 1900, adesivo_bola: 850, adesivo_parachoque: 420, colinhas: 11000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-delta'
+    "id": "bosque_das_mansoes",
+    "name": "Bosque das Mansões",
+    "zone": "Distrito Sede",
+    "population": 4300,
+    "households": 1450,
+    "votersEstimated": 3600,
+    "completedStreets": 0,
+    "totalStreets": 32,
+    "priority": "Média",
+    "lat": -27.5965,
+    "lng": -48.634,
+    "officialColor": "#e860bc",
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 9500,
+      "adesivos": 1200,
+      "adesivo_bola": 550,
+      "adesivo_parachoque": 300,
+      "colinhas": 6000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.593,
+        -48.634
+      ],
+      [
+        -27.592,
+        -48.628
+      ],
+      [
+        -27.596,
+        -48.626
+      ],
+      [
+        -27.6,
+        -48.63
+      ],
+      [
+        -27.601,
+        -48.637
+      ],
+      [
+        -27.596,
+        -48.64
+      ],
+      [
+        -27.592,
+        -48.64
+      ]
+    ]
   },
   {
-    id: 'ponta_de_baixo',
-    name: 'Ponta de Baixo',
-    zone: 'Distrito Sede',
-    population: 4100,
-    households: 1600,
-    votersEstimated: 3400,
-    totalStreets: 28,
-    completedStreets: 0,
-    lat: -27.6250,
-    lng: -48.6280,
-    priority: 'Baixa',
-    polygon: [
-      [-27.6215, -48.6240],
-      [-27.6230, -48.6210],
-      [-27.6280, -48.6225],
-      [-27.6325, -48.6285],
-      [-27.6310, -48.6330],
-      [-27.6260, -48.6335],
-      [-27.6230, -48.6290]
-    ],
-    targetMaterials: { santinhos: 8000, adesivos: 950, adesivo_bola: 420, adesivo_parachoque: 210, colinhas: 5200 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-delta'
+    "id": "campinas",
+    "name": "Campinas",
+    "zone": "Distrito Campinas",
+    "population": 16800,
+    "households": 7100,
+    "votersEstimated": 14100,
+    "completedStreets": 0,
+    "totalStreets": 62,
+    "priority": "Alta",
+    "lat": -27.598,
+    "lng": -48.61,
+    "officialColor": "#e2579b",
+    "assignedTeamId": "team-alpha",
+    "targetMaterials": {
+      "santinhos": 32000,
+      "adesivos": 3800,
+      "adesivo_bola": 1600,
+      "adesivo_parachoque": 850,
+      "colinhas": 20000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.589,
+        -48.608
+      ],
+      [
+        -27.585,
+        -48.602
+      ],
+      [
+        -27.596,
+        -48.604
+      ],
+      [
+        -27.604,
+        -48.61
+      ],
+      [
+        -27.606,
+        -48.614
+      ],
+      [
+        -27.599,
+        -48.616
+      ],
+      [
+        -27.592,
+        -48.614
+      ]
+    ]
   },
   {
-    id: 'fazenda_santo_antonio',
-    name: 'Fazenda Santo Antônio',
-    zone: 'Distrito Sede',
-    population: 8900,
-    households: 3400,
-    votersEstimated: 7200,
-    totalStreets: 52,
-    completedStreets: 0,
-    lat: -27.6200,
-    lng: -48.6360,
-    priority: 'Média',
-    polygon: [
-      [-27.6155, -48.6385],
-      [-27.6165, -48.6335],
-      [-27.6210, -48.6335],
-      [-27.6260, -48.6335],
-      [-27.6280, -48.6390],
-      [-27.6245, -48.6435],
-      [-27.6185, -48.6420]
-    ],
-    targetMaterials: { santinhos: 17000, adesivos: 2000, adesivo_bola: 900, adesivo_parachoque: 450, colinhas: 11500 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-delta'
+    "id": "centro",
+    "name": "Centro",
+    "zone": "Distrito Sede",
+    "population": 8400,
+    "households": 3200,
+    "votersEstimated": 6850,
+    "completedStreets": 0,
+    "totalStreets": 48,
+    "priority": "Média",
+    "lat": -27.621,
+    "lng": -48.625,
+    "officialColor": "#7be7ec",
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 18000,
+      "adesivos": 2200,
+      "adesivo_bola": 950,
+      "adesivo_parachoque": 500,
+      "colinhas": 12000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.616,
+        -48.625
+      ],
+      [
+        -27.618,
+        -48.62
+      ],
+      [
+        -27.624,
+        -48.622
+      ],
+      [
+        -27.626,
+        -48.626
+      ],
+      [
+        -27.622,
+        -48.63
+      ],
+      [
+        -27.617,
+        -48.629
+      ]
+    ]
   },
   {
-    id: 'rocado',
-    name: 'Roçado',
-    zone: 'Distrito Sede',
-    population: 9800,
-    households: 3800,
-    votersEstimated: 7950,
-    totalStreets: 56,
-    completedStreets: 0,
-    lat: -27.6080,
-    lng: -48.6360,
-    priority: 'Média',
-    polygon: [
-      [-27.6025, -48.6380],
-      [-27.6040, -48.6300],
-      [-27.6075, -48.6285],
-      [-27.6135, -48.6315],
-      [-27.6155, -48.6385],
-      [-27.6120, -48.6425],
-      [-27.6065, -48.6420]
-    ],
-    targetMaterials: { santinhos: 19000, adesivos: 2200, adesivo_bola: 1000, adesivo_parachoque: 500, colinhas: 12500 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-echo'
+    "id": "colonia_santana",
+    "name": "Colônia Santana",
+    "zone": "Distrito Sede",
+    "population": 5800,
+    "households": 2100,
+    "votersEstimated": 4600,
+    "completedStreets": 0,
+    "totalStreets": 34,
+    "priority": "Baixa",
+    "lat": -27.6,
+    "lng": -48.73,
+    "officialColor": "#66f0a4",
+    "assignedTeamId": "team-fox",
+    "targetMaterials": {
+      "santinhos": 12000,
+      "adesivos": 1400,
+      "adesivo_bola": 600,
+      "adesivo_parachoque": 300,
+      "colinhas": 8000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.57,
+        -48.72
+      ],
+      [
+        -27.578,
+        -48.685
+      ],
+      [
+        -27.585,
+        -48.69
+      ],
+      [
+        -27.598,
+        -48.695
+      ],
+      [
+        -27.606,
+        -48.708
+      ],
+      [
+        -27.616,
+        -48.718
+      ],
+      [
+        -27.616,
+        -48.745
+      ],
+      [
+        -27.605,
+        -48.756
+      ],
+      [
+        -27.585,
+        -48.745
+      ]
+    ]
   },
   {
-    id: 'bosque_das_mansoes',
-    name: 'Bosque das Mansões',
-    zone: 'Distrito Sede',
-    population: 4300,
-    households: 1450,
-    votersEstimated: 3600,
-    totalStreets: 32,
-    completedStreets: 0,
-    lat: -27.5995,
-    lng: -48.6365,
-    priority: 'Média',
-    polygon: [
-      [-27.5955, -48.6395],
-      [-27.5960, -48.6325],
-      [-27.6015, -48.6315],
-      [-27.6040, -48.6355],
-      [-27.6030, -48.6405],
-      [-27.5985, -48.6415]
-    ],
-    targetMaterials: { santinhos: 8500, adesivos: 1100, adesivo_bola: 480, adesivo_parachoque: 240, colinhas: 5500 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-echo'
+    "id": "distrito_industrial",
+    "name": "Distrito Industrial",
+    "zone": "Distrito Sede",
+    "population": 3200,
+    "households": 1100,
+    "votersEstimated": 2700,
+    "completedStreets": 0,
+    "totalStreets": 36,
+    "priority": "Baixa",
+    "lat": -27.63,
+    "lng": -48.645,
+    "officialColor": "#d29b76",
+    "assignedTeamId": "team-eco",
+    "targetMaterials": {
+      "santinhos": 7000,
+      "adesivos": 900,
+      "adesivo_bola": 400,
+      "adesivo_parachoque": 200,
+      "colinhas": 4500
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.622,
+        -48.638
+      ],
+      [
+        -27.622,
+        -48.644
+      ],
+      [
+        -27.626,
+        -48.65
+      ],
+      [
+        -27.632,
+        -48.652
+      ],
+      [
+        -27.638,
+        -48.646
+      ],
+      [
+        -27.636,
+        -48.638
+      ],
+      [
+        -27.628,
+        -48.636
+      ]
+    ]
   },
   {
-    id: 'areias',
-    name: 'Areias',
-    zone: 'Distrito Barreiros',
-    population: 22300,
-    households: 8600,
-    votersEstimated: 17800,
-    totalStreets: 86,
-    completedStreets: 0,
-    lat: -27.5830,
-    lng: -48.6350,
-    priority: 'Alta',
-    polygon: [
-      [-27.5765, -48.6380],
-      [-27.5775, -48.6305],
-      [-27.5835, -48.6265],
-      [-27.5895, -48.6295],
-      [-27.5910, -48.6375],
-      [-27.5875, -48.6420],
-      [-27.5805, -48.6415]
-    ],
-    targetMaterials: { santinhos: 40000, adesivos: 4800, adesivo_bola: 2100, adesivo_parachoque: 1050, colinhas: 26000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-bravo'
+    "id": "fazenda_santo_antonio",
+    "name": "Fazenda Santo Antônio",
+    "zone": "Distrito Sede",
+    "population": 8900,
+    "households": 3400,
+    "votersEstimated": 7200,
+    "completedStreets": 0,
+    "totalStreets": 52,
+    "priority": "Média",
+    "lat": -27.625,
+    "lng": -48.633,
+    "officialColor": "#e8a8b8",
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 18000,
+      "adesivos": 2200,
+      "adesivo_bola": 950,
+      "adesivo_parachoque": 500,
+      "colinhas": 12000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.62,
+        -48.631
+      ],
+      [
+        -27.616,
+        -48.625
+      ],
+      [
+        -27.617,
+        -48.629
+      ],
+      [
+        -27.622,
+        -48.63
+      ],
+      [
+        -27.627,
+        -48.629
+      ],
+      [
+        -27.632,
+        -48.633
+      ],
+      [
+        -27.628,
+        -48.636
+      ],
+      [
+        -27.622,
+        -48.638
+      ]
+    ]
   },
   {
-    id: 'bela_vista',
-    name: 'Bela Vista',
-    zone: 'Distrito Barreiros',
-    population: 14200,
-    households: 5400,
-    votersEstimated: 11600,
-    totalStreets: 64,
-    completedStreets: 0,
-    lat: -27.5680,
-    lng: -48.6280,
-    priority: 'Alta',
-    polygon: [
-      [-27.5605, -48.6325],
-      [-27.5615, -48.6240],
-      [-27.5675, -48.6200],
-      [-27.5745, -48.6235],
-      [-27.5765, -48.6310],
-      [-27.5720, -48.6360],
-      [-27.5645, -48.6365]
-    ],
-    targetMaterials: { santinhos: 26000, adesivos: 3100, adesivo_bola: 1400, adesivo_parachoque: 700, colinhas: 17000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-bravo'
+    "id": "flor_de_napolis",
+    "name": "Flor de Nápolis",
+    "zone": "Distrito Sede",
+    "population": 9200,
+    "households": 3500,
+    "votersEstimated": 7500,
+    "completedStreets": 0,
+    "totalStreets": 46,
+    "priority": "Média",
+    "lat": -27.616,
+    "lng": -48.637,
+    "officialColor": "#f2927c",
+    "officialNumber": 1,
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 19000,
+      "adesivos": 2300,
+      "adesivo_bola": 1000,
+      "adesivo_parachoque": 550,
+      "colinhas": 13000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.611,
+        -48.631
+      ],
+      [
+        -27.61,
+        -48.623
+      ],
+      [
+        -27.615,
+        -48.626
+      ],
+      [
+        -27.62,
+        -48.631
+      ],
+      [
+        -27.622,
+        -48.638
+      ],
+      [
+        -27.617,
+        -48.643
+      ],
+      [
+        -27.611,
+        -48.644
+      ],
+      [
+        -27.611,
+        -48.636
+      ]
+    ]
   },
   {
-    id: 'ipiranga',
-    name: 'Ipiranga',
-    zone: 'Distrito Barreiros',
-    population: 11500,
-    households: 4400,
-    votersEstimated: 9200,
-    totalStreets: 54,
-    completedStreets: 0,
-    lat: -27.5790,
-    lng: -48.6430,
-    priority: 'Média',
-    polygon: [
-      [-27.5735, -48.6455],
-      [-27.5745, -48.6390],
-      [-27.5810, -48.6395],
-      [-27.5865, -48.6440],
-      [-27.5850, -48.6495],
-      [-27.5780, -48.6490]
-    ],
-    targetMaterials: { santinhos: 21000, adesivos: 2500, adesivo_bola: 1150, adesivo_parachoque: 575, colinhas: 14000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-bravo'
+    "id": "forquilhas",
+    "name": "Forquilhas",
+    "zone": "Distrito Forquilhinha",
+    "population": 24100,
+    "households": 9300,
+    "votersEstimated": 19200,
+    "completedStreets": 0,
+    "totalStreets": 110,
+    "priority": "Alta",
+    "lat": -27.595,
+    "lng": -48.675,
+    "officialColor": "#e89f8c",
+    "assignedTeamId": "team-eco",
+    "targetMaterials": {
+      "santinhos": 42000,
+      "adesivos": 5200,
+      "adesivo_bola": 2400,
+      "adesivo_parachoque": 1200,
+      "colinhas": 28000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.576,
+        -48.668
+      ],
+      [
+        -27.577,
+        -48.656
+      ],
+      [
+        -27.585,
+        -48.65
+      ],
+      [
+        -27.594,
+        -48.654
+      ],
+      [
+        -27.594,
+        -48.658
+      ],
+      [
+        -27.6,
+        -48.66
+      ],
+      [
+        -27.609,
+        -48.662
+      ],
+      [
+        -27.615,
+        -48.659
+      ],
+      [
+        -27.618,
+        -48.675
+      ],
+      [
+        -27.612,
+        -48.692
+      ],
+      [
+        -27.598,
+        -48.695
+      ],
+      [
+        -27.585,
+        -48.69
+      ],
+      [
+        -27.578,
+        -48.685
+      ]
+    ]
   },
   {
-    id: 'real_parque',
-    name: 'Real Parque',
-    zone: 'Distrito Barreiros',
-    population: 8300,
-    households: 3100,
-    votersEstimated: 6700,
-    totalStreets: 44,
-    completedStreets: 0,
-    lat: -27.5760,
-    lng: -48.6540,
-    priority: 'Média',
-    polygon: [
-      [-27.5695, -48.6580],
-      [-27.5710, -48.6495],
-      [-27.5780, -48.6490],
-      [-27.5830, -48.6535],
-      [-27.5805, -48.6600],
-      [-27.5740, -48.6610]
-    ],
-    targetMaterials: { santinhos: 15500, adesivos: 1800, adesivo_bola: 820, adesivo_parachoque: 410, colinhas: 10200 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-bravo'
+    "id": "forquilhinha",
+    "name": "Forquilhinha",
+    "zone": "Distrito Forquilhinha",
+    "population": 32400,
+    "households": 12600,
+    "votersEstimated": 25900,
+    "completedStreets": 0,
+    "totalStreets": 138,
+    "priority": "Alta",
+    "lat": -27.609,
+    "lng": -48.654,
+    "officialColor": "#72d2e8",
+    "assignedTeamId": "team-eco",
+    "targetMaterials": {
+      "santinhos": 55000,
+      "adesivos": 6800,
+      "adesivo_bola": 3200,
+      "adesivo_parachoque": 1600,
+      "colinhas": 38000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.604,
+        -48.652
+      ],
+      [
+        -27.604,
+        -48.645
+      ],
+      [
+        -27.611,
+        -48.644
+      ],
+      [
+        -27.614,
+        -48.649
+      ],
+      [
+        -27.615,
+        -48.659
+      ],
+      [
+        -27.609,
+        -48.662
+      ],
+      [
+        -27.6,
+        -48.66
+      ]
+    ]
   },
   {
-    id: 'pedregal',
-    name: 'Pedregal',
-    zone: 'Distrito Barreiros',
-    population: 5600,
-    households: 2100,
-    votersEstimated: 4500,
-    totalStreets: 34,
-    completedStreets: 0,
-    lat: -27.5850,
-    lng: -48.6530,
-    priority: 'Média',
-    polygon: [
-      [-27.5810, -48.6560],
-      [-27.5820, -48.6485],
-      [-27.5880, -48.6475],
-      [-27.5915, -48.6525],
-      [-27.5885, -48.6580]
-    ],
-    targetMaterials: { santinhos: 10500, adesivos: 1250, adesivo_bola: 560, adesivo_parachoque: 280, colinhas: 7000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-bravo'
+    "id": "ipiranga",
+    "name": "Ipiranga",
+    "zone": "Distrito Barreiros",
+    "population": 11500,
+    "households": 4400,
+    "votersEstimated": 9200,
+    "completedStreets": 0,
+    "totalStreets": 54,
+    "priority": "Média",
+    "lat": -27.586,
+    "lng": -48.636,
+    "officialColor": "#bebcd2",
+    "assignedTeamId": "team-bravo",
+    "targetMaterials": {
+      "santinhos": 22000,
+      "adesivos": 2600,
+      "adesivo_bola": 1100,
+      "adesivo_parachoque": 600,
+      "colinhas": 14000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.58,
+        -48.632
+      ],
+      [
+        -27.583,
+        -48.63
+      ],
+      [
+        -27.59,
+        -48.628
+      ],
+      [
+        -27.593,
+        -48.634
+      ],
+      [
+        -27.592,
+        -48.64
+      ],
+      [
+        -27.586,
+        -48.642
+      ],
+      [
+        -27.583,
+        -48.638
+      ]
+    ]
   },
   {
-    id: 'floresta',
-    name: 'Floresta',
-    zone: 'Distrito Campinas',
-    population: 7800,
-    households: 3000,
-    votersEstimated: 6400,
-    totalStreets: 38,
-    completedStreets: 0,
-    lat: -27.5880,
-    lng: -48.6250,
-    priority: 'Média',
-    polygon: [
-      [-27.5840, -48.6265],
-      [-27.5845, -48.6205],
-      [-27.5905, -48.6190],
-      [-27.5935, -48.6245],
-      [-27.5910, -48.6285],
-      [-27.5865, -48.6290]
-    ],
-    targetMaterials: { santinhos: 14500, adesivos: 1750, adesivo_bola: 780, adesivo_parachoque: 390, colinhas: 9600 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-alpha'
+    "id": "jardim_cidade_de_florianopolis",
+    "name": "Jardim Cidade de Florianópolis",
+    "zone": "Distrito Barreiros",
+    "population": 8700,
+    "households": 3350,
+    "votersEstimated": 7100,
+    "completedStreets": 0,
+    "totalStreets": 46,
+    "priority": "Média",
+    "lat": -27.584,
+    "lng": -48.624,
+    "officialColor": "#aae08c",
+    "officialNumber": 2,
+    "assignedTeamId": "team-charlie",
+    "targetMaterials": {
+      "santinhos": 18000,
+      "adesivos": 2200,
+      "adesivo_bola": 950,
+      "adesivo_parachoque": 500,
+      "colinhas": 12000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.574,
+        -48.628
+      ],
+      [
+        -27.575,
+        -48.62
+      ],
+      [
+        -27.583,
+        -48.622
+      ],
+      [
+        -27.586,
+        -48.617
+      ],
+      [
+        -27.59,
+        -48.618
+      ],
+      [
+        -27.593,
+        -48.622
+      ],
+      [
+        -27.59,
+        -48.628
+      ],
+      [
+        -27.583,
+        -48.63
+      ]
+    ]
   },
   {
-    id: 'serraria',
-    name: 'Serraria',
-    zone: 'Distrito Barreiros',
-    population: 19800,
-    households: 7500,
-    votersEstimated: 15900,
-    totalStreets: 92,
-    completedStreets: 0,
-    lat: -27.5550,
-    lng: -48.6250,
-    priority: 'Alta',
-    polygon: [
-      [-27.5420, -48.6310],
-      [-27.5440, -48.6180],
-      [-27.5510, -48.6125],
-      [-27.5615, -48.6160],
-      [-27.5615, -48.6280],
-      [-27.5570, -48.6365],
-      [-27.5480, -48.6370]
-    ],
-    targetMaterials: { santinhos: 36000, adesivos: 4300, adesivo_bola: 1900, adesivo_parachoque: 950, colinhas: 24000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-bravo'
+    "id": "jardim_santiago",
+    "name": "Jardim Santiago",
+    "zone": "Distrito Barreiros",
+    "population": 3900,
+    "households": 1420,
+    "votersEstimated": 3100,
+    "completedStreets": 0,
+    "totalStreets": 26,
+    "priority": "Baixa",
+    "lat": -27.562,
+    "lng": -48.607,
+    "officialColor": "#e8e48a",
+    "assignedTeamId": "team-charlie",
+    "targetMaterials": {
+      "santinhos": 8000,
+      "adesivos": 1000,
+      "adesivo_bola": 450,
+      "adesivo_parachoque": 250,
+      "colinhas": 5500
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.555,
+        -48.608
+      ],
+      [
+        -27.557,
+        -48.602
+      ],
+      [
+        -27.566,
+        -48.6
+      ],
+      [
+        -27.569,
+        -48.606
+      ],
+      [
+        -27.565,
+        -48.612
+      ],
+      [
+        -27.559,
+        -48.611
+      ]
+    ]
   },
   {
-    id: 'flor_de_napolis',
-    name: 'Flor de Nápolis',
-    zone: 'Distrito Sede',
-    population: 9200,
-    households: 3500,
-    votersEstimated: 7500,
-    totalStreets: 46,
-    completedStreets: 0,
-    lat: -27.6150,
-    lng: -48.6460,
-    priority: 'Média',
-    polygon: [
-      [-27.6095, -48.6495],
-      [-27.6110, -48.6420],
-      [-27.6175, -48.6410],
-      [-27.6210, -48.6465],
-      [-27.6185, -48.6520],
-      [-27.6125, -48.6530]
-    ],
-    targetMaterials: { santinhos: 17500, adesivos: 2100, adesivo_bola: 920, adesivo_parachoque: 460, colinhas: 11800 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-echo'
+    "id": "kobrasol",
+    "name": "Kobrasol",
+    "zone": "Distrito Campinas",
+    "population": 18640,
+    "households": 7850,
+    "votersEstimated": 15400,
+    "completedStreets": 0,
+    "totalStreets": 68,
+    "priority": "Alta",
+    "lat": -27.596,
+    "lng": -48.619,
+    "officialColor": "#bfe85c",
+    "assignedTeamId": "team-alpha",
+    "targetMaterials": {
+      "santinhos": 35000,
+      "adesivos": 4000,
+      "adesivo_bola": 1800,
+      "adesivo_parachoque": 900,
+      "colinhas": 22000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.59,
+        -48.618
+      ],
+      [
+        -27.592,
+        -48.614
+      ],
+      [
+        -27.599,
+        -48.616
+      ],
+      [
+        -27.606,
+        -48.614
+      ],
+      [
+        -27.606,
+        -48.62
+      ],
+      [
+        -27.601,
+        -48.624
+      ],
+      [
+        -27.593,
+        -48.622
+      ]
+    ]
   },
   {
-    id: 'picadas_do_sul',
-    name: 'Picadas do Sul',
-    zone: 'Distrito Sede',
-    population: 12400,
-    households: 4800,
-    votersEstimated: 9900,
-    totalStreets: 58,
-    completedStreets: 0,
-    lat: -27.6250,
-    lng: -48.6530,
-    priority: 'Média',
-    polygon: [
-      [-27.6185, -48.6550],
-      [-27.6190, -48.6480],
-      [-27.6245, -48.6460],
-      [-27.6315, -48.6495],
-      [-27.6320, -48.6585],
-      [-27.6265, -48.6605]
-    ],
-    targetMaterials: { santinhos: 23000, adesivos: 2700, adesivo_bola: 1200, adesivo_parachoque: 600, colinhas: 15000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-delta'
+    "id": "nossa_senhora_do_rosario",
+    "name": "Nossa Senhora do Rosário",
+    "zone": "Distrito Barreiros",
+    "population": 6800,
+    "households": 2650,
+    "votersEstimated": 5400,
+    "completedStreets": 0,
+    "totalStreets": 36,
+    "priority": "Média",
+    "lat": -27.58,
+    "lng": -48.617,
+    "officialColor": "#c06868",
+    "assignedTeamId": "team-charlie",
+    "targetMaterials": {
+      "santinhos": 15000,
+      "adesivos": 1800,
+      "adesivo_bola": 800,
+      "adesivo_parachoque": 400,
+      "colinhas": 10000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.572,
+        -48.615
+      ],
+      [
+        -27.574,
+        -48.613
+      ],
+      [
+        -27.584,
+        -48.613
+      ],
+      [
+        -27.586,
+        -48.617
+      ],
+      [
+        -27.583,
+        -48.622
+      ],
+      [
+        -27.575,
+        -48.62
+      ]
+    ]
   },
   {
-    id: 'distrito_industrial',
-    name: 'Distrito Industrial',
-    zone: 'Distrito Sede',
-    population: 3200,
-    households: 1100,
-    votersEstimated: 2700,
-    totalStreets: 36,
-    completedStreets: 0,
-    lat: -27.6320,
-    lng: -48.6430,
-    priority: 'Baixa',
-    polygon: [
-      [-27.6260, -48.6450],
-      [-27.6275, -48.6385],
-      [-27.6335, -48.6375],
-      [-27.6385, -48.6430],
-      [-27.6375, -48.6490],
-      [-27.6315, -48.6495]
-    ],
-    targetMaterials: { santinhos: 6500, adesivos: 800, adesivo_bola: 350, adesivo_parachoque: 180, colinhas: 4200 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-delta'
+    "id": "pedregal",
+    "name": "Pedregal",
+    "zone": "Distrito Barreiros",
+    "population": 5600,
+    "households": 2100,
+    "votersEstimated": 4500,
+    "completedStreets": 0,
+    "totalStreets": 34,
+    "priority": "Média",
+    "lat": -27.589,
+    "lng": -48.649,
+    "officialColor": "#85c0e8",
+    "assignedTeamId": "team-bravo",
+    "targetMaterials": {
+      "santinhos": 12000,
+      "adesivos": 1500,
+      "adesivo_bola": 650,
+      "adesivo_parachoque": 350,
+      "colinhas": 8000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.585,
+        -48.65
+      ],
+      [
+        -27.586,
+        -48.642
+      ],
+      [
+        -27.592,
+        -48.64
+      ],
+      [
+        -27.592,
+        -48.648
+      ],
+      [
+        -27.594,
+        -48.654
+      ],
+      [
+        -27.588,
+        -48.656
+      ],
+      [
+        -27.585,
+        -48.65
+      ]
+    ]
   },
   {
-    id: 'forquilhinhas',
-    name: 'Forquilhinhas',
-    zone: 'Distrito Forquilhinhas',
-    population: 32400,
-    households: 12600,
-    votersEstimated: 25900,
-    totalStreets: 138,
-    completedStreets: 0,
-    lat: -27.6050,
-    lng: -48.6540,
-    priority: 'Alta',
-    polygon: [
-      [-27.5965, -48.6590],
-      [-27.5980, -48.6480],
-      [-27.6045, -48.6460],
-      [-27.6115, -48.6500],
-      [-27.6120, -48.6610],
-      [-27.6060, -48.6635],
-      [-27.6000, -48.6625]
-    ],
-    targetMaterials: { santinhos: 58000, adesivos: 7000, adesivo_bola: 3200, adesivo_parachoque: 1600, colinhas: 39000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-charlie'
+    "id": "picadas_do_sul",
+    "name": "Picadas do Sul",
+    "zone": "Distrito Sede",
+    "population": 12400,
+    "households": 4800,
+    "votersEstimated": 9900,
+    "completedStreets": 0,
+    "totalStreets": 58,
+    "priority": "Média",
+    "lat": -27.62,
+    "lng": -48.654,
+    "officialColor": "#58d8c2",
+    "assignedTeamId": "team-eco",
+    "targetMaterials": {
+      "santinhos": 24000,
+      "adesivos": 2900,
+      "adesivo_bola": 1300,
+      "adesivo_parachoque": 650,
+      "colinhas": 16000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.615,
+        -48.659
+      ],
+      [
+        -27.614,
+        -48.649
+      ],
+      [
+        -27.617,
+        -48.643
+      ],
+      [
+        -27.622,
+        -48.644
+      ],
+      [
+        -27.626,
+        -48.65
+      ],
+      [
+        -27.628,
+        -48.661
+      ],
+      [
+        -27.621,
+        -48.664
+      ]
+    ]
   },
   {
-    id: 'forquilhas',
-    name: 'Forquilhas',
-    zone: 'Distrito Forquilhinhas',
-    population: 24100,
-    households: 9300,
-    votersEstimated: 19200,
-    totalStreets: 110,
-    completedStreets: 0,
-    lat: -27.6080,
-    lng: -48.6820,
-    priority: 'Alta',
-    polygon: [
-      [-27.5970, -48.6920],
-      [-27.5980, -48.6720],
-      [-27.6060, -48.6685],
-      [-27.6170, -48.6740],
-      [-27.6190, -48.6940],
-      [-27.6110, -48.7010],
-      [-27.6020, -48.6995]
-    ],
-    targetMaterials: { santinhos: 43000, adesivos: 5200, adesivo_bola: 2400, adesivo_parachoque: 1200, colinhas: 29000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-charlie'
+    "id": "ponta_de_baixo",
+    "name": "Ponta de Baixo",
+    "zone": "Distrito Sede",
+    "population": 4100,
+    "households": 1600,
+    "votersEstimated": 3400,
+    "completedStreets": 0,
+    "totalStreets": 28,
+    "priority": "Baixa",
+    "lat": -27.635,
+    "lng": -48.624,
+    "officialColor": "#5c6ee8",
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 9000,
+      "adesivos": 1100,
+      "adesivo_bola": 500,
+      "adesivo_parachoque": 250,
+      "colinhas": 6000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.626,
+        -48.626
+      ],
+      [
+        -27.624,
+        -48.622
+      ],
+      [
+        -27.632,
+        -48.616
+      ],
+      [
+        -27.644,
+        -48.62
+      ],
+      [
+        -27.646,
+        -48.628
+      ],
+      [
+        -27.638,
+        -48.632
+      ],
+      [
+        -27.627,
+        -48.629
+      ]
+    ]
   },
   {
-    id: 'potecas',
-    name: 'Potecas',
-    zone: 'Distrito Forquilhinhas',
-    population: 8100,
-    households: 3100,
-    votersEstimated: 6400,
-    totalStreets: 48,
-    completedStreets: 0,
-    lat: -27.5920,
-    lng: -48.6720,
-    priority: 'Média',
-    polygon: [
-      [-27.5835, -48.6790],
-      [-27.5840, -48.6660],
-      [-27.5925, -48.6630],
-      [-27.5980, -48.6700],
-      [-27.5970, -48.6810],
-      [-27.5890, -48.6825]
-    ],
-    targetMaterials: { santinhos: 15000, adesivos: 1800, adesivo_bola: 800, adesivo_parachoque: 400, colinhas: 10000 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-charlie'
+    "id": "potecas",
+    "name": "Potecas",
+    "zone": "Distrito Forquilhinha",
+    "population": 8100,
+    "households": 3100,
+    "votersEstimated": 6400,
+    "completedStreets": 0,
+    "totalStreets": 48,
+    "priority": "Média",
+    "lat": -27.598,
+    "lng": -48.652,
+    "officialColor": "#b284e8",
+    "assignedTeamId": "team-fox",
+    "targetMaterials": {
+      "santinhos": 16000,
+      "adesivos": 2000,
+      "adesivo_bola": 900,
+      "adesivo_parachoque": 450,
+      "colinhas": 11000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.592,
+        -48.648
+      ],
+      [
+        -27.592,
+        -48.64
+      ],
+      [
+        -27.596,
+        -48.64
+      ],
+      [
+        -27.602,
+        -48.645
+      ],
+      [
+        -27.604,
+        -48.652
+      ],
+      [
+        -27.6,
+        -48.66
+      ],
+      [
+        -27.594,
+        -48.658
+      ],
+      [
+        -27.594,
+        -48.654
+      ]
+    ]
   },
   {
-    id: 'sertao_do_maruim',
-    name: 'Sertão do Maruim',
-    zone: 'Distrito Sede',
-    population: 7100,
-    households: 2750,
-    votersEstimated: 5700,
-    totalStreets: 42,
-    completedStreets: 0,
-    lat: -27.6360,
-    lng: -48.7000,
-    priority: 'Média',
-    polygon: [
-      [-27.6250, -48.7180],
-      [-27.6240, -48.6850],
-      [-27.6350, -48.6810],
-      [-27.6460, -48.6910],
-      [-27.6470, -48.7150],
-      [-27.6380, -48.7230]
-    ],
-    targetMaterials: { santinhos: 13500, adesivos: 1600, adesivo_bola: 720, adesivo_parachoque: 360, colinhas: 8800 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-echo'
+    "id": "praia_comprida",
+    "name": "Praia Comprida",
+    "zone": "Distrito Sede",
+    "population": 7200,
+    "households": 2850,
+    "votersEstimated": 5900,
+    "completedStreets": 0,
+    "totalStreets": 42,
+    "priority": "Média",
+    "lat": -27.612,
+    "lng": -48.622,
+    "officialColor": "#d2c4e8",
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 16000,
+      "adesivos": 1900,
+      "adesivo_bola": 850,
+      "adesivo_parachoque": 450,
+      "colinhas": 11000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.606,
+        -48.62
+      ],
+      [
+        -27.606,
+        -48.614
+      ],
+      [
+        -27.613,
+        -48.616
+      ],
+      [
+        -27.618,
+        -48.62
+      ],
+      [
+        -27.616,
+        -48.625
+      ],
+      [
+        -27.61,
+        -48.623
+      ]
+    ]
   },
   {
-    id: 'colonia_santana',
-    name: 'Colônia Santana',
-    zone: 'Distrito Sede',
-    population: 5800,
-    households: 2100,
-    votersEstimated: 4600,
-    totalStreets: 34,
-    completedStreets: 0,
-    lat: -27.6180,
-    lng: -48.7450,
-    priority: 'Baixa',
-    polygon: [
-      [-27.6050, -48.7650],
-      [-27.6060, -48.7280],
-      [-27.6200, -48.7250],
-      [-27.6310, -48.7360],
-      [-27.6300, -48.7630],
-      [-27.6180, -48.7680]
-    ],
-    targetMaterials: { santinhos: 11000, adesivos: 1300, adesivo_bola: 580, adesivo_parachoque: 290, colinhas: 7200 },
-    deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
-    assignedTeamId: 'team-fox'
+    "id": "real_parque",
+    "name": "Real Parque",
+    "zone": "Distrito Barreiros",
+    "population": 8300,
+    "households": 3100,
+    "votersEstimated": 6700,
+    "completedStreets": 0,
+    "totalStreets": 44,
+    "priority": "Média",
+    "lat": -27.58,
+    "lng": -48.648,
+    "officialColor": "#e878a8",
+    "assignedTeamId": "team-bravo",
+    "targetMaterials": {
+      "santinhos": 17000,
+      "adesivos": 2100,
+      "adesivo_bola": 900,
+      "adesivo_parachoque": 450,
+      "colinhas": 11500
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.568,
+        -48.646
+      ],
+      [
+        -27.578,
+        -48.644
+      ],
+      [
+        -27.583,
+        -48.638
+      ],
+      [
+        -27.586,
+        -48.642
+      ],
+      [
+        -27.585,
+        -48.65
+      ],
+      [
+        -27.577,
+        -48.656
+      ],
+      [
+        -27.57,
+        -48.654
+      ]
+    ]
+  },
+  {
+    "id": "rocado",
+    "name": "Roçado",
+    "zone": "Distrito Sede",
+    "population": 9800,
+    "households": 3800,
+    "votersEstimated": 7950,
+    "completedStreets": 0,
+    "totalStreets": 56,
+    "priority": "Média",
+    "lat": -27.606,
+    "lng": -48.628,
+    "officialColor": "#6ce8a2",
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 20000,
+      "adesivos": 2400,
+      "adesivo_bola": 1100,
+      "adesivo_parachoque": 550,
+      "colinhas": 14000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.596,
+        -48.626
+      ],
+      [
+        -27.601,
+        -48.624
+      ],
+      [
+        -27.606,
+        -48.62
+      ],
+      [
+        -27.61,
+        -48.623
+      ],
+      [
+        -27.611,
+        -48.631
+      ],
+      [
+        -27.607,
+        -48.634
+      ],
+      [
+        -27.6,
+        -48.63
+      ]
+    ]
+  },
+  {
+    "id": "sao_luiz",
+    "name": "São Luiz",
+    "zone": "Distrito Sede",
+    "population": 5100,
+    "households": 1950,
+    "votersEstimated": 4200,
+    "completedStreets": 0,
+    "totalStreets": 32,
+    "priority": "Média",
+    "lat": -27.607,
+    "lng": -48.639,
+    "officialColor": "#9cd264",
+    "assignedTeamId": "team-delta",
+    "targetMaterials": {
+      "santinhos": 11000,
+      "adesivos": 1350,
+      "adesivo_bola": 600,
+      "adesivo_parachoque": 300,
+      "colinhas": 7500
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.601,
+        -48.637
+      ],
+      [
+        -27.6,
+        -48.63
+      ],
+      [
+        -27.607,
+        -48.634
+      ],
+      [
+        -27.611,
+        -48.636
+      ],
+      [
+        -27.611,
+        -48.644
+      ],
+      [
+        -27.604,
+        -48.645
+      ],
+      [
+        -27.602,
+        -48.645
+      ]
+    ]
+  },
+  {
+    "id": "serraria",
+    "name": "Serraria",
+    "zone": "Distrito Barreiros",
+    "population": 19800,
+    "households": 7500,
+    "votersEstimated": 15900,
+    "completedStreets": 0,
+    "totalStreets": 92,
+    "priority": "Alta",
+    "lat": -27.55,
+    "lng": -48.628,
+    "officialColor": "#aee894",
+    "assignedTeamId": "team-charlie",
+    "targetMaterials": {
+      "santinhos": 38000,
+      "adesivos": 4600,
+      "adesivo_bola": 2100,
+      "adesivo_parachoque": 1050,
+      "colinhas": 25000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.532,
+        -48.632
+      ],
+      [
+        -27.536,
+        -48.618
+      ],
+      [
+        -27.545,
+        -48.608
+      ],
+      [
+        -27.558,
+        -48.608
+      ],
+      [
+        -27.562,
+        -48.616
+      ],
+      [
+        -27.564,
+        -48.625
+      ],
+      [
+        -27.562,
+        -48.636
+      ],
+      [
+        -27.555,
+        -48.652
+      ],
+      [
+        -27.54,
+        -48.65
+      ]
+    ]
+  },
+  {
+    "id": "sertao_do_maruim",
+    "name": "Sertão do Maruim",
+    "zone": "Distrito Sede",
+    "population": 7100,
+    "households": 2750,
+    "votersEstimated": 5700,
+    "completedStreets": 0,
+    "totalStreets": 42,
+    "priority": "Média",
+    "lat": -27.626,
+    "lng": -48.692,
+    "officialColor": "#e8b84e",
+    "assignedTeamId": "team-eco",
+    "targetMaterials": {
+      "santinhos": 15000,
+      "adesivos": 1800,
+      "adesivo_bola": 800,
+      "adesivo_parachoque": 400,
+      "colinhas": 10000
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.612,
+        -48.692
+      ],
+      [
+        -27.618,
+        -48.675
+      ],
+      [
+        -27.621,
+        -48.664
+      ],
+      [
+        -27.628,
+        -48.661
+      ],
+      [
+        -27.638,
+        -48.666
+      ],
+      [
+        -27.644,
+        -48.678
+      ],
+      [
+        -27.642,
+        -48.705
+      ],
+      [
+        -27.63,
+        -48.715
+      ],
+      [
+        -27.616,
+        -48.718
+      ],
+      [
+        -27.606,
+        -48.708
+      ]
+    ]
+  },
+  {
+    "id": "area_rural",
+    "name": "Área Rural",
+    "zone": "Distrito Sede",
+    "population": 1400,
+    "households": 480,
+    "votersEstimated": 1100,
+    "completedStreets": 0,
+    "totalStreets": 18,
+    "priority": "Baixa",
+    "lat": -27.635,
+    "lng": -48.73,
+    "officialColor": "#f0cca8",
+    "assignedTeamId": "team-fox",
+    "targetMaterials": {
+      "santinhos": 4000,
+      "adesivos": 500,
+      "adesivo_bola": 250,
+      "adesivo_parachoque": 120,
+      "colinhas": 2500
+    },
+    "deliveredMaterials": {
+      "santinhos": 0,
+      "adesivos": 0,
+      "adesivo_bola": 0,
+      "adesivo_parachoque": 0,
+      "colinhas": 0
+    },
+    "polygon": [
+      [
+        -27.616,
+        -48.745
+      ],
+      [
+        -27.616,
+        -48.718
+      ],
+      [
+        -27.63,
+        -48.715
+      ],
+      [
+        -27.642,
+        -48.705
+      ],
+      [
+        -27.652,
+        -48.712
+      ],
+      [
+        -27.655,
+        -48.742
+      ],
+      [
+        -27.635,
+        -48.755
+      ]
+    ]
   }
 ];

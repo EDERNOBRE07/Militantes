@@ -29,7 +29,7 @@ import {
   Eye
 } from 'lucide-react';
 
-export type MapLayerMode = 'demografia_ibge' | 'performance_militancia';
+export type MapLayerMode = 'atlas_pmsj' | 'demografia_ibge' | 'performance_militancia';
 export type BaseMapProvider = 'google_streets' | 'google_satellite' | 'google_terrain' | 'carto_osm';
 
 interface CoverageMapViewProps {
@@ -57,8 +57,8 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   // Map Provider (Google Maps Free standard, satellite and terrain)
   const [baseMapProvider, setBaseMapProvider] = useState<BaseMapProvider>('google_streets');
 
-  // Layer mode: IBGE Demographic Density vs Militancy Performance
-  const [layerMode, setLayerMode] = useState<MapLayerMode>('performance_militancia');
+  // Layer mode: Mapa Oficial PMSJ 2020 (Atlas IFSC) vs Demografia IBGE vs PINs Performance
+  const [layerMode, setLayerMode] = useState<MapLayerMode>('atlas_pmsj');
   const [showVans, setShowVans] = useState<boolean>(true);
   const [showMilitants, setShowMilitants] = useState<boolean>(true);
   const [showCheckins, setShowCheckins] = useState<boolean>(true);
@@ -205,6 +205,13 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
         strokeWidth = 1.0;
         strokeOpacity = 0.4;
         fillOpacity = 0.04;
+      } else if (layerMode === 'atlas_pmsj') {
+        // Mapa Oficial IFSC / PMSJ (2020) & IBGE (2021)
+        fillColor = bairro.officialColor || '#6366f1';
+        strokeColor = '#334155';
+        strokeWidth = 2.0;
+        strokeOpacity = 0.95;
+        fillOpacity = 0.45;
       } else if (layerMode === 'demografia_ibge') {
         // IBGE Population / Demography scale
         if (bairro.population >= 20000) {
@@ -255,7 +262,44 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       }
 
       // Customized Popup content per layer
-      const popupHtml = layerMode === 'demografia_ibge' ? `
+      const popupHtml = layerMode === 'atlas_pmsj' ? `
+        <div class="p-2 space-y-2 text-slate-800 font-sans min-w-[220px]">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 bg-slate-50 -mx-2 -mt-2 p-2 rounded-t">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3.5 h-3.5 rounded-full inline-block border border-black/30 shrink-0 shadow-xs" style="background-color: ${bairro.officialColor || '#3b82f6'}"></span>
+              <div>
+                <span class="text-[9px] uppercase tracking-wider font-bold text-slate-500 block">
+                  ${bairro.officialNumber ? `Nº ${bairro.officialNumber} • Mapa Oficial PMSJ` : 'Bairro Oficial PMSJ (2020)'}
+                </span>
+                <h4 class="font-bold text-sm text-slate-900 leading-tight">${bairro.name}</h4>
+              </div>
+            </div>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200">${bairro.zone}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">População (Censo):</p>
+              <p class="font-bold text-slate-900 text-sm">${bairro.population.toLocaleString('pt-BR')} hab.</p>
+            </div>
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">Eleitores (TSE):</p>
+              <p class="font-bold text-blue-700 text-sm">${bairro.votersEstimated.toLocaleString('pt-BR')}</p>
+            </div>
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">Total de Ruas:</p>
+              <p class="font-bold text-slate-800">${bairro.totalStreets} ruas</p>
+            </div>
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">Ruas Cobertas:</p>
+              <p class="font-bold text-emerald-700">${bairro.completedStreets} (${Math.round((bairro.completedStreets / Math.max(bairro.totalStreets, 1)) * 100)}%)</p>
+            </div>
+          </div>
+          <p class="text-[9px] text-slate-500 italic pt-1 border-t border-slate-100 flex items-center justify-between">
+            <span>Atlas PMSJ (2020) • IFSC / IBGE</span>
+            <span class="font-semibold text-slate-600">Prioridade: ${bairro.priority}</span>
+          </p>
+        </div>
+      ` : layerMode === 'demografia_ibge' ? `
         <div class="p-2 space-y-2 text-slate-800 font-sans min-w-[210px]">
           <div class="flex items-center justify-between border-b border-indigo-100 pb-1.5 bg-indigo-50/70 -mx-2 -mt-2 p-2 rounded-t">
             <div>
@@ -336,7 +380,15 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       // 1.1 Render Labels on Center
       if (showLabels && (!isOtherWhenFiltered || selectedBairroFilter === 'todos')) {
         let labelHtml = '';
-        if (layerMode === 'demografia_ibge') {
+        if (layerMode === 'atlas_pmsj') {
+          labelHtml = `
+            <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-slate-300'} text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full border border-black/30 shrink-0" style="background-color: ${bairro.officialColor || fillColor}"></span>
+              ${bairro.officialNumber ? `<span class="bg-slate-800 text-white rounded-full text-[9px] w-3.5 h-3.5 flex items-center justify-center font-bold font-mono shrink-0">${bairro.officialNumber}</span>` : ''}
+              <span class="${isSelected ? 'font-bold text-rose-700' : 'text-slate-800'}">${bairro.name}</span>
+            </div>
+          `;
+        } else if (layerMode === 'demografia_ibge') {
           labelHtml = `
             <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-indigo-200'} text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full" style="background-color: ${isSelected ? '#ef4444' : fillColor}"></span>
@@ -651,8 +703,23 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       {/* Top Map Control & Layer Switcher Bar */}
       <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-[1000] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         
-        {/* Layer Mode Switcher (IBGE vs Performance) */}
+        {/* Layer Mode Switcher (Atlas Oficial PMSJ 2020 vs IBGE vs Performance) */}
         <div className="flex flex-wrap items-center gap-1 bg-white/95 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-slate-200 shadow-md pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => setLayerMode('atlas_pmsj')}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              layerMode === 'atlas_pmsj'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+            title="Mapa Oficial dos 28 Bairros de São José (PMSJ 2020 / Atlas Escolar IFSC / IBGE 2021)"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Mapa Oficial PMSJ (2020)</span>
+            <span className="sm:hidden">Oficial PMSJ</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setLayerMode('demografia_ibge')}
@@ -814,7 +881,28 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       {/* Dynamic Bottom Left Map Legend */}
       <div className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200 shadow-md text-xs space-y-1.5 pointer-events-auto max-w-sm">
         
-        {layerMode === 'demografia_ibge' ? (
+        {layerMode === 'atlas_pmsj' ? (
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-1.5 text-slate-900 font-bold text-[11px] uppercase tracking-wider">
+                <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                28 Bairros Oficiais • PMSJ (2020)
+              </div>
+              <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">28 Bairros + Rural</span>
+            </div>
+            <p className="text-[10px] text-slate-600 mb-1.5">
+              Limites cartografados conforme o Atlas Escolar de São José (PMSJ 2020 / IFSC / IBGE 2021).
+            </p>
+            <div className="flex items-center gap-3 text-[10px] text-slate-600 border-t border-slate-100 pt-1.5">
+              <span className="flex items-center gap-1">
+                <span className="w-3.5 h-3.5 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-[8px]">1</span> Flor de Nápolis
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3.5 h-3.5 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-[8px]">2</span> Jd. Cidade de Florianópolis
+              </span>
+            </div>
+          </div>
+        ) : layerMode === 'demografia_ibge' ? (
           <div>
             <div className="flex items-center gap-1.5 mb-1 text-indigo-900 font-bold text-[11px] uppercase tracking-wider">
               <Building2 className="w-3.5 h-3.5 text-indigo-600" />

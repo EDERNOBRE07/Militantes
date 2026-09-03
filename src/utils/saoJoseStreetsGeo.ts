@@ -1,14 +1,14 @@
 import { Neighborhood, StreetCheckIn } from '../types';
 
 /**
- * Bounding box for São José - SC
+ * Bounding box for São José - SC (abrangendo todo o território municipal conforme PMSJ 2020 / IBGE 2021)
  */
 export const SAO_JOSE_BOUNDS = {
-  minLat: -27.6800,
-  maxLat: -27.5200,
-  minLng: -48.7400,
+  minLat: -27.6700,
+  maxLat: -27.5100,
+  minLng: -48.7650,
   maxLng: -48.5800,
-  center: [-27.6136, -48.6366] as [number, number]
+  center: [-27.5950, -48.6450] as [number, number]
 };
 
 /**
@@ -802,7 +802,12 @@ export function resolveExactStreetCoordinates(
 
   // 3. Fallback: Centro do Bairro informado
   if (neighborhoodId && fallbackNeighborhoods.length > 0) {
-    const neigh = fallbackNeighborhoods.find(n => n.id === neighborhoodId || normalizeStreetName(n.name) === normalizeStreetName(neighborhoodId));
+    const neigh = fallbackNeighborhoods.find(n => 
+      n.id === neighborhoodId || 
+      (neighborhoodId === 'forquilhinhas' && n.id === 'forquilhinha') ||
+      (neighborhoodId === 'forquilhinha' && n.id === 'forquilhinhas') ||
+      normalizeStreetName(n.name) === normalizeStreetName(neighborhoodId)
+    );
     if (neigh && isCoordinateInsideSaoJose(neigh.lat, neigh.lng)) {
       // Dispersão determinística leve para não sobrepor múltiplos checkins exatamente no mesmo ponto central
       const hash = Array.from(streetName || 'rua').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -894,6 +899,8 @@ export function getCalibratedCheckInPosition(
   // Localiza o bairro atribuído ao check-in
   const targetNeigh = neighborhoods.find(
     n => n.id === checkIn.neighborhoodId || 
+    (checkIn.neighborhoodId === 'forquilhinhas' && n.id === 'forquilhinha') ||
+    (checkIn.neighborhoodId === 'forquilhinha' && n.id === 'forquilhinhas') ||
     (checkIn.neighborhoodName && n.name.toLowerCase() === checkIn.neighborhoodName.toLowerCase())
   );
 

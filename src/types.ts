@@ -28,7 +28,7 @@ export interface MaterialCount {
 export interface Neighborhood {
   id: string;
   name: string;
-  zone: 'Distrito Sede' | 'Distrito Barreiros' | 'Distrito Forquilhinhas' | 'Distrito Campinas';
+  zone: 'Distrito Sede' | 'Distrito Barreiros' | 'Distrito Forquilhinhas' | 'Distrito Forquilhinha' | 'Distrito Campinas';
   population: number; // IBGE 2022 Census
   households: number; // Domicílios
   votersEstimated: number; // Eleitores estimados
@@ -41,6 +41,8 @@ export interface Neighborhood {
   targetMaterials: MaterialCount;
   deliveredMaterials: MaterialCount;
   assignedTeamId?: string;
+  officialColor?: string;
+  officialNumber?: number;
 }
 
 export interface Militant {

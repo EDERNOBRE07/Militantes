@@ -42,7 +42,7 @@ const STORAGE_KEYS = {
   USERS: 'militancia_users_v1',
   CURRENT_USER: 'militancia_current_user_v1',
   AUTH_SESSION: 'militancia_auth_session_v1',
-  NEIGHBORHOODS: 'militancia_neighborhoods_v1',
+  NEIGHBORHOODS: 'militancia_neighborhoods_pmsj2020_v3',
   MILITANTS: 'militancia_militants_v1',
   TEAMS: 'militancia_teams_v1',
   VANS: 'militancia_vans_v1',
@@ -2125,6 +2125,8 @@ export class StorageService {
     const updatedNeighborhoods = neighborhoods.map(n => {
       const nCheckins = checkins.filter(c => 
         c.neighborhoodId === n.id || 
+        (n.id === 'forquilhinha' && c.neighborhoodId === 'forquilhinhas') ||
+        (n.id === 'forquilhas' && c.neighborhoodId === 'forquilhas') ||
         (c.neighborhoodName && c.neighborhoodName.toLowerCase().trim() === n.name.toLowerCase().trim())
       );
       const uniqueStreets = new Set(nCheckins.map(c => (c.streetName || '').toLowerCase().trim())).size;
@@ -2194,15 +2196,25 @@ export class StorageService {
   static getNeighborhoods(): Neighborhood[] {
     let list = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
 
-    // Assegura que todos os 24 bairros oficiais existam e que Areias e Bosque das Mansões estejam separados
-    const hasBosque = list.some(n => n.id === 'bosque_das_mansoes');
+    // Assegura que todos os 28 bairros oficiais (PMSJ 2020 / IFSC / IBGE 2021) existam com seus polígonos exatos
+    const hasAltoForquilhas = list.some(n => n.id === 'alto_forquilhas');
+    const hasSantiago = list.some(n => n.id === 'jardim_santiago');
+    const hasJardimFpolis = list.some(n => n.id === 'jardim_cidade_de_florianopolis');
+    const hasRosario = list.some(n => n.id === 'nossa_senhora_do_rosario');
+    const hasSaoLuiz = list.some(n => n.id === 'sao_luiz');
+    const hasAreaRural = list.some(n => n.id === 'area_rural');
     const isOldCount = list.length < INITIAL_NEIGHBORHOODS.length;
-    if (!hasBosque || isOldCount) {
+
+    if (!hasAltoForquilhas || !hasSantiago || !hasJardimFpolis || !hasRosario || !hasSaoLuiz || !hasAreaRural || isOldCount) {
       list = INITIAL_NEIGHBORHOODS.map(official => {
-        const existing = list.find(n => n.id === official.id || n.name.toLowerCase() === official.name.toLowerCase());
+        const existing = list.find(n => 
+          n.id === official.id || 
+          (official.id === 'forquilhinha' && n.id === 'forquilhinhas') ||
+          n.name.toLowerCase() === official.name.toLowerCase()
+        );
         if (existing) {
           return {
-            ...official,
+            ...official, // Preserva e atualiza polígonos oficiais, cores do mapa oficial e coordenadas
             completedStreets: Math.max(existing.completedStreets || 0, official.completedStreets || 0),
             deliveredMaterials: {
               santinhos: Math.max(existing.deliveredMaterials?.santinhos || 0, official.deliveredMaterials?.santinhos || 0),
