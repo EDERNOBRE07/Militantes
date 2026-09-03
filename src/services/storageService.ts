@@ -1346,7 +1346,61 @@ export class StorageService {
     if (this.checkinsMemoryCache && this.checkinsMemoryCache.length > 0) {
       return this.checkinsMemoryCache;
     }
-    const fromLocal = this.get<StreetCheckIn[]>(STORAGE_KEYS.CHECKINS, INITIAL_CHECKINS);
+    let fromLocal = this.get<StreetCheckIn[]>(STORAGE_KEYS.CHECKINS, INITIAL_CHECKINS);
+
+    // Realoção e normalização automática para as regras dos 24 bairros oficiais
+    let checkinsModified = false;
+    const reallocated = fromLocal.map(chk => {
+      let updated = { ...chk };
+      const streetLower = (chk.streetName || '').toLowerCase();
+      const neighIdLower = (chk.neighborhoodId || '').toLowerCase();
+
+      // Regra 1: Separação de Areias e Bosque das Mansões
+      if (streetLower.includes('bosque') || streetLower.includes('mansões') || streetLower.includes('mansoes') || streetLower.includes('lourival de souza') || streetLower.includes('alaide martins')) {
+        if (updated.neighborhoodId !== 'bosque_das_mansoes') {
+          updated.neighborhoodId = 'bosque_das_mansoes';
+          updated.neighborhoodName = 'Bosque das Mansões';
+          checkinsModified = true;
+        }
+      } else if (neighIdLower === 'areias_bosque' || ((streetLower.includes('são pedro') || streetLower.includes('sao pedro') || streetLower.includes('iano')) && updated.neighborhoodId !== 'areias')) {
+        updated.neighborhoodId = 'areias';
+        updated.neighborhoodName = 'Areias';
+        checkinsModified = true;
+      }
+
+      // Regra 2: Calibragem de coordenadas se estava no placeholder de Kobrasol (-27.5962, -48.6190)
+      const isPlaceholderGps = (
+        Math.abs(updated.latitude - (-27.5962)) < 0.0008 &&
+        Math.abs(updated.longitude - (-48.6190)) < 0.0008
+      );
+      if (isPlaceholderGps && updated.neighborhoodId !== 'kobrasol') {
+        const calibrated = resolveExactStreetCoordinates(updated.streetName, updated.neighborhoodId, INITIAL_NEIGHBORHOODS);
+        updated.latitude = calibrated.lat;
+        updated.longitude = calibrated.lng;
+        checkinsModified = true;
+      }
+
+      return updated;
+    });
+
+    // Assegura a presença de check-ins de amostra em Areias e Bosque das Mansões
+    if (!reallocated.some(c => c.neighborhoodId === 'areias')) {
+      const areiasSamples = INITIAL_CHECKINS.filter(c => c.neighborhoodId === 'areias');
+      reallocated.push(...areiasSamples);
+      checkinsModified = true;
+    }
+    if (!reallocated.some(c => c.neighborhoodId === 'bosque_das_mansoes')) {
+      const bosqueSamples = INITIAL_CHECKINS.filter(c => c.neighborhoodId === 'bosque_das_mansoes');
+      reallocated.push(...bosqueSamples);
+      checkinsModified = true;
+    }
+
+    if (checkinsModified) {
+      fromLocal = reallocated;
+      this.safeLocalStorageSet(STORAGE_KEYS.CHECKINS, fromLocal);
+      vaultStorage.setItem(STORAGE_KEYS.CHECKINS, fromLocal).catch(() => {});
+    }
+
     this.checkinsMemoryCache = fromLocal;
 
     // Assegura que se o IndexedDB Vault tiver fotos completas ou check-ins adicionais, sincroniza
@@ -2058,7 +2112,7 @@ export class StorageService {
   }
 
   /**
-   * Recalcula com precisão matemática as estatísticas de todos os 18 bairros e de todos os militantes
+   * Recalcula com precisão matemática as estatísticas de todos os 24 bairros e de todos os militantes
    * diretamente a partir da lista oficial de check-ins.
    * Evita qualquer divergência ou "sumiço" de dados entre telas.
    */
@@ -2138,7 +2192,35 @@ export class StorageService {
 
   // Neighborhoods
   static getNeighborhoods(): Neighborhood[] {
-    const list = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
+    let list = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
+
+    // Assegura que todos os 24 bairros oficiais existam e que Areias e Bosque das Mansões estejam separados
+    const hasBosque = list.some(n => n.id === 'bosque_das_mansoes');
+    const isOldCount = list.length < INITIAL_NEIGHBORHOODS.length;
+    if (!hasBosque || isOldCount) {
+      list = INITIAL_NEIGHBORHOODS.map(official => {
+        const existing = list.find(n => n.id === official.id || n.name.toLowerCase() === official.name.toLowerCase());
+        if (existing) {
+          return {
+            ...official,
+            completedStreets: Math.max(existing.completedStreets || 0, official.completedStreets || 0),
+            deliveredMaterials: {
+              santinhos: Math.max(existing.deliveredMaterials?.santinhos || 0, official.deliveredMaterials?.santinhos || 0),
+              adesivos: Math.max(existing.deliveredMaterials?.adesivos || 0, official.deliveredMaterials?.adesivos || 0),
+              adesivo_bola: Math.max(existing.deliveredMaterials?.adesivo_bola || 0, official.deliveredMaterials?.adesivo_bola || 0),
+              adesivo_parachoque: Math.max(existing.deliveredMaterials?.adesivo_parachoque || 0, official.deliveredMaterials?.adesivo_parachoque || 0),
+              colinhas: Math.max(existing.deliveredMaterials?.colinhas || 0, official.deliveredMaterials?.colinhas || 0),
+              abordagens: Math.max(existing.deliveredMaterials?.abordagens || 0, official.deliveredMaterials?.abordagens || 0),
+              comercio: Math.max(existing.deliveredMaterials?.comercio || 0, official.deliveredMaterials?.comercio || 0)
+            },
+            assignedTeamId: existing.assignedTeamId || official.assignedTeamId
+          };
+        }
+        return official;
+      });
+      this.set(STORAGE_KEYS.NEIGHBORHOODS, list);
+    }
+
     const checkins = this.getCheckIns();
     const totalCompleted = list.reduce((sum, n) => sum + (n.completedStreets || 0), 0);
     if (checkins.length > 0 && totalCompleted === 0) {

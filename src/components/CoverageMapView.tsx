@@ -156,8 +156,13 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
     } else {
       const targetBairro = neighborhoods.find(n => n.id === selectedBairroFilter);
       if (targetBairro) {
-        map.setView([targetBairro.lat, targetBairro.lng], 15);
+        if (targetBairro.polygon && targetBairro.polygon.length >= 3) {
+          map.fitBounds(L.polygon(targetBairro.polygon).getBounds(), { padding: [45, 45], maxZoom: 16 });
+        } else {
+          map.setView([targetBairro.lat, targetBairro.lng], 15);
+        }
         setInspectedBairro(targetBairro);
+        setShowCheckins(true); // Exibe os pins daquele bairro automaticamente
       }
     }
   }, [selectedBairroFilter, neighborhoods]);
@@ -170,22 +175,37 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
 
     layerGroup.clearLayers();
 
-    const filteredNeighborhoods = selectedBairroFilter === 'todos'
-      ? neighborhoods
-      : neighborhoods.filter(n => n.id === selectedBairroFilter);
+    // =========================================================================
+    // 1. RENDER NEIGHBORHOOD POLYGONS ACCORDING TO ACTIVE LAYER MODE & SELECTION
+    // =========================================================================
+    neighborhoods.forEach(bairro => {
+      const isSelected = selectedBairroFilter !== 'todos' && bairro.id === selectedBairroFilter;
+      const isOtherWhenFiltered = selectedBairroFilter !== 'todos' && !isSelected;
 
-    // =========================================================================
-    // 1. RENDER NEIGHBORHOOD POLYGONS ACCORDING TO ACTIVE LAYER MODE
-    // =========================================================================
-    filteredNeighborhoods.forEach(bairro => {
       const completionRate = (bairro.completedStreets / bairro.totalStreets) * 100;
       const votersPerStreet = Math.round(bairro.votersEstimated / Math.max(bairro.totalStreets, 1));
 
       let fillColor = '#10b981';
       let strokeColor = '#059669';
       let fillOpacity = 0.25;
+      let strokeWidth = 2.0;
+      let strokeOpacity = 0.85;
 
-      if (layerMode === 'demografia_ibge') {
+      if (isSelected) {
+        // Destaque exato da área geográfica oficial solicitada pelo usuário (contorno vermelho nítido)
+        strokeColor = '#ef4444';
+        fillColor = '#ef4444';
+        strokeWidth = 3.5;
+        strokeOpacity = 1.0;
+        fillOpacity = 0.28;
+      } else if (isOtherWhenFiltered) {
+        // Outros bairros em segundo plano sutil para contextualizar o mapa
+        strokeColor = '#94a3b8';
+        fillColor = '#cbd5e1';
+        strokeWidth = 1.0;
+        strokeOpacity = 0.4;
+        fillOpacity = 0.04;
+      } else if (layerMode === 'demografia_ibge') {
         // IBGE Population / Demography scale
         if (bairro.population >= 20000) {
           fillColor = '#6366f1'; // Indigo (>20k hab - Muito Alta)
@@ -223,11 +243,16 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
 
       const polygon = L.polygon(bairro.polygon, {
         color: strokeColor,
-        weight: 2.0,
-        opacity: 0.85,
+        weight: strokeWidth,
+        opacity: strokeOpacity,
         fillColor: fillColor,
-        fillOpacity: fillOpacity
+        fillOpacity: fillOpacity,
+        dashArray: isOtherWhenFiltered ? '4, 4' : undefined
       });
+
+      if (isSelected) {
+        polygon.bringToFront();
+      }
 
       // Customized Popup content per layer
       const popupHtml = layerMode === 'demografia_ibge' ? `
@@ -297,28 +322,33 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       polygon.bindPopup(popupHtml, { maxWidth: 300 });
 
       polygon.on('click', () => {
+        setSelectedBairroFilter(bairro.id);
+        setShowCheckins(true);
         setInspectedBairro(bairro);
+        if (mapInstanceRef.current && bairro.polygon && bairro.polygon.length >= 3) {
+          mapInstanceRef.current.fitBounds(L.polygon(bairro.polygon).getBounds(), { padding: [45, 45], maxZoom: 16 });
+        }
         if (onSelectNeighborhood) onSelectNeighborhood(bairro);
       });
 
       layerGroup.addLayer(polygon);
 
       // 1.1 Render Labels on Center
-      if (showLabels) {
+      if (showLabels && (!isOtherWhenFiltered || selectedBairroFilter === 'todos')) {
         let labelHtml = '';
         if (layerMode === 'demografia_ibge') {
           labelHtml = `
-            <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border border-indigo-200 text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${fillColor}"></span>
-              <span>${bairro.name}</span>
+            <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-indigo-200'} text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${isSelected ? '#ef4444' : fillColor}"></span>
+              <span class="${isSelected ? 'font-bold text-rose-700' : ''}">${bairro.name}</span>
               <span class="text-indigo-700 font-bold font-mono text-[10px]">(${(bairro.population / 1000).toFixed(1)}k hab)</span>
             </div>
           `;
         } else {
           labelHtml = `
-            <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border border-slate-200 text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${fillColor}"></span>
-              <span>${bairro.name}</span>
+            <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-slate-200'} text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${isSelected ? '#ef4444' : fillColor}"></span>
+              <span class="${isSelected ? 'font-bold text-rose-700' : ''}">${bairro.name}</span>
               <span class="${completionRate >= 75 ? 'text-emerald-700 font-bold' : (completionRate >= 45 ? 'text-amber-700 font-bold' : 'text-rose-700 font-bold')} font-mono text-[10px]">(${completionRate.toFixed(0)}%)</span>
             </div>
           `;
@@ -707,7 +737,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
               onChange={(e) => setSelectedBairroFilter(e.target.value)}
               className="bg-slate-50 text-xs text-slate-800 border-0 rounded-lg px-2 py-1 focus:ring-1 focus:ring-blue-500 font-medium outline-none cursor-pointer max-w-[120px] sm:max-w-none"
             >
-              <option value="todos">Todos (18 Bairros)</option>
+              <option value="todos">Todos ({neighborhoods.length || 24} Bairros)</option>
               {neighborhoods.map(n => (
                 <option key={n.id} value={n.id}>
                   {n.name}

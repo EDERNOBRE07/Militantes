@@ -361,23 +361,23 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     type: 'rua'
   },
 
-  // AREIAS & BOSQUE DAS MANSÕES
+  // AREIAS (Bairro Oficial 10)
   {
     name: 'Rua São Pedro',
     aliases: ['rua sao pedro', 'sao pedro'],
     neighborhoodId: 'areias',
     neighborhoodName: 'Areias',
-    lat: -27.5890,
-    lng: -48.6380,
+    lat: -27.5850,
+    lng: -48.6350,
     type: 'rua'
   },
   {
     name: 'Avenida das Torres',
     aliases: ['av das torres', 'avenida das torres', 'av torres', 'torres'],
     neighborhoodId: 'areias',
-    neighborhoodName: 'Areias / Bela Vista / Serraria',
-    lat: -27.5780,
-    lng: -48.6290,
+    neighborhoodName: 'Areias',
+    lat: -27.5820,
+    lng: -48.6320,
     type: 'avenida'
   },
   {
@@ -385,8 +385,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     aliases: ['rua francisco jacinto de melo', 'francisco jacinto de melo', 'francisco jacinto'],
     neighborhoodId: 'areias',
     neighborhoodName: 'Areias',
-    lat: -27.5850,
-    lng: -48.6360,
+    lat: -27.5870,
+    lng: -48.6370,
     type: 'rua'
   },
   {
@@ -394,8 +394,64 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     aliases: ['rua iano', 'iano'],
     neighborhoodId: 'areias',
     neighborhoodName: 'Areias',
-    lat: -27.5910,
-    lng: -48.6430,
+    lat: -27.5890,
+    lng: -48.6390,
+    type: 'rua'
+  },
+  {
+    name: 'Rua João José Martins',
+    aliases: ['joao jose martins', 'rua joao jose'],
+    neighborhoodId: 'areias',
+    neighborhoodName: 'Areias',
+    lat: -27.5840,
+    lng: -48.6340,
+    type: 'rua'
+  },
+
+  // BOSQUE DAS MANSÕES (Bairro Oficial 9 - Separado de Areias)
+  {
+    name: 'Rua Bosque das Mansões',
+    aliases: ['bosque das mansoes', 'rua bosque das mansoes', 'rua bosque', 'bosque'],
+    neighborhoodId: 'bosque_das_mansoes',
+    neighborhoodName: 'Bosque das Mansões',
+    lat: -27.5990,
+    lng: -48.6360,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Manoel Lourival de Souza',
+    aliases: ['rua manoel lourival de souza', 'manoel lourival de souza', 'lourival de souza'],
+    neighborhoodId: 'bosque_das_mansoes',
+    neighborhoodName: 'Bosque das Mansões',
+    lat: -27.6010,
+    lng: -48.6340,
+    type: 'rua'
+  },
+  {
+    name: 'Rua das Mansões',
+    aliases: ['rua das mansoes', 'das mansoes', 'mansoes'],
+    neighborhoodId: 'bosque_das_mansoes',
+    neighborhoodName: 'Bosque das Mansões',
+    lat: -27.5980,
+    lng: -48.6370,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Alaide Martins',
+    aliases: ['alaide martins', 'rua alaide martins'],
+    neighborhoodId: 'bosque_das_mansoes',
+    neighborhoodName: 'Bosque das Mansões',
+    lat: -27.5975,
+    lng: -48.6385,
+    type: 'rua'
+  },
+  {
+    name: 'Rua Maria Bernardina da Silva',
+    aliases: ['maria bernardina da silva', 'rua maria bernardina'],
+    neighborhoodId: 'bosque_das_mansoes',
+    neighborhoodName: 'Bosque das Mansões',
+    lat: -27.6020,
+    lng: -48.6350,
     type: 'rua'
   },
 
@@ -772,9 +828,62 @@ export function resolveExactStreetCoordinates(
 }
 
 /**
+ * Verifica geometricamente se um ponto de coordenadas [lat, lng] está
+ * rigorosamente dentro do polígono geográfico de um bairro (Ray-Casting Algorithm)
+ */
+export function isPointInsidePolygon(point: [number, number], polygon: [number, number][]): boolean {
+  if (!polygon || polygon.length < 3) return false;
+  const [lat, lng] = point;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+    const intersect = ((yi > lng) !== (yj > lng)) &&
+      (lat < ((xj - xi) * (lng - yi)) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * Identifica o bairro oficial correspondente a uma coordenada geográfica
+ */
+export function findNeighborhoodForCoordinates(
+  lat: number,
+  lng: number,
+  neighborhoods: Neighborhood[] = []
+): Neighborhood | undefined {
+  if (!neighborhoods || neighborhoods.length === 0) return undefined;
+
+  // 1. Tenta correspondência exata via polígono geográfico
+  for (const n of neighborhoods) {
+    if (n.polygon && n.polygon.length >= 3) {
+      if (isPointInsidePolygon([lat, lng], n.polygon)) {
+        return n;
+      }
+    }
+  }
+
+  // 2. Fallback: menor distância euclidiana ao centroide do bairro
+  let closest = neighborhoods[0];
+  let minDistance = Infinity;
+  for (const n of neighborhoods) {
+    const dLat = n.lat - lat;
+    const dLng = n.lng - lng;
+    const distSq = dLat * dLat + dLng * dLng;
+    if (distSq < minDistance) {
+      minDistance = distSq;
+      closest = n;
+    }
+  }
+  return closest;
+}
+
+/**
  * Garante que qualquer StreetCheckIn possua coordenadas válidas e precisas
- * Se a geolocalização capturada for incorreta/nula ou fora de São José,
- * resolve automaticamente o PIN na rua correspondente!
+ * Se a geolocalização capturada for incorreta/nula, fora de São José, ou fora
+ * do polígono do bairro correspondente, resolve automaticamente o PIN na rua
+ * correspondente dentro da área geográfica exata do bairro!
  */
 export function getCalibratedCheckInPosition(
   checkIn: StreetCheckIn,
@@ -782,13 +891,30 @@ export function getCalibratedCheckInPosition(
 ): { lat: number; lng: number; isRecalibrated: boolean } {
   const isGpsValid = isCoordinateInsideSaoJose(checkIn.latitude, checkIn.longitude);
 
-  // Se o GPS é válido e não está travado em coordenada padrão neutra
-  if (isGpsValid && checkIn.latitude !== 0 && checkIn.longitude !== 0) {
-    // Se o GPS está dentro do município, verificar se há rua conhecida muito discrepante
+  // Localiza o bairro atribuído ao check-in
+  const targetNeigh = neighborhoods.find(
+    n => n.id === checkIn.neighborhoodId || 
+    (checkIn.neighborhoodName && n.name.toLowerCase() === checkIn.neighborhoodName.toLowerCase())
+  );
+
+  // Verifica se o GPS está dentro do polígono oficial do bairro
+  const isInsidePolygon = targetNeigh && targetNeigh.polygon && targetNeigh.polygon.length >= 3
+    ? isPointInsidePolygon([checkIn.latitude, checkIn.longitude], targetNeigh.polygon)
+    : true;
+
+  // Ponto fixo neutro comum de placeholder (-27.5962, -48.6190)
+  const isGenericPlaceholder = (
+    Math.abs(checkIn.latitude - (-27.5962)) < 0.0008 &&
+    Math.abs(checkIn.longitude - (-48.6190)) < 0.0008
+  );
+  const isWrongNeighPlaceholder = isGenericPlaceholder && targetNeigh?.id !== 'kobrasol';
+
+  // Se o GPS é válido, não é coordenada neutra equivocada e está dentro do polígono do bairro
+  if (isGpsValid && checkIn.latitude !== 0 && checkIn.longitude !== 0 && !isWrongNeighPlaceholder && isInsidePolygon) {
     return { lat: checkIn.latitude, lng: checkIn.longitude, isRecalibrated: false };
   }
 
-  // GPS ausente ou inválido -> resolver pelo nome da rua cadastrada
+  // GPS ausente, fora do polígono ou deslocado -> resolver com precisão na rua ou centro do bairro!
   const resolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
   return { lat: resolved.lat, lng: resolved.lng, isRecalibrated: true };
 }

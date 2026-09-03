@@ -382,7 +382,7 @@ export default function App() {
             <span className="text-slate-300">•</span>
             <span>Eleições 2026</span>
             <span className="text-slate-300">•</span>
-            <span>18 Bairros Oficiais (Censo IBGE)</span>
+            <span>24 Bairros Oficiais (PMSJ / IBGE)</span>
           </p>
           <p className="text-slate-600 font-medium">
             Início do Trabalho: <strong className="text-blue-700">25/08 a 04/10 de 2026</strong> (Votação 04/Out)
