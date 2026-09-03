@@ -1,4 +1,14 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 // ==============================================================================
 // API de Sincronização em Tempo Real MySQL Hostinger
 // Domínio: militancia.mastervisionmarketing.com
@@ -190,6 +200,105 @@ if ($method === 'GET') {
             } catch (Exception $eRel) {
                 // Silencioso se der erro na consulta relacional
             }
+
+            // Consulta também diretamente a tabela relacional militantes_cadastrados
+            try {
+                $stmtMil = $pdo->query("SELECT * FROM militantes_cadastrados ORDER BY nome ASC");
+                $milRows = $stmtMil->fetchAll();
+                if ($milRows && count($milRows) > 0) {
+                    $relationalMilitants = [];
+                    foreach ($milRows as $mr) {
+                        $parsedData = [];
+                        if (!empty($mr['dados_json'])) {
+                            $decoded = json_decode($mr['dados_json'], true);
+                            if (is_array($decoded)) $parsedData = $decoded;
+                        }
+                        $relationalMilitants[] = array_merge([
+                            'id' => $mr['id'],
+                            'name' => $mr['nome'],
+                            'matricula' => $mr['matricula'],
+                            'role' => $mr['cargo'] ?? 'militante',
+                            'teamId' => $mr['equipe_id'] ?? 'team-alpha',
+                            'phone' => $mr['telefone'] ?? '',
+                            'status' => $mr['status'] ?? 'ativo',
+                            'weeklyGoalPercentage' => 0,
+                            'totalStreetsCovered' => 0,
+                            'totalKmWalked' => 0,
+                            'deliveredMaterials' => [
+                                'santinhos' => 0, 'adesivos' => 0, 'adesivo_bola' => 0,
+                                'adesivo_parachoque' => 0, 'colinhas' => 0, 'abordagens' => 0, 'comercio' => 0
+                            ]
+                        ], $parsedData);
+                    }
+
+                    $existingMil = isset($state['militantes_data']) && is_array($state['militantes_data'])
+                        ? $state['militantes_data']
+                        : (isset($state['militancia_militants_v1']) && is_array($state['militancia_militants_v1']) ? $state['militancia_militants_v1'] : []);
+
+                    $milMap = [];
+                    foreach ($existingMil as $m) {
+                        if (isset($m['id'])) $milMap[$m['id']] = $m;
+                    }
+                    foreach ($relationalMilitants as $m) {
+                        if (isset($m['id'])) {
+                            if (!isset($milMap[$m['id']])) {
+                                $milMap[$m['id']] = $m;
+                            } else {
+                                $milMap[$m['id']] = array_merge($milMap[$m['id']], $m);
+                            }
+                        }
+                    }
+                    $finalMilitants = array_values($milMap);
+                    $state['militantes_data'] = $finalMilitants;
+                    $state['militancia_militants_v1'] = $finalMilitants;
+                    $state['militancia_militantes_v1'] = $finalMilitants;
+                }
+            } catch (Exception $eMil) {}
+
+            // Consulta também diretamente a tabela relacional vans_cadastradas
+            try {
+                $stmtVans = $pdo->query("SELECT * FROM vans_cadastradas ORDER BY nome ASC");
+                $vanRows = $stmtVans->fetchAll();
+                if ($vanRows && count($vanRows) > 0) {
+                    $relationalVans = [];
+                    foreach ($vanRows as $vr) {
+                        $parsedData = [];
+                        if (!empty($vr['dados_json'])) {
+                            $decoded = json_decode($vr['dados_json'], true);
+                            if (is_array($decoded)) $parsedData = $decoded;
+                        }
+                        $relationalVans[] = array_merge([
+                            'id' => $vr['id'],
+                            'name' => $vr['nome'],
+                            'driverName' => $vr['motorista_nome'],
+                            'plate' => $vr['placa'],
+                            'driverPhone' => $vr['telefone'] ?? '',
+                            'capacity' => intval($vr['capacidade'] ?? 12),
+                            'status' => 'aguardando_resgate',
+                            'assignedTeamIds' => ['team-alpha']
+                        ], $parsedData);
+                    }
+                    $existingVans = isset($state['vans_data']) && is_array($state['vans_data'])
+                        ? $state['vans_data']
+                        : (isset($state['militancia_vans_v1']) && is_array($state['militancia_vans_v1']) ? $state['militancia_vans_v1'] : []);
+                    $vanMap = [];
+                    foreach ($existingVans as $v) {
+                        if (isset($v['id'])) $vanMap[$v['id']] = $v;
+                    }
+                    foreach ($relationalVans as $v) {
+                        if (isset($v['id'])) {
+                            if (!isset($vanMap[$v['id']])) {
+                                $vanMap[$v['id']] = $v;
+                            } else {
+                                $vanMap[$v['id']] = array_merge($vanMap[$v['id']], $v);
+                            }
+                        }
+                    }
+                    $finalVans = array_values($vanMap);
+                    $state['vans_data'] = $finalVans;
+                    $state['militancia_vans_v1'] = $finalVans;
+                }
+            } catch (Exception $eVans) {}
 
             echo json_encode([
                 'status' => 'success',

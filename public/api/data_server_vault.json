@@ -6,7 +6,7 @@
     {
       "id": "mil-1787842613622",
       "name": "Daiana",
-      "matricula": "Mil004",
+      "matricula": "Mil-DAI",
       "cpfMasked": "***.452.189-**",
       "phone": "(48) 99124-5501",
       "email": "daiana.militancia@campanhasj.com.br",
@@ -27,7 +27,15 @@
         "comercio": 0
       },
       "weeklyGoalPercentage": 85,
-      "batteryLevel": 92
+      "batteryLevel": 92,
+      "currentLocation": {
+        "lat": -27.5962,
+        "lng": -48.619,
+        "streetName": "Rua Manoel Francisco de souza. (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 3
     },
     {
       "id": "mil-douglas-005",
@@ -58,7 +66,7 @@
     {
       "id": "mil-1787842613621",
       "name": "Luciano",
-      "matricula": "Mil003",
+      "matricula": "Mil-LUC",
       "cpfMasked": "***.781.992-**",
       "phone": "(48) 99655-4321",
       "email": "luciano.militancia@campanhasj.com.br",
@@ -162,7 +170,7 @@
     {
       "id": "mil-304",
       "name": "Beatriz Fontes Vieira",
-      "matricula": "Mil006",
+      "matricula": "Mil004",
       "cpfMasked": "***.712.980-**",
       "phone": "(48) 98833-2190",
       "email": "beatriz.fontes@campanhasj.com.br",
@@ -188,13 +196,670 @@
     {
       "id": "mil-305",
       "name": "Gabriel Costa Nogueira",
-      "matricula": "Mil007",
+      "matricula": "Mil005",
       "cpfMasked": "***.543.210-**",
       "phone": "(48) 99119-8765",
       "email": "gabriel.costa@campanhasj.com.br",
       "teamId": "team-delta",
       "role": "militante",
       "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100
+    },
+    {
+      "id": "mil-1787842380824",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 17.600000000000005,
+      "totalStreetsCovered": 22,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 275,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 54,
+        "comercio": 4
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Luciano",
+      "matricula": "Mil001",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98432-0627",
+      "email": "luciano@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5728693,
+        "lng": -48.6576116,
+        "streetName": "R. Cidinei Luís (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 14
+    },
+    {
+      "id": "mil-1787842489241",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 1,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Beatriz",
+      "matricula": "Mil002",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99670-8704",
+      "email": "beatriz@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5741592,
+        "lng": -48.6740642,
+        "streetName": "R. Nossa Sra. Rainha da Paz (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842561785",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 3,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Carlos",
+      "matricula": "Mil003",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99167-5793",
+      "email": "carlos@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.575254,
+        "lng": -48.6731671,
+        "streetName": "R. Sabiá do Campo (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842651982",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 7,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Douglas ",
+      "matricula": "Mil005",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 51 99323-9173",
+      "email": "douglas.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5441439,
+        "lng": -48.6421579,
+        "streetName": "R. Nossa Sra. dos Navegantes (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842690694",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Eduardo ",
+      "matricula": "Mil005",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98850-5247",
+      "email": "eduardo.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.54669,
+        "lng": -48.6444782,
+        "streetName": "R. Curió (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842774685",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 3,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Gustavo",
+      "matricula": "Mil007",
+      "cpfMasked": "***.***.***-**",
+      "phone": "(48) 985050302",
+      "email": "gustavo@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5751295,
+        "lng": -48.6567069,
+        "streetName": "R. Telmo Luiz Martins (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842816279",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 4,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Iliane",
+      "matricula": "Mil008",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98451-7097",
+      "email": "iliane@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5466594,
+        "lng": -48.6479617,
+        "streetName": "R. Papagaio (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842848950",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Israel",
+      "matricula": "Mil009",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99631-9768",
+      "email": "israel@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5446229,
+        "lng": -48.6418904,
+        "streetName": "Serv. Francisco Umbelino (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842879496",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 2,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Jessica ",
+      "matricula": "Mil010",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99156-6697",
+      "email": "jessica.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.6022455,
+        "lng": -48.6483546,
+        "streetName": "R. Leopoldina Marcelino (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842912688",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 9,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Juliana",
+      "matricula": "Mil011",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99802-5613",
+      "email": "juliana@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5750729,
+        "lng": -48.6650612,
+        "streetName": "R. Urano Pires (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842976552",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Juliane",
+      "matricula": "Mil012",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98476-6891",
+      "email": "juliane@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.6046667,
+        "lng": -48.6519887,
+        "streetName": "R. Aimoré (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843082113",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Kayla",
+      "matricula": "Mil013",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 47 98926-5369",
+      "email": "kayla@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843172481",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Merilyn",
+      "matricula": "Mil014",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 67 99265-5292",
+      "email": "merilyn@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843294191",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Nathalia",
+      "matricula": "Mil015",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99914-7238",
+      "email": "nathalia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848020226",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Raissa",
+      "matricula": "Mil016",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99900-3029",
+      "email": "raissa@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848111342",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 11,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Sandra Beatriz",
+      "matricula": "Mil017",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99180-8565",
+      "email": "sandra.beatriz@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5736983,
+        "lng": -48.6115745,
+        "streetName": "R. Cap. Pedro Leite (nº Trecho Geral)",
+        "neighborhoodName": "Barreiros",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848170611",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Stefani",
+      "matricula": "Mil018",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98407-7178",
+      "email": "stefani@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848232931",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Solange",
+      "matricula": "Mil019",
+      "cpfMasked": "***.***.***-**",
+      "phone": "‪+55 48 98466‑3307‬",
+      "email": "solange@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848883614",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 4.8,
+      "totalStreetsCovered": 6,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 50,
+        "adesivo_bola": 16,
+        "adesivo_parachoque": 8,
+        "colinhas": 200,
+        "abordagens": 40,
+        "comercio": 36
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Milena",
+      "matricula": "Mil020",
+      "cpfMasked": "***.***.***-**",
+      "phone": "48 98497-4019",
+      "email": "milena@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5725041,
+        "lng": -48.6708272,
+        "streetName": "R. Aveiro (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 4
+    },
+    {
+      "id": "mil-1787935574554",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "rose",
+      "matricula": "Mil021",
+      "cpfMasked": "***.***.***-**",
+      "phone": "(48) 933819476",
+      "email": "rose@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-303",
+      "name": "Lucas Pires Scherer",
+      "matricula": "Mil003",
+      "cpfMasked": "***.311.609-**",
+      "phone": "(48) 99188-4422",
+      "email": "lucas.scherer@campanhasj.com.br",
+      "teamId": "team-bravo",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
       "status": "ativo",
       "dailyRate": 150,
       "totalKmWalked": 0,
@@ -275,618 +940,80 @@
       "dailyProgressPct": 0,
       "totalMaterialsDelivered": 0,
       "status": "planejamento"
+    },
+    {
+      "id": "team-charlie",
+      "name": "Equipe Charlie (Forquilhinhas & Potecas)",
+      "color": "#f59e0b",
+      "leaderId": "mil-304",
+      "leaderName": "Beatriz Fontes Vieira",
+      "memberIds": [
+        "mil-304"
+      ],
+      "assignedVanId": "van-01",
+      "targetNeighborhoodIds": [
+        "forquilhinhas",
+        "potecas",
+        "forquilhas"
+      ],
+      "dailyProgressPct": 0,
+      "totalMaterialsDelivered": 0,
+      "status": "planejamento"
+    },
+    {
+      "id": "team-delta",
+      "name": "Equipe Delta (Praia Comprida & Sede)",
+      "color": "#8b5cf6",
+      "leaderId": "mil-305",
+      "leaderName": "Gabriel Costa Nogueira",
+      "memberIds": [
+        "mil-305"
+      ],
+      "assignedVanId": "van-03",
+      "targetNeighborhoodIds": [
+        "praia_comprida",
+        "rocado",
+        "fazenda_santo_antonio"
+      ],
+      "dailyProgressPct": 0,
+      "totalMaterialsDelivered": 0,
+      "status": "planejamento"
+    },
+    {
+      "id": "team-eco",
+      "name": "Equipe Eco (Serraria & Ipiranga)",
+      "color": "#ec4899",
+      "leaderId": "user-lider-alpha",
+      "leaderName": "Juliana Silveira",
+      "memberIds": [],
+      "assignedVanId": "van-02",
+      "targetNeighborhoodIds": [
+        "serraria",
+        "ipiranga"
+      ],
+      "dailyProgressPct": 0,
+      "totalMaterialsDelivered": 0,
+      "status": "planejamento"
+    },
+    {
+      "id": "team-fox",
+      "name": "Equipe Fox (Colônia Santana & Sertão)",
+      "color": "#06b6d4",
+      "leaderId": "user-coord-geral",
+      "leaderName": "Pedro da Silva Rosa",
+      "memberIds": [],
+      "assignedVanId": "van-03",
+      "targetNeighborhoodIds": [
+        "sertao_do_maruim",
+        "colonia_santana",
+        "picadas_do_sul"
+      ],
+      "dailyProgressPct": 0,
+      "totalMaterialsDelivered": 0,
+      "status": "planejamento"
     }
   ],
   "militancia_checkins_v1": [
-    {
-      "id": "chk-1787944352110",
-      "militantId": "mil-1787842613622",
-      "militantName": "Daiana",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhinhas",
-      "neighborhoodName": "Forquilhinhas",
-      "streetName": "Rua Manoel Francisco de souza",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 19:12:32",
-      "latitude": -27.6042,
-      "longitude": -48.653,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in de rua confirmado em Forquilhinhas",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787944235558",
-      "militantId": "mil-1787842613622",
-      "militantName": "Daiana",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhinhas",
-      "neighborhoodName": "Forquilhinhas",
-      "streetName": "Rua allan kardec",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 19:10:35",
-      "latitude": -27.6078,
-      "longitude": -48.6552,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in de rua confirmado em Forquilhinhas",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787944129777",
-      "militantId": "mil-1787842613622",
-      "militantName": "Daiana",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhinhas",
-      "neighborhoodName": "Forquilhinhas",
-      "streetName": "rua Aimoré",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 19:08:49",
-      "latitude": -27.6095,
-      "longitude": -48.6515,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 0,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 40,
-        "comercio": 0
-      },
-      "observations": "Militância de abordagem direta em Forquilhinhas",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787943417791",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua aguas de Chapecó",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:56:57",
-      "latitude": -27.5815,
-      "longitude": -48.629,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 150,
-        "adesivos": 25,
-        "adesivo_bola": 8,
-        "adesivo_parachoque": 4,
-        "colinhas": 100,
-        "abordagens": 20,
-        "comercio": 0
-      },
-      "observations": "Excelente aceitação da campanha no bairro Bela Vista",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787943331411",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua lagoa da conceição",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:55:31",
-      "latitude": -27.5832,
-      "longitude": -48.6315,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 5,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787943252356",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua pantano do sul",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:54:12",
-      "latitude": -27.584,
-      "longitude": -48.6328,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787943199431",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua Daniela",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:53:19",
-      "latitude": -27.5825,
-      "longitude": -48.6305,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787942999071",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua Giancarlo Griss Costa",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:49:59",
-      "latitude": -27.5855,
-      "longitude": -48.628,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 5,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787942929846",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua das violetas",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:48:49",
-      "latitude": -27.587,
-      "longitude": -48.6335,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787942872348",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua rua dos jasmins",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:47:52",
-      "latitude": -27.5862,
-      "longitude": -48.634,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 0,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787942253428",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua das papoulas",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:37:33",
-      "latitude": -27.588,
-      "longitude": -48.6345,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787942192399",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "bela_vista",
-      "neighborhoodName": "Bela Vista",
-      "streetName": "Rua rua candido amaro damasio",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:36:32",
-      "latitude": -27.5895,
-      "longitude": -48.631,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787941749052",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "ipiranga",
-      "neighborhoodName": "Ipiranga",
-      "streetName": "rua Antenor Valentin da silva",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:29:09",
-      "latitude": -27.591,
-      "longitude": -48.6395,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 0,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787940159378",
-      "militantId": "mil-1787842613623",
-      "militantName": "Milena",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhinhas",
-      "neighborhoodName": "Forquilhinhas",
-      "streetName": "rua jose Bartolomeu vieira",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:02:39",
-      "latitude": -27.6055,
-      "longitude": -48.654,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 0,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 5,
-        "comercio": 2
-      },
-      "observations": "Abordagens e visitas a comércio em Forquilhinhas",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787940053919",
-      "militantId": "mil-1787842613623",
-      "militantName": "Milena",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhas",
-      "neighborhoodName": "Forquilhas",
-      "streetName": "rua vereador Arthur Manoel mariano",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 18:00:53",
-      "latitude": -27.602,
-      "longitude": -48.662,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 150,
-        "adesivos": 25,
-        "adesivo_bola": 8,
-        "adesivo_parachoque": 4,
-        "colinhas": 100,
-        "abordagens": 15,
-        "comercio": 20
-      },
-      "observations": "Comércio local receptivo na principal de Forquilhas",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787939964436",
-      "militantId": "mil-1787842613623",
-      "militantName": "Milena",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhas",
-      "neighborhoodName": "Forquilhas",
-      "streetName": "rua vitorino jose Luiz",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 17:59:24",
-      "latitude": -27.608,
-      "longitude": -48.665,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 8,
-        "adesivo_parachoque": 4,
-        "colinhas": 100,
-        "abordagens": 5,
-        "comercio": 3
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787939922505",
-      "militantId": "mil-1787842613623",
-      "militantName": "Milena",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhas",
-      "neighborhoodName": "Forquilhas",
-      "streetName": "rua vitorino jose Luiz (Trecho Sul)",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 17:58:42",
-      "latitude": -27.6085,
-      "longitude": -48.6655,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 0,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 5,
-        "comercio": 3
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787938172640",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhas",
-      "neighborhoodName": "Forquilhas",
-      "streetName": "rua Alexandre plueinsk",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 17:29:32",
-      "latitude": -27.6065,
-      "longitude": -48.668,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787937786691",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhinhas",
-      "neighborhoodName": "Forquilhinhas",
-      "streetName": "rua bernadino freitas de Agostinho",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 17:23:06",
-      "latitude": -27.6035,
-      "longitude": -48.651,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 0,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 0,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787937074076",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhas",
-      "neighborhoodName": "Forquilhas",
-      "streetName": "rua tulio Rodrigues martins",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 17:11:14",
-      "latitude": -27.605,
-      "longitude": -48.6635,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 0,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 2,
-        "comercio": 0
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
-    {
-      "id": "chk-1787937127202",
-      "militantId": "mil-1787842613621",
-      "militantName": "Luciano",
-      "teamId": "team-1787840837258",
-      "neighborhoodId": "forquilhas",
-      "neighborhoodName": "Forquilhas",
-      "streetName": "rua tulio Rodrigues martins (Trecho Leste)",
-      "houseNumberRange": "Trecho Geral",
-      "timestamp": "2026-08-28 17:12:07",
-      "latitude": -27.6052,
-      "longitude": -48.663,
-      "accuracyMeters": 4.2,
-      "photos": [
-        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-      ],
-      "materialsDelivered": {
-        "santinhos": 0,
-        "adesivos": 25,
-        "adesivo_bola": 0,
-        "adesivo_parachoque": 0,
-        "colinhas": 0,
-        "abordagens": 5,
-        "comercio": 4
-      },
-      "observations": "Check-in realizado em campo",
-      "status": "validado",
-      "synced": true
-    },
     {
       "id": "chk-1788359354126",
       "militantId": "mil-1787842613622",
@@ -2033,6 +2160,615 @@
       "synced": true
     },
     {
+      "id": "chk-1787944352110",
+      "militantId": "mil-1787842613622",
+      "militantName": "Daiana",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhinhas",
+      "neighborhoodName": "Forquilhinhas",
+      "streetName": "Rua Manoel Francisco de souza",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 19:12:32",
+      "latitude": -27.6042,
+      "longitude": -48.653,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in de rua confirmado em Forquilhinhas",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787944235558",
+      "militantId": "mil-1787842613622",
+      "militantName": "Daiana",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhinhas",
+      "neighborhoodName": "Forquilhinhas",
+      "streetName": "Rua allan kardec",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 19:10:35",
+      "latitude": -27.6078,
+      "longitude": -48.6552,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in de rua confirmado em Forquilhinhas",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787944129777",
+      "militantId": "mil-1787842613622",
+      "militantName": "Daiana",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhinhas",
+      "neighborhoodName": "Forquilhinhas",
+      "streetName": "rua Aimoré",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 19:08:49",
+      "latitude": -27.6095,
+      "longitude": -48.6515,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 40,
+        "comercio": 0
+      },
+      "observations": "Militância de abordagem direta em Forquilhinhas",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787943417791",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua aguas de Chapecó",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:56:57",
+      "latitude": -27.5815,
+      "longitude": -48.629,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 150,
+        "adesivos": 25,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 20,
+        "comercio": 0
+      },
+      "observations": "Excelente aceitação da campanha no bairro Bela Vista",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787943331411",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua lagoa da conceição",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:55:31",
+      "latitude": -27.5832,
+      "longitude": -48.6315,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787943252356",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua pantano do sul",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:54:12",
+      "latitude": -27.584,
+      "longitude": -48.6328,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787943199431",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua Daniela",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:53:19",
+      "latitude": -27.5825,
+      "longitude": -48.6305,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787942999071",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua Giancarlo Griss Costa",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:49:59",
+      "latitude": -27.5855,
+      "longitude": -48.628,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787942929846",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua das violetas",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:48:49",
+      "latitude": -27.587,
+      "longitude": -48.6335,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787942872348",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua rua dos jasmins",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:47:52",
+      "latitude": -27.5862,
+      "longitude": -48.634,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787942253428",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua das papoulas",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:37:33",
+      "latitude": -27.588,
+      "longitude": -48.6345,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787942192399",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "bela_vista",
+      "neighborhoodName": "Bela Vista",
+      "streetName": "Rua rua candido amaro damasio",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:36:32",
+      "latitude": -27.5895,
+      "longitude": -48.631,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787941749052",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "ipiranga",
+      "neighborhoodName": "Ipiranga",
+      "streetName": "rua Antenor Valentin da silva",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:29:09",
+      "latitude": -27.591,
+      "longitude": -48.6395,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787940159378",
+      "militantId": "mil-1787842613623",
+      "militantName": "Milena",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhinhas",
+      "neighborhoodName": "Forquilhinhas",
+      "streetName": "rua jose Bartolomeu vieira",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:02:39",
+      "latitude": -27.6055,
+      "longitude": -48.654,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 2
+      },
+      "observations": "Abordagens e visitas a comércio em Forquilhinhas",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787940053919",
+      "militantId": "mil-1787842613623",
+      "militantName": "Milena",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhas",
+      "neighborhoodName": "Forquilhas",
+      "streetName": "rua vereador Arthur Manoel mariano",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 18:00:53",
+      "latitude": -27.602,
+      "longitude": -48.662,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 150,
+        "adesivos": 25,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 15,
+        "comercio": 20
+      },
+      "observations": "Comércio local receptivo na principal de Forquilhas",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787939964436",
+      "militantId": "mil-1787842613623",
+      "militantName": "Milena",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhas",
+      "neighborhoodName": "Forquilhas",
+      "streetName": "rua vitorino jose Luiz",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 17:59:24",
+      "latitude": -27.608,
+      "longitude": -48.665,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 5,
+        "comercio": 3
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787939922505",
+      "militantId": "mil-1787842613623",
+      "militantName": "Milena",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhas",
+      "neighborhoodName": "Forquilhas",
+      "streetName": "rua vitorino jose Luiz (Trecho Sul)",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 17:58:42",
+      "latitude": -27.6085,
+      "longitude": -48.6655,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 3
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787938172640",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhas",
+      "neighborhoodName": "Forquilhas",
+      "streetName": "rua Alexandre plueinsk",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 17:29:32",
+      "latitude": -27.6065,
+      "longitude": -48.668,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787937786691",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhinhas",
+      "neighborhoodName": "Forquilhinhas",
+      "streetName": "rua bernadino freitas de Agostinho",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 17:23:06",
+      "latitude": -27.6035,
+      "longitude": -48.651,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787937127202",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhas",
+      "neighborhoodName": "Forquilhas",
+      "streetName": "rua tulio Rodrigues martins (Trecho Leste)",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 17:12:07",
+      "latitude": -27.6052,
+      "longitude": -48.663,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 25,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 4
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
+      "id": "chk-1787937074076",
+      "militantId": "mil-1787842613621",
+      "militantName": "Luciano",
+      "teamId": "team-1787840837258",
+      "neighborhoodId": "forquilhas",
+      "neighborhoodName": "Forquilhas",
+      "streetName": "rua tulio Rodrigues martins",
+      "houseNumberRange": "Trecho Geral",
+      "timestamp": "2026-08-28 17:11:14",
+      "latitude": -27.605,
+      "longitude": -48.6635,
+      "accuracyMeters": 4.2,
+      "photos": [
+        "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
+      ],
+      "materialsDelivered": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 2,
+        "comercio": 0
+      },
+      "observations": "Check-in realizado em campo",
+      "status": "validado",
+      "synced": true
+    },
+    {
       "id": "chk-1787856709513",
       "militantId": "mil-1787842380824",
       "militantName": "Luciano",
@@ -2267,5 +3003,4382 @@
       "status": "validado",
       "synced": true
     }
-  ]
+  ],
+  "militancia_neighborhoods_v1": [
+    {
+      "id": "kobrasol",
+      "name": "Kobrasol",
+      "zone": "Distrito Campinas",
+      "population": 18640,
+      "households": 7850,
+      "votersEstimated": 15400,
+      "totalStreets": 68,
+      "completedStreets": 0,
+      "lat": -27.5955,
+      "lng": -48.6185,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.59,
+          -48.625
+        ],
+        [
+          -27.59,
+          -48.612
+        ],
+        [
+          -27.602,
+          -48.612
+        ],
+        [
+          -27.602,
+          -48.625
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 35000,
+        "adesivos": 4000,
+        "adesivo_bola": 1800,
+        "adesivo_parachoque": 900,
+        "colinhas": 22000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-alpha"
+    },
+    {
+      "id": "campinas",
+      "name": "Campinas",
+      "zone": "Distrito Campinas",
+      "population": 16800,
+      "households": 7100,
+      "votersEstimated": 14100,
+      "totalStreets": 62,
+      "completedStreets": 0,
+      "lat": -27.601,
+      "lng": -48.627,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.596,
+          -48.635
+        ],
+        [
+          -27.596,
+          -48.62
+        ],
+        [
+          -27.608,
+          -48.62
+        ],
+        [
+          -27.608,
+          -48.635
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 32000,
+        "adesivos": 3800,
+        "adesivo_bola": 1600,
+        "adesivo_parachoque": 850,
+        "colinhas": 20000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-alpha"
+    },
+    {
+      "id": "barreiros",
+      "name": "Barreiros",
+      "zone": "Distrito Barreiros",
+      "population": 27950,
+      "households": 11200,
+      "votersEstimated": 22800,
+      "totalStreets": 114,
+      "completedStreets": 0,
+      "lat": -27.575,
+      "lng": -48.608,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.565,
+          -48.62
+        ],
+        [
+          -27.565,
+          -48.598
+        ],
+        [
+          -27.585,
+          -48.598
+        ],
+        [
+          -27.585,
+          -48.62
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 50000,
+        "adesivos": 6000,
+        "adesivo_bola": 2800,
+        "adesivo_parachoque": 1400,
+        "colinhas": 34000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-bravo"
+    },
+    {
+      "id": "praia_comprida",
+      "name": "Praia Comprida",
+      "zone": "Distrito Sede",
+      "population": 7200,
+      "households": 2850,
+      "votersEstimated": 5900,
+      "totalStreets": 42,
+      "completedStreets": 0,
+      "lat": -27.618,
+      "lng": -48.625,
+      "priority": "Média",
+      "polygon": [
+        [
+          -27.61,
+          -48.632
+        ],
+        [
+          -27.61,
+          -48.618
+        ],
+        [
+          -27.625,
+          -48.618
+        ],
+        [
+          -27.625,
+          -48.632
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 15000,
+        "adesivos": 1800,
+        "adesivo_bola": 750,
+        "adesivo_parachoque": 400,
+        "colinhas": 9500
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-delta"
+    },
+    {
+      "id": "forquilhinhas",
+      "name": "Forquilhinhas",
+      "zone": "Distrito Forquilhinhas",
+      "population": 32400,
+      "households": 12600,
+      "votersEstimated": 25900,
+      "totalStreets": 138,
+      "completedStreets": 4,
+      "lat": -27.604,
+      "lng": -48.665,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.592,
+          -48.68
+        ],
+        [
+          -27.592,
+          -48.65
+        ],
+        [
+          -27.615,
+          -48.65
+        ],
+        [
+          -27.615,
+          -48.68
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 58000,
+        "adesivos": 7200,
+        "adesivo_bola": 3200,
+        "adesivo_parachoque": 1600,
+        "colinhas": 39000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 50,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 2
+      },
+      "assignedTeamId": "team-charlie"
+    },
+    {
+      "id": "serraria",
+      "name": "Serraria",
+      "zone": "Distrito Barreiros",
+      "population": 24800,
+      "households": 9400,
+      "votersEstimated": 19800,
+      "totalStreets": 96,
+      "completedStreets": 0,
+      "lat": -27.558,
+      "lng": -48.618,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.545,
+          -48.63
+        ],
+        [
+          -27.545,
+          -48.605
+        ],
+        [
+          -27.57,
+          -48.605
+        ],
+        [
+          -27.57,
+          -48.63
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 45000,
+        "adesivos": 5200,
+        "adesivo_bola": 2400,
+        "adesivo_parachoque": 1200,
+        "colinhas": 29000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-eco"
+    },
+    {
+      "id": "rocado",
+      "name": "Roçado",
+      "zone": "Distrito Sede",
+      "population": 7800,
+      "households": 2950,
+      "votersEstimated": 6400,
+      "totalStreets": 46,
+      "completedStreets": 1,
+      "lat": -27.608,
+      "lng": -48.639,
+      "priority": "Média",
+      "polygon": [
+        [
+          -27.602,
+          -48.648
+        ],
+        [
+          -27.602,
+          -48.63
+        ],
+        [
+          -27.615,
+          -48.63
+        ],
+        [
+          -27.615,
+          -48.648
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 16000,
+        "adesivos": 1900,
+        "adesivo_bola": 800,
+        "adesivo_parachoque": 420,
+        "colinhas": 10200
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-delta"
+    },
+    {
+      "id": "fazenda_santo_antonio",
+      "name": "Fazenda Santo Antônio",
+      "zone": "Distrito Sede",
+      "population": 14500,
+      "households": 5600,
+      "votersEstimated": 11900,
+      "totalStreets": 64,
+      "completedStreets": 0,
+      "lat": -27.622,
+      "lng": -48.642,
+      "priority": "Média",
+      "polygon": [
+        [
+          -27.615,
+          -48.655
+        ],
+        [
+          -27.615,
+          -48.635
+        ],
+        [
+          -27.632,
+          -48.635
+        ],
+        [
+          -27.632,
+          -48.655
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 28000,
+        "adesivos": 3300,
+        "adesivo_bola": 1450,
+        "adesivo_parachoque": 750,
+        "colinhas": 18000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-delta"
+    },
+    {
+      "id": "ipiranga",
+      "name": "Ipiranga",
+      "zone": "Distrito Barreiros",
+      "population": 13200,
+      "households": 4900,
+      "votersEstimated": 10600,
+      "totalStreets": 54,
+      "completedStreets": 1,
+      "lat": -27.582,
+      "lng": -48.622,
+      "priority": "Média",
+      "polygon": [
+        [
+          -27.575,
+          -48.632
+        ],
+        [
+          -27.575,
+          -48.615
+        ],
+        [
+          -27.59,
+          -48.615
+        ],
+        [
+          -27.59,
+          -48.632
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 25000,
+        "adesivos": 2900,
+        "adesivo_bola": 1300,
+        "adesivo_parachoque": 650,
+        "colinhas": 16000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-eco"
+    },
+    {
+      "id": "bela_vista",
+      "name": "Bela Vista",
+      "zone": "Distrito Barreiros",
+      "population": 14100,
+      "households": 5200,
+      "votersEstimated": 11400,
+      "totalStreets": 58,
+      "completedStreets": 9,
+      "lat": -27.571,
+      "lng": -48.634,
+      "priority": "Média",
+      "polygon": [
+        [
+          -27.562,
+          -48.645
+        ],
+        [
+          -27.562,
+          -48.625
+        ],
+        [
+          -27.58,
+          -48.625
+        ],
+        [
+          -27.58,
+          -48.645
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 26000,
+        "adesivos": 3100,
+        "adesivo_bola": 1350,
+        "adesivo_parachoque": 700,
+        "colinhas": 16500
+      },
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 200,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 30,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-bravo"
+    },
+    {
+      "id": "potecas",
+      "name": "Potecas",
+      "zone": "Distrito Forquilhinhas",
+      "population": 11600,
+      "households": 4100,
+      "votersEstimated": 9200,
+      "totalStreets": 52,
+      "completedStreets": 0,
+      "lat": -27.618,
+      "lng": -48.685,
+      "priority": "Média",
+      "polygon": [
+        [
+          -27.608,
+          -48.7
+        ],
+        [
+          -27.608,
+          -48.675
+        ],
+        [
+          -27.628,
+          -48.675
+        ],
+        [
+          -27.628,
+          -48.7
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 22000,
+        "adesivos": 2600,
+        "adesivo_bola": 1150,
+        "adesivo_parachoque": 580,
+        "colinhas": 14000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-charlie"
+    },
+    {
+      "id": "picadas_do_sul",
+      "name": "Picadas do Sul",
+      "zone": "Distrito Sede",
+      "population": 9200,
+      "households": 3300,
+      "votersEstimated": 7400,
+      "totalStreets": 44,
+      "completedStreets": 0,
+      "lat": -27.628,
+      "lng": -48.665,
+      "priority": "Baixa",
+      "polygon": [
+        [
+          -27.62,
+          -48.678
+        ],
+        [
+          -27.62,
+          -48.655
+        ],
+        [
+          -27.638,
+          -48.655
+        ],
+        [
+          -27.638,
+          -48.678
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 18000,
+        "adesivos": 2100,
+        "adesivo_bola": 900,
+        "adesivo_parachoque": 460,
+        "colinhas": 11500
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-fox"
+    },
+    {
+      "id": "forquilhas",
+      "name": "Forquilhas",
+      "zone": "Distrito Forquilhinhas",
+      "population": 29100,
+      "households": 10800,
+      "votersEstimated": 23200,
+      "totalStreets": 120,
+      "completedStreets": 6,
+      "lat": -27.595,
+      "lng": -48.692,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.58,
+          -48.71
+        ],
+        [
+          -27.58,
+          -48.675
+        ],
+        [
+          -27.61,
+          -48.675
+        ],
+        [
+          -27.61,
+          -48.71
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 52000,
+        "adesivos": 6400,
+        "adesivo_bola": 2900,
+        "adesivo_parachoque": 1450,
+        "colinhas": 35000
+      },
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 100,
+        "adesivo_bola": 16,
+        "adesivo_parachoque": 8,
+        "colinhas": 200,
+        "abordagens": 32,
+        "comercio": 30
+      },
+      "assignedTeamId": "team-charlie"
+    },
+    {
+      "id": "sertao_do_maruim",
+      "name": "Sertão do Maruim",
+      "zone": "Distrito Sede",
+      "population": 7100,
+      "households": 2500,
+      "votersEstimated": 5600,
+      "totalStreets": 38,
+      "completedStreets": 0,
+      "lat": -27.635,
+      "lng": -48.695,
+      "priority": "Baixa",
+      "polygon": [
+        [
+          -27.625,
+          -48.715
+        ],
+        [
+          -27.625,
+          -48.685
+        ],
+        [
+          -27.648,
+          -48.685
+        ],
+        [
+          -27.648,
+          -48.715
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 14000,
+        "adesivos": 1600,
+        "adesivo_bola": 700,
+        "adesivo_parachoque": 360,
+        "colinhas": 9000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-fox"
+    },
+    {
+      "id": "colonia_santana",
+      "name": "Colônia Santana",
+      "zone": "Distrito Sede",
+      "population": 5800,
+      "households": 2100,
+      "votersEstimated": 4600,
+      "totalStreets": 34,
+      "completedStreets": 0,
+      "lat": -27.615,
+      "lng": -48.745,
+      "priority": "Baixa",
+      "polygon": [
+        [
+          -27.6,
+          -48.765
+        ],
+        [
+          -27.6,
+          -48.725
+        ],
+        [
+          -27.63,
+          -48.725
+        ],
+        [
+          -27.63,
+          -48.765
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 11000,
+        "adesivos": 1300,
+        "adesivo_bola": 580,
+        "adesivo_parachoque": 290,
+        "colinhas": 7200
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-fox"
+    },
+    {
+      "id": "areias",
+      "name": "Areias / Bosque das Mansões",
+      "zone": "Distrito Barreiros",
+      "population": 22300,
+      "households": 8600,
+      "votersEstimated": 17800,
+      "totalStreets": 86,
+      "completedStreets": 0,
+      "lat": -27.588,
+      "lng": -48.641,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.578,
+          -48.655
+        ],
+        [
+          -27.578,
+          -48.63
+        ],
+        [
+          -27.598,
+          -48.63
+        ],
+        [
+          -27.598,
+          -48.655
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 40000,
+        "adesivos": 4800,
+        "adesivo_bola": 2100,
+        "adesivo_parachoque": 1050,
+        "colinhas": 26000
+      },
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "assignedTeamId": "team-bravo"
+    }
+  ],
+  "militancia_militants_v1": [
+    {
+      "id": "mil-1787842380824",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 17.600000000000005,
+      "totalStreetsCovered": 22,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 275,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 54,
+        "comercio": 4
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Luciano",
+      "matricula": "Mil001",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98432-0627",
+      "email": "luciano@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5728693,
+        "lng": -48.6576116,
+        "streetName": "R. Cidinei Luís (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 14
+    },
+    {
+      "id": "mil-1787842489241",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 1,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Beatriz",
+      "matricula": "Mil002",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99670-8704",
+      "email": "beatriz@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5741592,
+        "lng": -48.6740642,
+        "streetName": "R. Nossa Sra. Rainha da Paz (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842561785",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 3,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Carlos",
+      "matricula": "Mil003",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99167-5793",
+      "email": "carlos@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.575254,
+        "lng": -48.6731671,
+        "streetName": "R. Sabiá do Campo (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842613622",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 4.8,
+      "totalStreetsCovered": 3,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 50,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 40,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 85,
+      "batteryLevel": 92,
+      "name": "Daiana",
+      "matricula": "Mil-DAI",
+      "cpfMasked": "***.452.189-**",
+      "phone": "(48) 99124-5501",
+      "email": "daiana.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 150,
+      "currentLocation": {
+        "lat": -27.5962,
+        "lng": -48.619,
+        "streetName": "Rua Manoel Francisco de souza. (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 3
+    },
+    {
+      "id": "mil-1787842651982",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 7,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Douglas ",
+      "matricula": "Mil005",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 51 99323-9173",
+      "email": "douglas.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5441439,
+        "lng": -48.6421579,
+        "streetName": "R. Nossa Sra. dos Navegantes (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842690694",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Eduardo ",
+      "matricula": "Mil005",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98850-5247",
+      "email": "eduardo.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.54669,
+        "lng": -48.6444782,
+        "streetName": "R. Curió (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842774685",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 3,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Gustavo",
+      "matricula": "Mil007",
+      "cpfMasked": "***.***.***-**",
+      "phone": "(48) 985050302",
+      "email": "gustavo@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5751295,
+        "lng": -48.6567069,
+        "streetName": "R. Telmo Luiz Martins (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842816279",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 4,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Iliane",
+      "matricula": "Mil008",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98451-7097",
+      "email": "iliane@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5466594,
+        "lng": -48.6479617,
+        "streetName": "R. Papagaio (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842848950",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Israel",
+      "matricula": "Mil009",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99631-9768",
+      "email": "israel@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5446229,
+        "lng": -48.6418904,
+        "streetName": "Serv. Francisco Umbelino (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842879496",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 2,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Jessica ",
+      "matricula": "Mil010",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99156-6697",
+      "email": "jessica.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.6022455,
+        "lng": -48.6483546,
+        "streetName": "R. Leopoldina Marcelino (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842912688",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 9,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Juliana",
+      "matricula": "Mil011",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99802-5613",
+      "email": "juliana@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5750729,
+        "lng": -48.6650612,
+        "streetName": "R. Urano Pires (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842976552",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Juliane",
+      "matricula": "Mil012",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98476-6891",
+      "email": "juliane@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.6046667,
+        "lng": -48.6519887,
+        "streetName": "R. Aimoré (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843082113",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Kayla",
+      "matricula": "Mil013",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 47 98926-5369",
+      "email": "kayla@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843172481",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Merilyn",
+      "matricula": "Mil014",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 67 99265-5292",
+      "email": "merilyn@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843294191",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Nathalia",
+      "matricula": "Mil015",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99914-7238",
+      "email": "nathalia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848020226",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Raissa",
+      "matricula": "Mil016",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99900-3029",
+      "email": "raissa@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848111342",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 11,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Sandra Beatriz",
+      "matricula": "Mil017",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99180-8565",
+      "email": "sandra.beatriz@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5736983,
+        "lng": -48.6115745,
+        "streetName": "R. Cap. Pedro Leite (nº Trecho Geral)",
+        "neighborhoodName": "Barreiros",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848170611",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Stefani",
+      "matricula": "Mil018",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98407-7178",
+      "email": "stefani@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848232931",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Solange",
+      "matricula": "Mil019",
+      "cpfMasked": "***.***.***-**",
+      "phone": "‪+55 48 98466‑3307‬",
+      "email": "solange@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848883614",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 4.8,
+      "totalStreetsCovered": 6,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 50,
+        "adesivo_bola": 16,
+        "adesivo_parachoque": 8,
+        "colinhas": 200,
+        "abordagens": 40,
+        "comercio": 36
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Milena",
+      "matricula": "Mil020",
+      "cpfMasked": "***.***.***-**",
+      "phone": "48 98497-4019",
+      "email": "milena@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5725041,
+        "lng": -48.6708272,
+        "streetName": "R. Aveiro (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 4
+    },
+    {
+      "id": "mil-1787935574554",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "rose",
+      "matricula": "Mil021",
+      "cpfMasked": "***.***.***-**",
+      "phone": "(48) 933819476",
+      "email": "rose@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842613621",
+      "name": "Luciano",
+      "matricula": "Mil-LUC",
+      "cpfMasked": "***.781.992-**",
+      "phone": "(48) 99655-4321",
+      "email": "luciano.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 8.5,
+      "totalStreetsCovered": 12,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 225,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 37,
+        "comercio": 4
+      },
+      "weeklyGoalPercentage": 94,
+      "batteryLevel": 88,
+      "completedStreets": 14
+    },
+    {
+      "id": "mil-1787842613623",
+      "name": "Milena",
+      "matricula": "Mil-MIL",
+      "cpfMasked": "***.331.704-**",
+      "phone": "(48) 98844-9912",
+      "email": "milena.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 6.2,
+      "totalStreetsCovered": 6,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 50,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 30,
+        "comercio": 28
+      },
+      "weeklyGoalPercentage": 90,
+      "batteryLevel": 95,
+      "completedStreets": 4
+    },
+    {
+      "id": "user-militante-01",
+      "name": "Carlos Eduardo Ramos",
+      "matricula": "Mil001",
+      "cpfMasked": "***.452.189-**",
+      "phone": "(48) 99912-7845",
+      "email": "cadu.militancia@campanhasj.com.br",
+      "teamId": "team-alpha",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "user-militante-02",
+      "name": "Mariana Becker",
+      "matricula": "Mil002",
+      "cpfMasked": "***.892.441-**",
+      "phone": "(48) 99655-1234",
+      "email": "mariana.becker@campanhasj.com.br",
+      "teamId": "team-alpha",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-303",
+      "name": "Lucas Pires Scherer",
+      "matricula": "Mil003",
+      "cpfMasked": "***.311.609-**",
+      "phone": "(48) 99188-4422",
+      "email": "lucas.scherer@campanhasj.com.br",
+      "teamId": "team-bravo",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-304",
+      "name": "Beatriz Fontes Vieira",
+      "matricula": "Mil004",
+      "cpfMasked": "***.712.980-**",
+      "phone": "(48) 98833-2190",
+      "email": "beatriz.fontes@campanhasj.com.br",
+      "teamId": "team-charlie",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-305",
+      "name": "Gabriel Costa Nogueira",
+      "matricula": "Mil005",
+      "cpfMasked": "***.543.210-**",
+      "phone": "(48) 99119-8765",
+      "email": "gabriel.costa@campanhasj.com.br",
+      "teamId": "team-delta",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-douglas-005",
+      "name": "Douglas",
+      "matricula": "Mil005",
+      "cpfMasked": "***.519.932-**",
+      "phone": "+55 51 99323-9173",
+      "email": "douglas.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 100,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "completedStreets": 0
+    }
+  ],
+  "militancia_audit_logs_v1": [
+    {
+      "id": "log-1788440401405-905",
+      "timestamp": "2026-09-03 13:00:01",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "LOGIN_COORDENADOR",
+      "category": "AUTENTICACAO",
+      "ipAddress": "177.136.210.45",
+      "details": "Coordenador Geral Pedro da Silva Rosa autenticado com acesso total ao sistema."
+    },
+    {
+      "id": "log-1788440287024-444",
+      "timestamp": "2026-09-03 12:58:07",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "LOGOUT_SISTEMA",
+      "category": "AUTENTICACAO",
+      "ipAddress": "177.136.210.45",
+      "details": "Usuário Pedro da Silva Rosa (coordenador01) encerrou a sessão."
+    },
+    {
+      "id": "log-1788440255627-948",
+      "timestamp": "2026-09-03 12:57:35",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "LOGIN_COORDENADOR",
+      "category": "AUTENTICACAO",
+      "ipAddress": "177.136.210.45",
+      "details": "Coordenador Geral Pedro da Silva Rosa autenticado com acesso total ao sistema."
+    },
+    {
+      "id": "log-1788438582002-323",
+      "timestamp": "2026-09-03 12:29:42",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "LOGIN_COORDENADOR",
+      "category": "AUTENTICACAO",
+      "ipAddress": "177.136.210.45",
+      "details": "Coordenador Geral Pedro da Silva Rosa autenticado com acesso total ao sistema."
+    },
+    {
+      "id": "log-clean-init-001",
+      "timestamp": "2026-08-27 08:00:00",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "SISTEMA_ZERADO_TESTES_REAIS",
+      "category": "CADASTROS",
+      "ipAddress": "127.0.0.1",
+      "details": "Base de dados de campo e contadores de materiais 100% zerados para início dos testes reais de campo em São José/SC."
+    }
+  ],
+  "militancia_admins_v1": [
+    {
+      "id": "admin-01",
+      "name": "Pedro da Silva Rosa",
+      "email": "pedro.rosa@campanhasj.com.br",
+      "matricula": "coordenador01",
+      "phone": "(48) 99124-5501",
+      "role": "admin",
+      "pinCode": "2026",
+      "securityLevel": "super_admin",
+      "createdAt": "2026-08-20",
+      "active": true
+    },
+    {
+      "id": "admin-02",
+      "name": "Dra. Luciana Prado (Tesouraria)",
+      "email": "financeiro.saojose@campanhasj.com.br",
+      "matricula": "ADM-002",
+      "phone": "(48) 98822-1144",
+      "role": "admin",
+      "pinCode": "1234",
+      "securityLevel": "financeiro",
+      "createdAt": "2026-08-21",
+      "active": true
+    }
+  ],
+  "militancia_calendar_v1": [
+    {
+      "id": "day-2026-08-25",
+      "date": "2026-08-25",
+      "dayOfWeek": "Terça-feira",
+      "dayNumber": 1,
+      "targetNeighborhoodIds": [
+        "kobrasol",
+        "campinas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 37,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (kobrasol)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (campinas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "concluido",
+      "completionRate": 95
+    },
+    {
+      "id": "day-2026-08-26",
+      "date": "2026-08-26",
+      "dayOfWeek": "Quarta-feira",
+      "dayNumber": 2,
+      "targetNeighborhoodIds": [
+        "barreiros",
+        "bela_vista"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 39,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (barreiros)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (bela_vista)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "em_andamento",
+      "completionRate": 78
+    },
+    {
+      "id": "day-2026-08-27",
+      "date": "2026-08-27",
+      "dayOfWeek": "Quinta-feira",
+      "dayNumber": 3,
+      "targetNeighborhoodIds": [
+        "forquilhinhas",
+        "potecas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 41,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhinhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (potecas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-08-28",
+      "date": "2026-08-28",
+      "dayOfWeek": "Sexta-feira",
+      "dayNumber": 4,
+      "targetNeighborhoodIds": [
+        "serraria",
+        "ipiranga"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 43,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (serraria)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (ipiranga)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-08-29",
+      "date": "2026-08-29",
+      "dayOfWeek": "Sábado",
+      "dayNumber": 5,
+      "targetNeighborhoodIds": [
+        "praia_comprida",
+        "rocado",
+        "fazenda_santo_antonio"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 45,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (praia_comprida)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (rocado)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-08-30",
+      "date": "2026-08-30",
+      "dayOfWeek": "Domingo",
+      "dayNumber": 6,
+      "targetNeighborhoodIds": [
+        "forquilhas",
+        "areias"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 47,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (areias)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-08-31",
+      "date": "2026-08-31",
+      "dayOfWeek": "Segunda-feira",
+      "dayNumber": 7,
+      "targetNeighborhoodIds": [
+        "picadas_do_sul",
+        "sertao_do_maruim",
+        "colonia_santana"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 49,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (picadas_do_sul)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (sertao_do_maruim)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-01",
+      "date": "2026-09-01",
+      "dayOfWeek": "Terça-feira",
+      "dayNumber": 8,
+      "targetNeighborhoodIds": [
+        "kobrasol",
+        "campinas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 51,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (kobrasol)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (campinas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-02",
+      "date": "2026-09-02",
+      "dayOfWeek": "Quarta-feira",
+      "dayNumber": 9,
+      "targetNeighborhoodIds": [
+        "barreiros",
+        "bela_vista"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 53,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (barreiros)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (bela_vista)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-03",
+      "date": "2026-09-03",
+      "dayOfWeek": "Quinta-feira",
+      "dayNumber": 10,
+      "targetNeighborhoodIds": [
+        "forquilhinhas",
+        "potecas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 35,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhinhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (potecas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-04",
+      "date": "2026-09-04",
+      "dayOfWeek": "Sexta-feira",
+      "dayNumber": 11,
+      "targetNeighborhoodIds": [
+        "serraria",
+        "ipiranga"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 37,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (serraria)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (ipiranga)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-05",
+      "date": "2026-09-05",
+      "dayOfWeek": "Sábado",
+      "dayNumber": 12,
+      "targetNeighborhoodIds": [
+        "praia_comprida",
+        "rocado",
+        "fazenda_santo_antonio"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 39,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (praia_comprida)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (rocado)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-06",
+      "date": "2026-09-06",
+      "dayOfWeek": "Domingo",
+      "dayNumber": 13,
+      "targetNeighborhoodIds": [
+        "forquilhas",
+        "areias"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 41,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (areias)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-07",
+      "date": "2026-09-07",
+      "dayOfWeek": "Segunda-feira",
+      "dayNumber": 14,
+      "targetNeighborhoodIds": [
+        "picadas_do_sul",
+        "sertao_do_maruim",
+        "colonia_santana"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 43,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (picadas_do_sul)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (sertao_do_maruim)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-08",
+      "date": "2026-09-08",
+      "dayOfWeek": "Terça-feira",
+      "dayNumber": 15,
+      "targetNeighborhoodIds": [
+        "kobrasol",
+        "campinas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 45,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (kobrasol)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (campinas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-09",
+      "date": "2026-09-09",
+      "dayOfWeek": "Quarta-feira",
+      "dayNumber": 16,
+      "targetNeighborhoodIds": [
+        "barreiros",
+        "bela_vista"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 47,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (barreiros)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (bela_vista)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-10",
+      "date": "2026-09-10",
+      "dayOfWeek": "Quinta-feira",
+      "dayNumber": 17,
+      "targetNeighborhoodIds": [
+        "forquilhinhas",
+        "potecas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 49,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhinhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (potecas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-11",
+      "date": "2026-09-11",
+      "dayOfWeek": "Sexta-feira",
+      "dayNumber": 18,
+      "targetNeighborhoodIds": [
+        "serraria",
+        "ipiranga"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 51,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (serraria)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (ipiranga)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-12",
+      "date": "2026-09-12",
+      "dayOfWeek": "Sábado",
+      "dayNumber": 19,
+      "targetNeighborhoodIds": [
+        "praia_comprida",
+        "rocado",
+        "fazenda_santo_antonio"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 53,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (praia_comprida)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (rocado)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-13",
+      "date": "2026-09-13",
+      "dayOfWeek": "Domingo",
+      "dayNumber": 20,
+      "targetNeighborhoodIds": [
+        "forquilhas",
+        "areias"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 35,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (areias)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-14",
+      "date": "2026-09-14",
+      "dayOfWeek": "Segunda-feira",
+      "dayNumber": 21,
+      "targetNeighborhoodIds": [
+        "picadas_do_sul",
+        "sertao_do_maruim",
+        "colonia_santana"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 37,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (picadas_do_sul)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (sertao_do_maruim)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-15",
+      "date": "2026-09-15",
+      "dayOfWeek": "Terça-feira",
+      "dayNumber": 22,
+      "targetNeighborhoodIds": [
+        "kobrasol",
+        "campinas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 39,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (kobrasol)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (campinas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-16",
+      "date": "2026-09-16",
+      "dayOfWeek": "Quarta-feira",
+      "dayNumber": 23,
+      "targetNeighborhoodIds": [
+        "barreiros",
+        "bela_vista"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 41,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (barreiros)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (bela_vista)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-17",
+      "date": "2026-09-17",
+      "dayOfWeek": "Quinta-feira",
+      "dayNumber": 24,
+      "targetNeighborhoodIds": [
+        "forquilhinhas",
+        "potecas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 43,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhinhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (potecas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-18",
+      "date": "2026-09-18",
+      "dayOfWeek": "Sexta-feira",
+      "dayNumber": 25,
+      "targetNeighborhoodIds": [
+        "serraria",
+        "ipiranga"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 45,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (serraria)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (ipiranga)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-19",
+      "date": "2026-09-19",
+      "dayOfWeek": "Sábado",
+      "dayNumber": 26,
+      "targetNeighborhoodIds": [
+        "praia_comprida",
+        "rocado",
+        "fazenda_santo_antonio"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 47,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (praia_comprida)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (rocado)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-20",
+      "date": "2026-09-20",
+      "dayOfWeek": "Domingo",
+      "dayNumber": 27,
+      "targetNeighborhoodIds": [
+        "forquilhas",
+        "areias"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 49,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (areias)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-21",
+      "date": "2026-09-21",
+      "dayOfWeek": "Segunda-feira",
+      "dayNumber": 28,
+      "targetNeighborhoodIds": [
+        "picadas_do_sul",
+        "sertao_do_maruim",
+        "colonia_santana"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 51,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (picadas_do_sul)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (sertao_do_maruim)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-22",
+      "date": "2026-09-22",
+      "dayOfWeek": "Terça-feira",
+      "dayNumber": 29,
+      "targetNeighborhoodIds": [
+        "kobrasol",
+        "campinas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 53,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (kobrasol)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (campinas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-23",
+      "date": "2026-09-23",
+      "dayOfWeek": "Quarta-feira",
+      "dayNumber": 30,
+      "targetNeighborhoodIds": [
+        "barreiros",
+        "bela_vista"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 35,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (barreiros)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (bela_vista)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-24",
+      "date": "2026-09-24",
+      "dayOfWeek": "Quinta-feira",
+      "dayNumber": 31,
+      "targetNeighborhoodIds": [
+        "forquilhinhas",
+        "potecas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 37,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhinhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (potecas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-25",
+      "date": "2026-09-25",
+      "dayOfWeek": "Sexta-feira",
+      "dayNumber": 32,
+      "targetNeighborhoodIds": [
+        "serraria",
+        "ipiranga"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 39,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (serraria)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (ipiranga)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-26",
+      "date": "2026-09-26",
+      "dayOfWeek": "Sábado",
+      "dayNumber": 33,
+      "targetNeighborhoodIds": [
+        "praia_comprida",
+        "rocado",
+        "fazenda_santo_antonio"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 41,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (praia_comprida)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (rocado)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-27",
+      "date": "2026-09-27",
+      "dayOfWeek": "Domingo",
+      "dayNumber": 34,
+      "targetNeighborhoodIds": [
+        "forquilhas",
+        "areias"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 43,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (areias)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-28",
+      "date": "2026-09-28",
+      "dayOfWeek": "Segunda-feira",
+      "dayNumber": 35,
+      "targetNeighborhoodIds": [
+        "picadas_do_sul",
+        "sertao_do_maruim",
+        "colonia_santana"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 45,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (picadas_do_sul)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (sertao_do_maruim)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-29",
+      "date": "2026-09-29",
+      "dayOfWeek": "Terça-feira",
+      "dayNumber": 36,
+      "targetNeighborhoodIds": [
+        "kobrasol",
+        "campinas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 47,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (kobrasol)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (campinas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-09-30",
+      "date": "2026-09-30",
+      "dayOfWeek": "Quarta-feira",
+      "dayNumber": 37,
+      "targetNeighborhoodIds": [
+        "barreiros",
+        "bela_vista"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 49,
+      "expectedMaterialsGoal": 21000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (barreiros)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (bela_vista)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-10-01",
+      "date": "2026-10-01",
+      "dayOfWeek": "Quinta-feira",
+      "dayNumber": 38,
+      "targetNeighborhoodIds": [
+        "forquilhinhas",
+        "potecas"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 51,
+      "expectedMaterialsGoal": 22500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhinhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (potecas)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-10-02",
+      "date": "2026-10-02",
+      "dayOfWeek": "Sexta-feira",
+      "dayNumber": 39,
+      "targetNeighborhoodIds": [
+        "serraria",
+        "ipiranga"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 53,
+      "expectedMaterialsGoal": 24000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (serraria)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (ipiranga)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-10-03",
+      "date": "2026-10-03",
+      "dayOfWeek": "Sábado",
+      "dayNumber": 40,
+      "targetNeighborhoodIds": [
+        "praia_comprida",
+        "rocado",
+        "fazenda_santo_antonio"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 35,
+      "expectedMaterialsGoal": 18000,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (praia_comprida)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (rocado)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    },
+    {
+      "id": "day-2026-10-04",
+      "date": "2026-10-04",
+      "dayOfWeek": "Domingo",
+      "dayNumber": 41,
+      "targetNeighborhoodIds": [
+        "forquilhas",
+        "areias"
+      ],
+      "teamsAssigned": [
+        "team-alpha",
+        "team-bravo",
+        "team-charlie",
+        "team-delta"
+      ],
+      "expectedStreetGoal": 37,
+      "expectedMaterialsGoal": 19500,
+      "vanRoutePlan": [
+        {
+          "vanId": "van-01",
+          "departureTime": "08:00",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 1 (forquilhas)",
+          "returnTime": "12:30",
+          "coordinatorNotes": "Desembarcar militantes em duplas com kits completos de material"
+        },
+        {
+          "vanId": "van-02",
+          "departureTime": "08:15",
+          "pickupPoint": "Comitê Central (Av. Pres. Kennedy, Campinas)",
+          "dropoffPoint": "Ponto Estratégico 2 (areias)",
+          "returnTime": "13:00",
+          "coordinatorNotes": "Foco em avenidas principais e comércio matutino"
+        }
+      ],
+      "status": "planejado"
+    }
+  ],
+  "militancia_notifications_v1": [],
+  "militancia_payrolls_v1": [
+    {
+      "id": "folha-semana-1",
+      "weekNumber": 1,
+      "weekLabel": "Semana 1 (26/08 a 01/09/2026)",
+      "startDate": "2026-08-26",
+      "endDate": "2026-09-01",
+      "status": "aberta",
+      "totalWeeklyAmount": 0,
+      "totalDaysWorked": 0,
+      "totalWorkersPaid": 0,
+      "totalMilitantsAmount": 0,
+      "totalLeadersAmount": 0,
+      "totalDriversAmount": 0,
+      "notes": "Folha de pagamento aberta para a primeira semana de campo.",
+      "items": []
+    },
+    {
+      "id": "folha-semana-2",
+      "weekNumber": 2,
+      "weekLabel": "Semana 2 (02/09 a 08/09/2026)",
+      "startDate": "2026-09-02",
+      "endDate": "2026-09-08",
+      "status": "aberta",
+      "totalWeeklyAmount": 0,
+      "totalDaysWorked": 0,
+      "totalWorkersPaid": 0,
+      "totalMilitantsAmount": 0,
+      "totalLeadersAmount": 0,
+      "totalDriversAmount": 0,
+      "notes": "Programação da segunda semana de campanha em São José.",
+      "items": []
+    }
+  ],
+  "militancia_stock_tx_v1": [],
+  "militancia_stock_v1": [
+    {
+      "id": "stock-santinhos",
+      "name": "Santinhos Políticos (Candidato + Propostas)",
+      "code": "MAT-SNT-01",
+      "type": "santinhos",
+      "description": "Santinho 7x10cm couche brilho 90g com propostas e foto oficial",
+      "totalReceived": 500000,
+      "dispatched": 0,
+      "currentStock": 500000,
+      "minThreshold": 50000,
+      "unit": "unidades",
+      "imageIcon": "FileText"
+    },
+    {
+      "id": "stock-colinhas",
+      "name": "Colinhas de Votação (Dia da Eleição)",
+      "code": "MAT-COL-02",
+      "type": "colinhas",
+      "description": "Colinha de bolso com espaço para preenchimento de números",
+      "totalReceived": 350000,
+      "dispatched": 0,
+      "currentStock": 350000,
+      "minThreshold": 40000,
+      "unit": "unidades",
+      "imageIcon": "CheckSquare"
+    },
+    {
+      "id": "stock-adesivos",
+      "name": "Adesivos Retangulares para Roupa/Comércio",
+      "code": "MAT-ADS-03",
+      "type": "adesivos",
+      "description": "Adesivo vinílico de peito 5x7cm de alta aderência",
+      "totalReceived": 60000,
+      "dispatched": 0,
+      "currentStock": 60000,
+      "minThreshold": 10000,
+      "unit": "unidades",
+      "imageIcon": "Tag"
+    },
+    {
+      "id": "stock-adesivo-bola",
+      "name": "Adesivo Bola Perfurite (Vidro Traseiro)",
+      "code": "MAT-BOL-04",
+      "type": "adesivo_bola",
+      "description": "Adesivo circular perfurado 30cm para vidro traseiro de carros",
+      "totalReceived": 25000,
+      "dispatched": 0,
+      "currentStock": 25000,
+      "minThreshold": 3000,
+      "unit": "unidades",
+      "imageIcon": "Disc"
+    },
+    {
+      "id": "stock-adesivo-parachoque",
+      "name": "Adesivo de Parachoque (Faixa)",
+      "code": "MAT-PAR-05",
+      "type": "adesivo_parachoque",
+      "description": "Adesivo faixa horizontal 35x10cm resistente a intempéries",
+      "totalReceived": 15000,
+      "dispatched": 0,
+      "currentStock": 15000,
+      "minThreshold": 2000,
+      "unit": "unidades",
+      "imageIcon": "Layers"
+    }
+  ],
+  "militancia_vans_v1": [
+    {
+      "id": "van-01",
+      "name": "Van 01 - Alpha & Charlie",
+      "model": "Mercedes-Benz Sprinter 516 (19 Lugares)",
+      "plate": "RKS-8A24",
+      "driverName": "Roberto Valente (Beto)",
+      "driverPhone": "(48) 98412-9900",
+      "capacity": 19,
+      "assignedTeamIds": [
+        "team-alpha",
+        "team-charlie"
+      ],
+      "status": "aguardando_resgate",
+      "currentCoords": {
+        "lat": -27.598,
+        "lng": -48.622,
+        "lastUpdate": "Agora"
+      },
+      "nextPickupLocation": "Comitê Central / Garagem",
+      "nextPickupTime": "08:00"
+    },
+    {
+      "id": "van-02",
+      "name": "Van 02 - Bravo & Eco",
+      "model": "Renault Master Grand L3H2 (16 Lugares)",
+      "plate": "RKA-3B90",
+      "driverName": "Marcos Aurélio Santos",
+      "driverPhone": "(48) 99155-3344",
+      "capacity": 16,
+      "assignedTeamIds": [
+        "team-bravo",
+        "team-eco"
+      ],
+      "status": "aguardando_resgate",
+      "currentCoords": {
+        "lat": -27.576,
+        "lng": -48.609,
+        "lastUpdate": "Agora"
+      },
+      "nextPickupLocation": "Comitê Central / Garagem",
+      "nextPickupTime": "08:00"
+    },
+    {
+      "id": "van-03",
+      "name": "Van 03 - Delta & Fox",
+      "model": "Fiat Ducato Minibus (16 Lugares)",
+      "plate": "QJC-7F45",
+      "driverName": "Claudemir de Oliveira",
+      "driverPhone": "(48) 99877-1122",
+      "capacity": 16,
+      "assignedTeamIds": [
+        "team-delta",
+        "team-fox"
+      ],
+      "status": "aguardando_resgate",
+      "currentCoords": {
+        "lat": -27.619,
+        "lng": -48.627,
+        "lastUpdate": "Agora"
+      },
+      "nextPickupLocation": "Comitê Central / Garagem",
+      "nextPickupTime": "08:00"
+    }
+  ],
+  "militantes_data": [
+    {
+      "id": "mil-1787842380824",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 17.600000000000005,
+      "totalStreetsCovered": 22,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 275,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 54,
+        "comercio": 4
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Luciano",
+      "matricula": "Mil001",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98432-0627",
+      "email": "luciano@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5728693,
+        "lng": -48.6576116,
+        "streetName": "R. Cidinei Luís (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 14
+    },
+    {
+      "id": "mil-1787842489241",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 1,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Beatriz",
+      "matricula": "Mil002",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99670-8704",
+      "email": "beatriz@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5741592,
+        "lng": -48.6740642,
+        "streetName": "R. Nossa Sra. Rainha da Paz (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842561785",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 3,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Carlos",
+      "matricula": "Mil003",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99167-5793",
+      "email": "carlos@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.575254,
+        "lng": -48.6731671,
+        "streetName": "R. Sabiá do Campo (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842613622",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 4.8,
+      "totalStreetsCovered": 3,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 50,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 40,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 85,
+      "batteryLevel": 92,
+      "name": "Daiana",
+      "matricula": "Mil-DAI",
+      "cpfMasked": "***.452.189-**",
+      "phone": "(48) 99124-5501",
+      "email": "daiana.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 150,
+      "currentLocation": {
+        "lat": -27.5962,
+        "lng": -48.619,
+        "streetName": "Rua Manoel Francisco de souza. (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 3
+    },
+    {
+      "id": "mil-1787842651982",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 7,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Douglas ",
+      "matricula": "Mil005",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 51 99323-9173",
+      "email": "douglas.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5441439,
+        "lng": -48.6421579,
+        "streetName": "R. Nossa Sra. dos Navegantes (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842690694",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Eduardo ",
+      "matricula": "Mil005",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98850-5247",
+      "email": "eduardo.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.54669,
+        "lng": -48.6444782,
+        "streetName": "R. Curió (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842774685",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 3,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Gustavo",
+      "matricula": "Mil007",
+      "cpfMasked": "***.***.***-**",
+      "phone": "(48) 985050302",
+      "email": "gustavo@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5751295,
+        "lng": -48.6567069,
+        "streetName": "R. Telmo Luiz Martins (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842816279",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 4,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Iliane",
+      "matricula": "Mil008",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98451-7097",
+      "email": "iliane@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5466594,
+        "lng": -48.6479617,
+        "streetName": "R. Papagaio (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842848950",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Israel",
+      "matricula": "Mil009",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99631-9768",
+      "email": "israel@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5446229,
+        "lng": -48.6418904,
+        "streetName": "Serv. Francisco Umbelino (nº Trecho Geral)",
+        "neighborhoodName": "Serraria",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842879496",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 2,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Jessica ",
+      "matricula": "Mil010",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99156-6697",
+      "email": "jessica.@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.6022455,
+        "lng": -48.6483546,
+        "streetName": "R. Leopoldina Marcelino (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842912688",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 9,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Juliana",
+      "matricula": "Mil011",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99802-5613",
+      "email": "juliana@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5750729,
+        "lng": -48.6650612,
+        "streetName": "R. Urano Pires (nº Trecho Geral)",
+        "neighborhoodName": "Areias / Bosque das Mansões",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842976552",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0.8,
+      "totalStreetsCovered": 1,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 5,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Juliane",
+      "matricula": "Mil012",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98476-6891",
+      "email": "juliane@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.6046667,
+        "lng": -48.6519887,
+        "streetName": "R. Aimoré (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhinhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843082113",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Kayla",
+      "matricula": "Mil013",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 47 98926-5369",
+      "email": "kayla@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843172481",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Merilyn",
+      "matricula": "Mil014",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 67 99265-5292",
+      "email": "merilyn@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787843294191",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Nathalia",
+      "matricula": "Mil015",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99914-7238",
+      "email": "nathalia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848020226",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Raissa",
+      "matricula": "Mil016",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99900-3029",
+      "email": "raissa@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848111342",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 1.6,
+      "totalStreetsCovered": 2,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 11,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Sandra Beatriz",
+      "matricula": "Mil017",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 99180-8565",
+      "email": "sandra.beatriz@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5736983,
+        "lng": -48.6115745,
+        "streetName": "R. Cap. Pedro Leite (nº Trecho Geral)",
+        "neighborhoodName": "Barreiros",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848170611",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Stefani",
+      "matricula": "Mil018",
+      "cpfMasked": "***.***.***-**",
+      "phone": "+55 48 98407-7178",
+      "email": "stefani@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848232931",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Solange",
+      "matricula": "Mil019",
+      "cpfMasked": "***.***.***-**",
+      "phone": "‪+55 48 98466‑3307‬",
+      "email": "solange@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787848883614",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 4.8,
+      "totalStreetsCovered": 6,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 50,
+        "adesivo_bola": 16,
+        "adesivo_parachoque": 8,
+        "colinhas": 200,
+        "abordagens": 40,
+        "comercio": 36
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "Milena",
+      "matricula": "Mil020",
+      "cpfMasked": "***.***.***-**",
+      "phone": "48 98497-4019",
+      "email": "milena@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "currentLocation": {
+        "lat": -27.5725041,
+        "lng": -48.6708272,
+        "streetName": "R. Aveiro (nº Trecho Geral)",
+        "neighborhoodName": "Forquilhas",
+        "lastUpdate": "Agora mesmo"
+      },
+      "completedStreets": 4
+    },
+    {
+      "id": "mil-1787935574554",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100,
+      "name": "rose",
+      "matricula": "Mil021",
+      "cpfMasked": "***.***.***-**",
+      "phone": "(48) 933819476",
+      "email": "rose@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "dailyRate": 100,
+      "completedStreets": 0
+    },
+    {
+      "id": "mil-1787842613621",
+      "name": "Luciano",
+      "matricula": "Mil-LUC",
+      "cpfMasked": "***.781.992-**",
+      "phone": "(48) 99655-4321",
+      "email": "luciano.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 8.5,
+      "totalStreetsCovered": 12,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 225,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 37,
+        "comercio": 4
+      },
+      "weeklyGoalPercentage": 94,
+      "batteryLevel": 88
+    },
+    {
+      "id": "mil-1787842613623",
+      "name": "Milena",
+      "matricula": "Mil-MIL",
+      "cpfMasked": "***.331.704-**",
+      "phone": "(48) 98844-9912",
+      "email": "milena.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 6.2,
+      "totalStreetsCovered": 6,
+      "deliveredMaterials": {
+        "santinhos": 150,
+        "adesivos": 50,
+        "adesivo_bola": 8,
+        "adesivo_parachoque": 4,
+        "colinhas": 100,
+        "abordagens": 30,
+        "comercio": 28
+      },
+      "weeklyGoalPercentage": 90,
+      "batteryLevel": 95
+    },
+    {
+      "id": "user-militante-01",
+      "name": "Carlos Eduardo Ramos",
+      "matricula": "Mil001",
+      "cpfMasked": "***.452.189-**",
+      "phone": "(48) 99912-7845",
+      "email": "cadu.militancia@campanhasj.com.br",
+      "teamId": "team-alpha",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100
+    },
+    {
+      "id": "user-militante-02",
+      "name": "Mariana Becker",
+      "matricula": "Mil002",
+      "cpfMasked": "***.892.441-**",
+      "phone": "(48) 99655-1234",
+      "email": "mariana.becker@campanhasj.com.br",
+      "teamId": "team-alpha",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100
+    },
+    {
+      "id": "mil-303",
+      "name": "Lucas Pires Scherer",
+      "matricula": "Mil003",
+      "cpfMasked": "***.311.609-**",
+      "phone": "(48) 99188-4422",
+      "email": "lucas.scherer@campanhasj.com.br",
+      "teamId": "team-bravo",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100
+    },
+    {
+      "id": "mil-304",
+      "name": "Beatriz Fontes Vieira",
+      "matricula": "Mil004",
+      "cpfMasked": "***.712.980-**",
+      "phone": "(48) 98833-2190",
+      "email": "beatriz.fontes@campanhasj.com.br",
+      "teamId": "team-charlie",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100
+    },
+    {
+      "id": "mil-305",
+      "name": "Gabriel Costa Nogueira",
+      "matricula": "Mil005",
+      "cpfMasked": "***.543.210-**",
+      "phone": "(48) 99119-8765",
+      "email": "gabriel.costa@campanhasj.com.br",
+      "teamId": "team-delta",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 150,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100
+    },
+    {
+      "id": "mil-douglas-005",
+      "name": "Douglas",
+      "matricula": "Mil005",
+      "cpfMasked": "***.519.932-**",
+      "phone": "+55 51 99323-9173",
+      "email": "douglas.militancia@campanhasj.com.br",
+      "teamId": "team-1787840837258",
+      "role": "militante",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+      "status": "ativo",
+      "dailyRate": 100,
+      "totalKmWalked": 0,
+      "totalStreetsCovered": 0,
+      "deliveredMaterials": {
+        "santinhos": 0,
+        "adesivos": 0,
+        "adesivo_bola": 0,
+        "adesivo_parachoque": 0,
+        "colinhas": 0,
+        "abordagens": 0,
+        "comercio": 0
+      },
+      "weeklyGoalPercentage": 0,
+      "batteryLevel": 100
+    }
+  ],
+  "vans_data": [
+    {
+      "id": "van-01",
+      "name": "Van 01 - Alpha & Charlie",
+      "model": "Mercedes-Benz Sprinter 516 (19 Lugares)",
+      "plate": "RKS-8A24",
+      "driverName": "Roberto Valente (Beto)",
+      "driverPhone": "(48) 98412-9900",
+      "capacity": 19,
+      "assignedTeamIds": [
+        "team-alpha",
+        "team-charlie"
+      ],
+      "status": "aguardando_resgate",
+      "currentCoords": {
+        "lat": -27.598,
+        "lng": -48.622,
+        "lastUpdate": "Agora"
+      },
+      "nextPickupLocation": "Comitê Central / Garagem",
+      "nextPickupTime": "08:00"
+    },
+    {
+      "id": "van-02",
+      "name": "Van 02 - Bravo & Eco",
+      "model": "Renault Master Grand L3H2 (16 Lugares)",
+      "plate": "RKA-3B90",
+      "driverName": "Marcos Aurélio Santos",
+      "driverPhone": "(48) 99155-3344",
+      "capacity": 16,
+      "assignedTeamIds": [
+        "team-bravo",
+        "team-eco"
+      ],
+      "status": "aguardando_resgate",
+      "currentCoords": {
+        "lat": -27.576,
+        "lng": -48.609,
+        "lastUpdate": "Agora"
+      },
+      "nextPickupLocation": "Comitê Central / Garagem",
+      "nextPickupTime": "08:00"
+    },
+    {
+      "id": "van-03",
+      "name": "Van 03 - Delta & Fox",
+      "model": "Fiat Ducato Minibus (16 Lugares)",
+      "plate": "QJC-7F45",
+      "driverName": "Claudemir de Oliveira",
+      "driverPhone": "(48) 99877-1122",
+      "capacity": 16,
+      "assignedTeamIds": [
+        "team-delta",
+        "team-fox"
+      ],
+      "status": "aguardando_resgate",
+      "currentCoords": {
+        "lat": -27.619,
+        "lng": -48.627,
+        "lastUpdate": "Agora"
+      },
+      "nextPickupLocation": "Comitê Central / Garagem",
+      "nextPickupTime": "08:00"
+    }
+  ],
+  "_lastServerSavedAt": "2026-09-03T13:23:54.911Z"
 }

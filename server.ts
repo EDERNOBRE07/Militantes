@@ -365,7 +365,43 @@ async function startServer() {
       if (hostingerResponse.ok) {
         const data = await hostingerResponse.json();
         // Merge remote and server vault checkins non-destructively
-        const remoteCheckins = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+        const rawRemote = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+        const remoteCheckins = rawRemote.map((r: any) => {
+          let photos = [];
+          if (Array.isArray(r.photos)) photos = r.photos;
+          else if (typeof r.fotos_json === 'string' && r.fotos_json.trim()) {
+            try { photos = JSON.parse(r.fotos_json); } catch {}
+          } else if (Array.isArray(r.fotos_json)) photos = r.fotos_json;
+
+          return {
+            id: String(r.id),
+            militantId: String(r.militantId || r.militante_id || 'mil-01'),
+            militantName: String(r.militantName || r.militante_nome || 'Militante'),
+            teamId: String(r.teamId || r.equipe_id || 'team-alpha'),
+            neighborhoodId: String(r.neighborhoodId || r.bairro_id || 'kobrasol'),
+            neighborhoodName: String(r.neighborhoodName || r.bairro_nome || 'Kobrasol'),
+            streetName: String(r.streetName || r.nome_rua || 'Rua de Campo'),
+            houseNumberRange: String(r.houseNumberRange || r.faixa_numeracao || 'Trecho Geral'),
+            timestamp: String(r.timestamp || r.timestamp_checkin || new Date().toISOString()),
+            latitude: Number(r.latitude) || -27.5962,
+            longitude: Number(r.longitude) || -48.6190,
+            accuracyMeters: Number(r.accuracyMeters || r.precisao_gps_metros) || 4.0,
+            materialsDelivered: {
+              santinhos: Number(r.materialsDelivered?.santinhos ?? r.qtd_santinhos ?? 0),
+              adesivos: Number(r.materialsDelivered?.adesivos ?? r.qtd_adesivos ?? 0),
+              adesivo_bola: Number(r.materialsDelivered?.adesivo_bola ?? r.qtd_adesivo_bola ?? 0),
+              adesivo_parachoque: Number(r.materialsDelivered?.adesivo_parachoque ?? r.qtd_adesivo_parachoque ?? 0),
+              colinhas: Number(r.materialsDelivered?.colinhas ?? r.qtd_colinhas ?? 0),
+              abordagens: Number(r.materialsDelivered?.abordagens ?? r.qtd_abordagens ?? 0),
+              comercio: Number(r.materialsDelivered?.comercio ?? r.qtd_comercio ?? 0)
+            },
+            photos: Array.isArray(photos) ? photos : [],
+            observations: String(r.observations || r.observacoes || ''),
+            status: r.status || r.status_auditoria || 'validado',
+            synced: true
+          };
+        });
+
         const mergedMap = new Map();
         localCheckins.forEach((c: any) => {
           if (c && c.id) mergedMap.set(String(c.id), c);
@@ -374,11 +410,12 @@ async function startServer() {
           if (c && c.id) {
             const idStr = String(c.id);
             const exist = mergedMap.get(idStr);
-            mergedMap.set(idStr, exist ? { ...c, ...exist } : c);
+            const finalPhotos = (exist?.photos && exist.photos.length > 0) ? exist.photos : c.photos;
+            mergedMap.set(idStr, exist ? { ...c, ...exist, photos: finalPhotos } : c);
           }
         });
         const mergedList = Array.from(mergedMap.values());
-        return res.json({ status: 'success', data: mergedList });
+        return res.json({ status: 'success', data: mergedList, count: mergedList.length });
       }
       return res.json({ status: 'local_fallback', data: localCheckins });
     } catch {
@@ -477,10 +514,18 @@ async function startServer() {
             }
           }
           // Ensure militant collections are mirrored
-          if (combinedData['militancia_militantes_v1'] && !combinedData['militancia_militants_v1']) {
-            combinedData['militancia_militants_v1'] = combinedData['militancia_militantes_v1'];
-          } else if (combinedData['militancia_militants_v1'] && !combinedData['militancia_militantes_v1']) {
-            combinedData['militancia_militantes_v1'] = combinedData['militancia_militants_v1'];
+          const realMilitants = combinedData['militantes_data'] || combinedData['militancia_militantes_v1'] || combinedData['militancia_militants_v1'] || [];
+          if (Array.isArray(realMilitants) && realMilitants.length > 0) {
+            combinedData['militantes_data'] = realMilitants;
+            combinedData['militancia_militants_v1'] = realMilitants;
+            combinedData['militancia_militantes_v1'] = realMilitants;
+          }
+
+          // Ensure van collections are mirrored
+          const realVans = combinedData['vans_data'] || combinedData['militancia_vans_v1'] || [];
+          if (Array.isArray(realVans) && realVans.length > 0) {
+            combinedData['vans_data'] = realVans;
+            combinedData['militancia_vans_v1'] = realVans;
           }
 
           // Persist the merged data into the server vault file

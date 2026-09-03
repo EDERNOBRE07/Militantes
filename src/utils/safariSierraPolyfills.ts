@@ -42,6 +42,70 @@ if (!Promise.allSettled) {
   };
 }
 
+// 3.1 Promise.any polyfill (Safari < 14 - Safari 10/11/12 no macOS Sierra)
+if (!('any' in Promise) || typeof (Promise as any).any !== 'function') {
+  (Promise as any).any = function (promises: Iterable<Promise<any>>) {
+    return new Promise((resolve, reject) => {
+      const arr = Array.from(promises);
+      if (arr.length === 0) {
+        return reject(new Error('All promises were rejected (empty array)'));
+      }
+      let rejections = 0;
+      const errors: any[] = new Array(arr.length);
+      arr.forEach((p, index) => {
+        Promise.resolve(p)
+          .then(resolve)
+          .catch(err => {
+            errors[index] = err;
+            rejections++;
+            if (rejections === arr.length) {
+              reject(new Error('All promises were rejected: ' + errors.map(e => e?.message || e).join(', ')));
+            }
+          });
+      });
+    });
+  };
+}
+
+// 3.2 Array.prototype.flat polyfill (Safari < 12)
+if (!Array.prototype.flat) {
+  Array.prototype.flat = function (depth = 1) {
+    const flatten = (arr: any[], d: number): any[] => {
+      return d > 0
+        ? arr.reduce((acc, val) => acc.concat(Array.isArray(val) ? flatten(val, d - 1) : val), [])
+        : arr.slice();
+    };
+    return flatten(this as any[], depth) as any;
+  };
+}
+
+// 3.3 String.prototype.replaceAll polyfill (Safari < 13.1)
+if (!String.prototype.replaceAll) {
+  String.prototype.replaceAll = function (str: any, newStr: any) {
+    if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
+      return this.replace(str, newStr);
+    }
+    return this.replace(new RegExp(String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), newStr);
+  };
+}
+
+// 3.4 AbortController polyfill (Safari < 11.1)
+if (typeof window !== 'undefined' && typeof (window as any).AbortController === 'undefined') {
+  class SimpleAbortSignal {
+    aborted = false;
+    addEventListener() {}
+    removeEventListener() {}
+  }
+  class SimpleAbortController {
+    signal = new SimpleAbortSignal();
+    abort() {
+      this.signal.aborted = true;
+    }
+  }
+  (window as any).AbortController = SimpleAbortController;
+  (window as any).AbortSignal = SimpleAbortSignal;
+}
+
 // 4. ResizeObserver polyfill (Safari < 13.1 - Essencial para Recharts / Leaflet)
 if (typeof window !== 'undefined' && !window.ResizeObserver) {
   class LegacyResizeObserver {
@@ -125,7 +189,30 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// 6. Detecção do Safari no macOS Sierra para diagnóstico
+// 6. Blindagem para LocalStorage no Safari em modo anônimo ou macOS Sierra antigo
+if (typeof window !== 'undefined') {
+  try {
+    const testKey = '__safari_quota_test__';
+    window.localStorage.setItem(testKey, '1');
+    window.localStorage.removeItem(testKey);
+  } catch (storageErr) {
+    console.warn('[Polyfill] LocalStorage restrito no Safari (modo anônimo ou quota rígida). Ativando memória resiliente.');
+    const memoryStore: Record<string, string> = {};
+    const mockStorage = {
+      getItem: (key: string) => (key in memoryStore ? memoryStore[key] : null),
+      setItem: (key: string, val: string) => { memoryStore[key] = String(val); },
+      removeItem: (key: string) => { delete memoryStore[key]; },
+      clear: () => { Object.keys(memoryStore).forEach(k => delete memoryStore[k]); },
+      key: (i: number) => Object.keys(memoryStore)[i] ?? null,
+      get length() { return Object.keys(memoryStore).length; }
+    };
+    try {
+      Object.defineProperty(window, 'localStorage', { value: mockStorage, configurable: true });
+    } catch {}
+  }
+}
+
+// 7. Detecção do Safari no macOS Sierra para diagnóstico
 export function detectLegacySafariSierra(): { isLegacySafari: boolean; isSierra: boolean; osInfo: string } {
   if (typeof window === 'undefined' || !navigator) {
     return { isLegacySafari: false, isSierra: false, osInfo: '' };

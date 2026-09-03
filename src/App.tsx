@@ -37,6 +37,12 @@ export default function App() {
     // Fetch latest remote state from Hostinger MySQL on startup
     StorageService.fetchRemoteState(true).then(() => {
       reloadData();
+      // Se tiver menos de 60 check-ins no cache local, restaura automaticamente o banco completo da Hostinger
+      if (StorageService.getCheckIns().length < 60) {
+        StorageService.restoreFromHostingerCloud().then(() => {
+          reloadData();
+        });
+      }
     });
 
     const handleDataUpdated = () => {

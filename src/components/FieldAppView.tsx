@@ -217,14 +217,14 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   const handleRestoreServerData = async () => {
     setIsRestoringServer(true);
     try {
-      await StorageService.fetchRemoteState(true);
+      const result = await StorageService.restoreFromHostingerCloud();
       const allNow = StorageService.getCheckIns();
       setAllCheckIns(allNow);
       onCheckInCreated();
       setFeedbackMsg({
-        text: `✓ Dados Recuperados da Nuvem!`,
-        destination: `MySQL Hostinger u844537895_Militantes + Cofre Central`,
-        details: `${allNow.length} ruas e check-ins integrados com sucesso. Nenhum dado foi perdido.`
+        text: `✓ ${result.checkinsCount} Ruas & Check-ins Recuperados!`,
+        destination: `MySQL Hostinger u844537895_Militantes (${result.militantsCount} militantes, ${result.vansCount} vans)`,
+        details: result.message
       });
     } catch (err: any) {
       setFeedbackMsg({

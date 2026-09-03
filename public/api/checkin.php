@@ -1,4 +1,14 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 require_once __DIR__ . '/db.php';
 
 $pdo = getDbConnection();
@@ -295,27 +305,52 @@ if ($method === 'POST') {
 } elseif ($method === 'GET') {
     if ($pdo) {
         try {
-            $stmt = $pdo->query("SELECT * FROM checkins_ruas ORDER BY timestamp_checkin DESC LIMIT 200");
+            $stmt = $pdo->query("SELECT * FROM checkins_ruas ORDER BY timestamp_checkin DESC LIMIT 1000");
             $rows = $stmt->fetchAll();
             echo json_encode([
                 'status' => 'success',
                 'count' => count($rows),
+                'database' => 'u844537895_Militantes',
+                'table' => 'checkins_ruas',
                 'data' => $rows
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             exit;
         } catch (Exception $e) {
+            // Em caso de erro, tenta o cofre local em disco
+            $diskVaultPath = __DIR__ . '/data_server_vault.json';
+            $fallbackRows = [];
+            if (file_exists($diskVaultPath)) {
+                $raw = file_get_contents($diskVaultPath);
+                $disk = $raw ? json_decode($raw, true) : null;
+                if ($disk && isset($disk['militancia_checkins_v1']) && is_array($disk['militancia_checkins_v1'])) {
+                    $fallbackRows = $disk['militancia_checkins_v1'];
+                }
+            }
             echo json_encode([
-                'status' => 'error',
+                'status' => 'partial_success',
+                'source' => 'disk_vault_fallback',
                 'message' => $e->getMessage(),
-                'data' => []
-            ]);
+                'count' => count($fallbackRows),
+                'data' => $fallbackRows
+            ], JSON_UNESCAPED_UNICODE);
             exit;
         }
     } else {
+        $diskVaultPath = __DIR__ . '/data_server_vault.json';
+        $fallbackRows = [];
+        if (file_exists($diskVaultPath)) {
+            $raw = file_get_contents($diskVaultPath);
+            $disk = $raw ? json_decode($raw, true) : null;
+            if ($disk && isset($disk['militancia_checkins_v1']) && is_array($disk['militancia_checkins_v1'])) {
+                $fallbackRows = $disk['militancia_checkins_v1'];
+            }
+        }
         echo json_encode([
             'status' => 'success',
-            'data' => []
-        ]);
+            'source' => 'disk_vault',
+            'count' => count($fallbackRows),
+            'data' => $fallbackRows
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }
