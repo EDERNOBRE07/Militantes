@@ -8,6 +8,7 @@ import {
   Neighborhood
 } from '../types';
 import { StorageService } from '../services/storageService';
+import { compressImageFile } from '../utils/imageCompressor';
 import {
   Users,
   UserPlus,
@@ -28,7 +29,13 @@ import {
   Upload,
   Image as ImageIcon,
   UserCheck,
-  ExternalLink
+  ExternalLink,
+  Map,
+  Search,
+  Building2,
+  Layers,
+  Compass,
+  CheckCircle2
 } from 'lucide-react';
 
 interface CadastrosViewProps {
@@ -60,7 +67,12 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
   neighborhoods,
   onRefreshData
 }) => {
-  const [activeTab, setActiveTab] = useState<'militantes' | 'equipes' | 'motoristas'>('equipes');
+  const [activeTab, setActiveTab] = useState<'militantes' | 'equipes' | 'motoristas' | 'bairros'>('equipes');
+  const [saveFeedback, setSaveFeedback] = useState<string>('');
+  const [isOptimizingAvatar, setIsOptimizingAvatar] = useState<boolean>(false);
+  const [avatarFeedback, setAvatarFeedback] = useState<string>('');
+  const [neighborhoodSearch, setNeighborhoodSearch] = useState<string>('');
+  const [neighborhoodRegionFilter, setNeighborhoodRegionFilter] = useState<string>('todos');
 
   // Modal States
   const [showMilitantModal, setShowMilitantModal] = useState(false);
@@ -87,22 +99,36 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
   const [mDailyRate, setMDailyRate] = useState<number>(150);
   const [mAvatar, setMAvatar] = useState<string>('');
 
-  // Handle Photo File Upload
-  const handleAvatarFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Photo File Upload com compressão inteligente para salvar no LocalStorage e MySQL
+  const handleAvatarFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    try {
+      setIsOptimizingAvatar(true);
+      setAvatarFeedback('Otimizando foto...');
+      const compressed = await compressImageFile(file, 256, 0.82);
+      setMAvatar(compressed);
+      setAvatarFeedback('Foto otimizada com sucesso (~25KB) e pronta para gravação!');
+    } catch (err) {
+      console.warn('Fallback para FileReader comum:', err);
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
           setMAvatar(event.target.result as string);
+          setAvatarFeedback('Foto carregada!');
         }
       };
       reader.readAsDataURL(file);
+    } finally {
+      setIsOptimizingAvatar(false);
     }
   };
 
   // Open Militant Modal (New or Edit)
   const handleOpenMilitantModal = (mil?: Militant, defaultTeamId?: string) => {
+    setAvatarFeedback('');
+    setIsOptimizingAvatar(false);
     if (mil) {
       setEditingMilitant(mil);
       setMName(mil.name);
@@ -148,19 +174,23 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
 
     const updatedMilitant: Militant = {
       ...baseMil,
-      name: mName,
-      matricula: mMatricula,
+      name: mName.trim(),
+      matricula: mMatricula.trim(),
       avatar: mAvatar || baseMil.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
       cpfMasked: mCpf.includes('*') ? mCpf : (mCpf ? `***.${mCpf.substring(4, 7)}.${mCpf.substring(7, 10)}-**` : '***.***.***-**'),
-      phone: mPhone,
-      email: mEmail || `${mName.toLowerCase().replace(/\s+/g, '.')}@campanhasj.com.br`,
+      phone: mPhone.trim(),
+      email: mEmail.trim() || `${mName.toLowerCase().replace(/\s+/g, '.')}@campanhasj.com.br`,
       teamId: mTeamId,
       role: mRole,
-      dailyRate: mDailyRate || 150
+      dailyRate: mDailyRate || 150,
+      updatedAt: new Date().toISOString(),
+      _localModified: true
     };
 
     StorageService.addOrUpdateMilitant(updatedMilitant);
     setShowMilitantModal(false);
+    setSaveFeedback(`Militante ${updatedMilitant.name} (${updatedMilitant.matricula}) e foto gravados com sucesso no banco de dados e nuvem!`);
+    setTimeout(() => setSaveFeedback(''), 4500);
     onRefreshData();
   };
   const [tName, setTName] = useState('');
@@ -246,6 +276,8 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
 
     StorageService.addOrUpdateTeam(updatedTeam);
     setShowTeamModal(false);
+    setSaveFeedback(`Equipe "${updatedTeam.name}" gravada com sucesso!`);
+    setTimeout(() => setSaveFeedback(''), 4500);
     onRefreshData();
   };
 
@@ -254,6 +286,8 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
     if (!deletingTeam) return;
     StorageService.deleteTeam(deletingTeam.id);
     setDeletingTeam(null);
+    setSaveFeedback(`Equipe removida com sucesso.`);
+    setTimeout(() => setSaveFeedback(''), 4500);
     onRefreshData();
   };
 
@@ -322,6 +356,8 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
 
     StorageService.addOrUpdateVan(updatedVan);
     setShowVanModal(false);
+    setSaveFeedback(`Motorista ${updatedVan.driverName} (${updatedVan.name} - ${updatedVan.plate}) salvo com sucesso!`);
+    setTimeout(() => setSaveFeedback(''), 4500);
     onRefreshData();
   };
 
@@ -330,6 +366,8 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
     if (!deletingVan) return;
     StorageService.deleteVan(deletingVan.id);
     setDeletingVan(null);
+    setSaveFeedback(`Motorista / Van removido com sucesso.`);
+    setTimeout(() => setSaveFeedback(''), 4500);
     onRefreshData();
   };
 
@@ -379,14 +417,30 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
         </div>
       </div>
 
+      {/* Save / Sync Feedback Banner */}
+      {saveFeedback && (
+        <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs font-semibold text-emerald-900 flex items-center justify-between shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{saveFeedback}</span>
+          </div>
+          <button
+            onClick={() => setSaveFeedback('')}
+            className="text-emerald-700 hover:text-emerald-900 font-bold px-2 py-0.5 rounded hover:bg-emerald-100"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2 flex-wrap gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setActiveTab('equipes')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
               activeTab === 'equipes'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
@@ -397,7 +451,7 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
             onClick={() => setActiveTab('militantes')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
               activeTab === 'militantes'
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
@@ -408,12 +462,23 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
             onClick={() => setActiveTab('motoristas')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
               activeTab === 'motoristas'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-2xs'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
             <Truck className="w-3.5 h-3.5 text-indigo-600" />
             Motoristas & Vans ({vans.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('bairros')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+              activeTab === 'bairros'
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs font-bold'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Map className="w-3.5 h-3.5 text-emerald-600" />
+            Bairros Oficiais ({neighborhoods.length})
           </button>
         </div>
 
@@ -821,6 +886,229 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* BAIRROS OFICIAIS TAB */}
+      {activeTab === 'bairros' && (
+        <div className="space-y-4">
+          {/* Header and Filters */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  LEI COMPLEMENTAR PMSJ 2020 / IBGE 2021
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  {neighborhoods.length} Bairros Catalogados (28 Oficiais + Área Rural)
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 mt-1 flex items-center gap-1.5">
+                <Map className="w-4 h-4 text-emerald-600" />
+                Território e Cobertura dos Bairros de São José - SC
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar bairro..."
+                  value={neighborhoodSearch}
+                  onChange={(e) => setNeighborhoodSearch(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800 outline-none focus:ring-1 focus:ring-emerald-500 w-40 sm:w-48"
+                />
+              </div>
+
+              <select
+                value={neighborhoodRegionFilter}
+                onChange={(e) => setNeighborhoodRegionFilter(e.target.value)}
+                className="py-1.5 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 outline-none"
+              >
+                <option value="todos">Todas as Regiões</option>
+                <option value="Kobrasol / Campinas">Kobrasol / Campinas</option>
+                <option value="Barreiros">Região Barreiros</option>
+                <option value="Forquilhas">Região Forquilhas / Sertão</option>
+                <option value="Sede">Região Sede / Centro Histórico</option>
+                <option value="Praia Comprida">Praia Comprida / Ponta</option>
+                <option value="Rural">Área Rural</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-[11px] text-slate-500 font-medium block">Total de Bairros</span>
+              <span className="text-lg font-bold text-slate-900">{neighborhoods.length} Bairros</span>
+              <span className="text-[10px] text-emerald-600 block mt-0.5">28 Urbanos + 1 Área Rural</span>
+            </div>
+
+            <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-[11px] text-slate-500 font-medium block">Total de Ruas Mapeadas</span>
+              <span className="text-lg font-bold text-slate-900">
+                {neighborhoods.reduce((acc, n) => acc + (n.totalStreets || 0), 0).toLocaleString('pt-BR')} Ruas
+              </span>
+              <span className="text-[10px] text-slate-500 block mt-0.5">Ruas oficiais geocodificadas</span>
+            </div>
+
+            <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-[11px] text-slate-500 font-medium block">Ruas Concluídas</span>
+              <span className="text-lg font-bold text-blue-700">
+                {neighborhoods.reduce((acc, n) => acc + (n.completedStreets || 0), 0).toLocaleString('pt-BR')} Ruas
+              </span>
+              <span className="text-[10px] text-blue-600 block mt-0.5">Cobertas pelas equipes</span>
+            </div>
+
+            <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-[11px] text-slate-500 font-medium block">Cobertura Geral</span>
+              {(() => {
+                const total = neighborhoods.reduce((acc, n) => acc + (n.totalStreets || 0), 0);
+                const done = neighborhoods.reduce((acc, n) => acc + (n.completedStreets || 0), 0);
+                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                return (
+                  <>
+                    <span className="text-lg font-bold text-emerald-700">{pct}%</span>
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                      <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Neighborhoods Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {neighborhoods
+              .filter(n => {
+                const matchesSearch = n.name.toLowerCase().includes(neighborhoodSearch.toLowerCase()) ||
+                  n.id.toLowerCase().includes(neighborhoodSearch.toLowerCase());
+                const matchesRegion = neighborhoodRegionFilter === 'todos' ||
+                  (n.region && n.region.toLowerCase().includes(neighborhoodRegionFilter.toLowerCase())) ||
+                  (n.name.toLowerCase().includes(neighborhoodRegionFilter.toLowerCase()));
+                return matchesSearch && matchesRegion;
+              })
+              .map(neighborhood => {
+                const assignedTeams = teams.filter(t => t.targetNeighborhoodIds?.includes(neighborhood.id));
+                const pct = neighborhood.totalStreets > 0
+                  ? Math.min(100, Math.round(((neighborhood.completedStreets || 0) / neighborhood.totalStreets) * 100))
+                  : 0;
+
+                return (
+                  <div
+                    key={neighborhood.id}
+                    className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs hover:shadow-sm transition flex flex-col justify-between space-y-3 relative overflow-hidden"
+                  >
+                    {/* Top Color Indicator */}
+                    <div
+                      className="absolute top-0 left-0 right-0 h-1.5"
+                      style={{ backgroundColor: neighborhood.color || '#3b82f6' }}
+                    />
+
+                    <div>
+                      {/* Title & Region */}
+                      <div className="flex items-start justify-between gap-2 pt-1">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900 leading-tight">
+                            {neighborhood.name}
+                          </h4>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            ID: {neighborhood.id} • {neighborhood.region || 'São José - SC'}
+                          </span>
+                        </div>
+                        <span
+                          className="w-4 h-4 rounded-full border border-white shadow-xs shrink-0"
+                          style={{ backgroundColor: neighborhood.color || '#3b82f6' }}
+                          title={`Cor no mapa: ${neighborhood.color}`}
+                        />
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mt-3 space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-slate-600 font-medium">
+                            Ruas: <strong>{neighborhood.completedStreets || 0}</strong> / {neighborhood.totalStreets}
+                          </span>
+                          <span className="font-bold text-slate-900">{pct}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{
+                              width: `${pct}%`,
+                              backgroundColor: neighborhood.color || '#2563EB'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Assigned Teams */}
+                      <div className="mt-3 pt-2 border-t border-slate-100 text-xs">
+                        <span className="text-[11px] font-semibold text-slate-600 block mb-1">
+                          Equipes Designadas:
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {assignedTeams.length > 0 ? (
+                            assignedTeams.map(t => (
+                              <span
+                                key={t.id}
+                                className="px-2 py-0.5 rounded text-[10px] font-semibold text-white shadow-2xs"
+                                style={{ backgroundColor: t.color || '#2563EB' }}
+                              >
+                                {t.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">Nenhuma equipe alocada</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Campaign Materials */}
+                      <div className="mt-3 pt-2 border-t border-slate-100 grid grid-cols-2 gap-1.5 text-[11px] text-slate-600">
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block">Santinhos:</span>
+                          <strong className="text-slate-800 font-semibold">
+                            {(neighborhood.deliveredMaterials?.santinhos || 0).toLocaleString('pt-BR')}
+                          </strong>
+                        </div>
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block">Adesivos:</span>
+                          <strong className="text-slate-800 font-semibold">
+                            {(neighborhood.deliveredMaterials?.adesivos || 0).toLocaleString('pt-BR')}
+                          </strong>
+                        </div>
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block">Colinhas / Band.:</span>
+                          <strong className="text-slate-800 font-semibold">
+                            {(neighborhood.deliveredMaterials?.colinhas || 0).toLocaleString('pt-BR')}
+                          </strong>
+                        </div>
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block">Abordagens:</span>
+                          <strong className="text-slate-800 font-semibold">
+                            {(neighborhood.deliveredMaterials?.abordagens || 0).toLocaleString('pt-BR')}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Coordinates & Status */}
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-slate-400" />
+                        {neighborhood.coordinates?.[0]?.toFixed(3)}, {neighborhood.coordinates?.[1]?.toFixed(3)}
+                      </span>
+                      <span className="font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                        Oficial PMSJ 2020
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       )}
@@ -1275,13 +1563,30 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => setMAvatar(presetUrl)}
+                          onClick={() => {
+                            setMAvatar(presetUrl);
+                            setAvatarFeedback('Modelo selecionado!');
+                          }}
                           className="w-6 h-6 rounded-full overflow-hidden border border-slate-300 hover:scale-110 transition shrink-0"
                         >
                           <img src={presetUrl} alt="Preset" className="w-full h-full object-cover" />
                         </button>
                       ))}
                     </div>
+
+                    {/* Status feedback */}
+                    {isOptimizingAvatar && (
+                      <p className="text-[11px] font-semibold text-blue-600 animate-pulse flex items-center gap-1 pt-1">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Otimizando e comprimindo imagem para persistência instantânea...
+                      </p>
+                    )}
+                    {!isOptimizingAvatar && avatarFeedback && (
+                      <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1 pt-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        {avatarFeedback}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

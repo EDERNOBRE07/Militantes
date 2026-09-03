@@ -29,6 +29,9 @@ export interface Neighborhood {
   id: string;
   name: string;
   zone: 'Distrito Sede' | 'Distrito Barreiros' | 'Distrito Forquilhinhas' | 'Distrito Forquilhinha' | 'Distrito Campinas';
+  region?: string;
+  color?: string;
+  coordinates?: [number, number];
   population: number; // IBGE 2022 Census
   households: number; // Domicílios
   votersEstimated: number; // Eleitores estimados
@@ -69,6 +72,8 @@ export interface Militant {
   weeklyGoalPercentage: number;
   batteryLevel?: number;
   dailyRate?: number; // R$ valor da diária definido no cadastro
+  updatedAt?: string;
+  _localModified?: boolean;
 }
 
 export interface Team {
@@ -83,6 +88,8 @@ export interface Team {
   dailyProgressPct: number;
   totalMaterialsDelivered: number;
   status: 'em_campo' | 'em_transito' | 'descanso' | 'planejamento';
+  updatedAt?: string;
+  _localModified?: boolean;
 }
 
 export interface Van {
@@ -98,6 +105,8 @@ export interface Van {
   currentCoords: { lat: number; lng: number; lastUpdate: string };
   nextPickupLocation: string;
   nextPickupTime: string;
+  updatedAt?: string;
+  _localModified?: boolean;
 }
 
 export interface StreetCheckIn {

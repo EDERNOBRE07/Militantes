@@ -458,7 +458,7 @@ export class StorageService {
                 if (item && item.id) itemMap.set(String(item.id), item);
               });
 
-              // 2. Preserva itens locais não presentes remotamente e mescla
+              // 2. Preserva itens locais não presentes remotamente e mescla com inteligência temporal
               localArr.forEach(item => {
                 if (item && item.id) {
                   const idStr = String(item.id);
@@ -466,16 +466,26 @@ export class StorageService {
                   if (!rem) {
                     itemMap.set(idStr, item);
                   } else {
-                    // Se k for militantes, preserva estatísticas não-nulas
+                    const localUpdated = item.updatedAt ? new Date(item.updatedAt).getTime() : 0;
+                    const remoteUpdated = rem.updatedAt ? new Date(rem.updatedAt).getTime() : 0;
+                    const isLocalNewer = !!item._localModified || (localUpdated > remoteUpdated);
+
+                    // Se k for militantes, preserva fotos personalizadas e estatísticas acumuladas
                     if (k === STORAGE_KEYS.MILITANTS) {
+                      const baseObj = isLocalNewer ? { ...rem, ...item } : { ...item, ...rem };
+                      
+                      // Proteção essencial: nunca sobrescrever avatar local com placeholder se o usuário trocou a foto
+                      if (item.avatar && (item.avatar.startsWith('data:image') || (!rem.avatar || rem.avatar.includes('photo-1535713875002')))) {
+                        baseObj.avatar = item.avatar;
+                      }
+
                       const remStreets = rem.totalStreetsCovered || 0;
                       const locStreets = item.totalStreetsCovered || 0;
                       const remKm = rem.totalKmWalked || 0;
                       const locKm = item.totalKmWalked || 0;
 
                       itemMap.set(idStr, {
-                        ...item,
-                        ...rem,
+                        ...baseObj,
                         totalStreetsCovered: Math.max(remStreets, locStreets),
                         totalKmWalked: Math.max(remKm, locKm),
                         deliveredMaterials: {
@@ -489,11 +499,45 @@ export class StorageService {
                         }
                       });
                     } else {
-                      itemMap.set(idStr, { ...item, ...rem });
+                      itemMap.set(idStr, isLocalNewer ? { ...rem, ...item } : { ...item, ...rem });
                     }
                   }
                 }
               });
+
+              // Garantia incondicional dos 28 bairros oficiais de São José (PMSJ 2020) + Área Rural (29 itens)
+              if (k === STORAGE_KEYS.NEIGHBORHOODS) {
+                INITIAL_NEIGHBORHOODS.forEach(official => {
+                  const existing = itemMap.get(official.id) || Array.from(itemMap.values()).find(
+                    n => n.name && n.name.toLowerCase().trim() === official.name.toLowerCase().trim()
+                  );
+                  if (!existing) {
+                    itemMap.set(official.id, official);
+                  } else {
+                    itemMap.set(official.id, {
+                      ...official,
+                      completedStreets: Math.max(existing.completedStreets || 0, official.completedStreets || 0),
+                      deliveredMaterials: {
+                        santinhos: Math.max(existing.deliveredMaterials?.santinhos || 0, official.deliveredMaterials?.santinhos || 0),
+                        adesivos: Math.max(existing.deliveredMaterials?.adesivos || 0, official.deliveredMaterials?.adesivos || 0),
+                        adesivo_bola: Math.max(existing.deliveredMaterials?.adesivo_bola || 0, official.deliveredMaterials?.adesivo_bola || 0),
+                        adesivo_parachoque: Math.max(existing.deliveredMaterials?.adesivo_parachoque || 0, official.deliveredMaterials?.adesivo_parachoque || 0),
+                        colinhas: Math.max(existing.deliveredMaterials?.colinhas || 0, official.deliveredMaterials?.colinhas || 0),
+                        abordagens: Math.max(existing.deliveredMaterials?.abordagens || 0, official.deliveredMaterials?.abordagens || 0),
+                        comercio: Math.max(existing.deliveredMaterials?.comercio || 0, official.deliveredMaterials?.comercio || 0)
+                      },
+                      assignedTeamId: existing.assignedTeamId || official.assignedTeamId
+                    });
+                  }
+                });
+
+                // Se o servidor remoto tinha menos de 28 bairros, sincroniza imediatamente a lista completa oficial
+                if (remoteArr.length < INITIAL_NEIGHBORHOODS.length) {
+                  setTimeout(() => {
+                    this.pushEntityToRemote(STORAGE_KEYS.NEIGHBORHOODS, Array.from(itemMap.values()));
+                  }, 800);
+                }
+              }
 
               const mergedArr = Array.from(itemMap.values());
               const currentVal = localStorage.getItem(k);
@@ -2121,16 +2165,23 @@ export class StorageService {
     const neighborhoods = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
     const militants = this.getMilitants();
 
-    // 1. Recalcula bairros a partir dos check-ins
-    const updatedNeighborhoods = neighborhoods.map(n => {
+    // 1. Recalcula bairros a partir dos check-ins garantindo sempre os 28 bairros oficiais + Área Rural
+    const rawNeighborhoods = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
+    const updatedNeighborhoods = INITIAL_NEIGHBORHOODS.map(official => {
+      const existing = (rawNeighborhoods || []).find(n => 
+        n.id === official.id || 
+        (official.id === 'forquilhinha' && n.id === 'forquilhinhas') ||
+        (n.name && n.name.toLowerCase().trim() === official.name.toLowerCase().trim())
+      );
+
       const nCheckins = checkins.filter(c => 
-        c.neighborhoodId === n.id || 
-        (n.id === 'forquilhinha' && c.neighborhoodId === 'forquilhinhas') ||
-        (n.id === 'forquilhas' && c.neighborhoodId === 'forquilhas') ||
-        (c.neighborhoodName && c.neighborhoodName.toLowerCase().trim() === n.name.toLowerCase().trim())
+        c.neighborhoodId === official.id || 
+        (official.id === 'forquilhinha' && c.neighborhoodId === 'forquilhinhas') ||
+        (official.id === 'forquilhas' && c.neighborhoodId === 'forquilhas') ||
+        (c.neighborhoodName && c.neighborhoodName.toLowerCase().trim() === official.name.toLowerCase().trim())
       );
       const uniqueStreets = new Set(nCheckins.map(c => (c.streetName || '').toLowerCase().trim())).size;
-      const completedCount = Math.min(n.totalStreets, Math.max(n.completedStreets || 0, uniqueStreets, nCheckins.length));
+      const completedCount = Math.min(official.totalStreets, Math.max(existing?.completedStreets || 0, uniqueStreets, nCheckins.length));
 
       const santinhosSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.santinhos || 0), 0);
       const adesivosSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.adesivos || 0), 0);
@@ -2141,16 +2192,17 @@ export class StorageService {
       const comercioSum = nCheckins.reduce((sum, c) => sum + (c.materialsDelivered?.comercio || 0), 0);
 
       return {
-        ...n,
+        ...official,
         completedStreets: completedCount,
+        assignedTeamId: existing?.assignedTeamId || official.assignedTeamId,
         deliveredMaterials: {
-          santinhos: Math.max(n.deliveredMaterials?.santinhos || 0, santinhosSum),
-          adesivos: Math.max(n.deliveredMaterials?.adesivos || 0, adesivosSum),
-          adesivo_bola: Math.max(n.deliveredMaterials?.adesivo_bola || 0, adesivoBolaSum),
-          adesivo_parachoque: Math.max(n.deliveredMaterials?.adesivo_parachoque || 0, adesivoParachoqueSum),
-          colinhas: Math.max(n.deliveredMaterials?.colinhas || 0, colinhasSum),
-          abordagens: Math.max(n.deliveredMaterials?.abordagens || 0, abordagensSum),
-          comercio: Math.max(n.deliveredMaterials?.comercio || 0, comercioSum)
+          santinhos: Math.max(existing?.deliveredMaterials?.santinhos || 0, official.deliveredMaterials?.santinhos || 0, santinhosSum),
+          adesivos: Math.max(existing?.deliveredMaterials?.adesivos || 0, official.deliveredMaterials?.adesivos || 0, adesivosSum),
+          adesivo_bola: Math.max(existing?.deliveredMaterials?.adesivo_bola || 0, official.deliveredMaterials?.adesivo_bola || 0, adesivoBolaSum),
+          adesivo_parachoque: Math.max(existing?.deliveredMaterials?.adesivo_parachoque || 0, official.deliveredMaterials?.adesivo_parachoque || 0, adesivoParachoqueSum),
+          colinhas: Math.max(existing?.deliveredMaterials?.colinhas || 0, official.deliveredMaterials?.colinhas || 0, colinhasSum),
+          abordagens: Math.max(existing?.deliveredMaterials?.abordagens || 0, official.deliveredMaterials?.abordagens || 0, abordagensSum),
+          comercio: Math.max(existing?.deliveredMaterials?.comercio || 0, official.deliveredMaterials?.comercio || 0, comercioSum)
         }
       };
     });
@@ -2194,51 +2246,38 @@ export class StorageService {
 
   // Neighborhoods
   static getNeighborhoods(): Neighborhood[] {
-    let list = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
+    const rawList = this.get<Neighborhood[]>(STORAGE_KEYS.NEIGHBORHOODS, INITIAL_NEIGHBORHOODS);
 
-    // Assegura que todos os 28 bairros oficiais (PMSJ 2020 / IFSC / IBGE 2021) existam com seus polígonos exatos
-    const hasAltoForquilhas = list.some(n => n.id === 'alto_forquilhas');
-    const hasSantiago = list.some(n => n.id === 'jardim_santiago');
-    const hasJardimFpolis = list.some(n => n.id === 'jardim_cidade_de_florianopolis');
-    const hasRosario = list.some(n => n.id === 'nossa_senhora_do_rosario');
-    const hasSaoLuiz = list.some(n => n.id === 'sao_luiz');
-    const hasAreaRural = list.some(n => n.id === 'area_rural');
-    const isOldCount = list.length < INITIAL_NEIGHBORHOODS.length;
+    // Assegura incondicionalmente todos os 28 bairros oficiais (PMSJ 2020) + Área Rural (29 itens)
+    const list: Neighborhood[] = INITIAL_NEIGHBORHOODS.map(official => {
+      const existing = (rawList || []).find(n => 
+        n.id === official.id || 
+        (official.id === 'forquilhinha' && n.id === 'forquilhinhas') ||
+        (n.name && n.name.toLowerCase().trim() === official.name.toLowerCase().trim())
+      );
+      if (existing) {
+        return {
+          ...official,
+          completedStreets: Math.max(existing.completedStreets || 0, official.completedStreets || 0),
+          deliveredMaterials: {
+            santinhos: Math.max(existing.deliveredMaterials?.santinhos || 0, official.deliveredMaterials?.santinhos || 0),
+            adesivos: Math.max(existing.deliveredMaterials?.adesivos || 0, official.deliveredMaterials?.adesivos || 0),
+            adesivo_bola: Math.max(existing.deliveredMaterials?.adesivo_bola || 0, official.deliveredMaterials?.adesivo_bola || 0),
+            adesivo_parachoque: Math.max(existing.deliveredMaterials?.adesivo_parachoque || 0, official.deliveredMaterials?.adesivo_parachoque || 0),
+            colinhas: Math.max(existing.deliveredMaterials?.colinhas || 0, official.deliveredMaterials?.colinhas || 0),
+            abordagens: Math.max(existing.deliveredMaterials?.abordagens || 0, official.deliveredMaterials?.abordagens || 0),
+            comercio: Math.max(existing.deliveredMaterials?.comercio || 0, official.deliveredMaterials?.comercio || 0)
+          },
+          assignedTeamId: existing.assignedTeamId || official.assignedTeamId
+        };
+      }
+      return official;
+    });
 
-    if (!hasAltoForquilhas || !hasSantiago || !hasJardimFpolis || !hasRosario || !hasSaoLuiz || !hasAreaRural || isOldCount) {
-      list = INITIAL_NEIGHBORHOODS.map(official => {
-        const existing = list.find(n => 
-          n.id === official.id || 
-          (official.id === 'forquilhinha' && n.id === 'forquilhinhas') ||
-          n.name.toLowerCase() === official.name.toLowerCase()
-        );
-        if (existing) {
-          return {
-            ...official, // Preserva e atualiza polígonos oficiais, cores do mapa oficial e coordenadas
-            completedStreets: Math.max(existing.completedStreets || 0, official.completedStreets || 0),
-            deliveredMaterials: {
-              santinhos: Math.max(existing.deliveredMaterials?.santinhos || 0, official.deliveredMaterials?.santinhos || 0),
-              adesivos: Math.max(existing.deliveredMaterials?.adesivos || 0, official.deliveredMaterials?.adesivos || 0),
-              adesivo_bola: Math.max(existing.deliveredMaterials?.adesivo_bola || 0, official.deliveredMaterials?.adesivo_bola || 0),
-              adesivo_parachoque: Math.max(existing.deliveredMaterials?.adesivo_parachoque || 0, official.deliveredMaterials?.adesivo_parachoque || 0),
-              colinhas: Math.max(existing.deliveredMaterials?.colinhas || 0, official.deliveredMaterials?.colinhas || 0),
-              abordagens: Math.max(existing.deliveredMaterials?.abordagens || 0, official.deliveredMaterials?.abordagens || 0),
-              comercio: Math.max(existing.deliveredMaterials?.comercio || 0, official.deliveredMaterials?.comercio || 0)
-            },
-            assignedTeamId: existing.assignedTeamId || official.assignedTeamId
-          };
-        }
-        return official;
-      });
-      this.set(STORAGE_KEYS.NEIGHBORHOODS, list);
+    if (!rawList || rawList.length < INITIAL_NEIGHBORHOODS.length) {
+      this.set(STORAGE_KEYS.NEIGHBORHOODS, list, true);
     }
 
-    const checkins = this.getCheckIns();
-    const totalCompleted = list.reduce((sum, n) => sum + (n.completedStreets || 0), 0);
-    if (checkins.length > 0 && totalCompleted === 0) {
-      const recalculated = this.recalculateAllStatsFromCheckins(checkins);
-      return recalculated.neighborhoods;
-    }
     return list;
   }
 
@@ -2269,19 +2308,55 @@ export class StorageService {
   static addOrUpdateMilitant(militant: Militant): void {
     const list = this.getMilitants();
     const idx = list.findIndex(m => m.id === militant.id);
+    const updatedMil: Militant = {
+      ...militant,
+      updatedAt: militant.updatedAt || new Date().toISOString(),
+      _localModified: true
+    };
+
     if (idx !== -1) {
-      list[idx] = militant;
+      list[idx] = updatedMil;
     } else {
-      list.push(militant);
+      list.push(updatedMil);
     }
-    this.set(STORAGE_KEYS.MILITANTS, list);
+
+    // Grava de forma segura tanto no LocalStorage quanto no IndexedDB Vault
+    this.set(STORAGE_KEYS.MILITANTS, list, true);
+    this.safeLocalStorageSet('militantes_data', list);
+    vaultStorage.setItem('militantes_data', list).catch(() => {});
+
+    // Envia imediatamente para o servidor MySQL Hostinger
+    this.pushEntityToRemote(STORAGE_KEYS.MILITANTS, list);
+    this.pushEntityToRemote('militantes_data', list);
+
+    const user = this.getCurrentUser();
+    this.logAudit(
+      user,
+      idx !== -1 ? 'EDICAO_MILITANTE' : 'CADASTRO_MILITANTE',
+      'CADASTROS',
+      `Militante ${militant.name} (${militant.matricula}) ${idx !== -1 ? 'atualizado' : 'cadastrado'} com sucesso.`
+    );
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
   }
 
   static deleteMilitant(militantId: string): void {
     const list = this.getMilitants().filter(m => m.id !== militantId);
-    this.set(STORAGE_KEYS.MILITANTS, list);
+    this.set(STORAGE_KEYS.MILITANTS, list, true);
+    this.safeLocalStorageSet('militantes_data', list);
+    vaultStorage.setItem('militantes_data', list).catch(() => {});
+
+    this.pushEntityToRemote(STORAGE_KEYS.MILITANTS, list);
+    this.pushEntityToRemote('militantes_data', list);
+
     const user = this.getCurrentUser();
     this.logAudit(user, 'EXCLUSAO_MILITANTE', 'CADASTROS', `Militante ${militantId} excluído do sistema.`);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
   }
 
   // Teams
@@ -2292,15 +2367,25 @@ export class StorageService {
   static addOrUpdateTeam(team: Team): void {
     const list = this.getTeams();
     const idx = list.findIndex(t => t.id === team.id);
+    const updatedTeam: Team = {
+      ...team,
+      updatedAt: team.updatedAt || new Date().toISOString(),
+      _localModified: true
+    };
     const user = this.getCurrentUser();
     if (idx !== -1) {
-      list[idx] = team;
+      list[idx] = updatedTeam;
       this.logAudit(user, 'EDICAO_EQUIPE', 'CADASTROS', `Equipe "${team.name}" atualizada.`);
     } else {
-      list.push(team);
+      list.push(updatedTeam);
       this.logAudit(user, 'INCLUSAO_EQUIPE', 'CADASTROS', `Nova equipe "${team.name}" cadastrada.`);
     }
-    this.set(STORAGE_KEYS.TEAMS, list);
+    this.set(STORAGE_KEYS.TEAMS, list, true);
+    this.pushEntityToRemote(STORAGE_KEYS.TEAMS, list);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
   }
 
   static updateTeam(team: Team): void {
@@ -2311,7 +2396,8 @@ export class StorageService {
     const list = this.getTeams();
     const targetTeam = list.find(t => t.id === teamId);
     const updatedList = list.filter(t => t.id !== teamId);
-    this.set(STORAGE_KEYS.TEAMS, updatedList);
+    this.set(STORAGE_KEYS.TEAMS, updatedList, true);
+    this.pushEntityToRemote(STORAGE_KEYS.TEAMS, updatedList);
 
     // Unassign or adjust militants that belonged to this deleted team
     const militants = this.getMilitants();
@@ -2323,11 +2409,16 @@ export class StorageService {
       }
     });
     if (militantsChanged) {
-      this.set(STORAGE_KEYS.MILITANTS, militants);
+      this.set(STORAGE_KEYS.MILITANTS, militants, true);
+      this.pushEntityToRemote(STORAGE_KEYS.MILITANTS, militants);
     }
 
     const user = this.getCurrentUser();
     this.logAudit(user, 'EXCLUSAO_EQUIPE', 'CADASTROS', `Equipe "${targetTeam?.name || teamId}" foi excluída do sistema.`);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
   }
 
   // Vans
@@ -2338,15 +2429,29 @@ export class StorageService {
   static addOrUpdateVan(van: Van): void {
     const list = this.getVans();
     const idx = list.findIndex(v => v.id === van.id);
+    const updatedVan: Van = {
+      ...van,
+      updatedAt: van.updatedAt || new Date().toISOString(),
+      _localModified: true
+    };
     const user = this.getCurrentUser();
     if (idx !== -1) {
-      list[idx] = van;
+      list[idx] = updatedVan;
       this.logAudit(user, 'EDICAO_MOTORISTA_VAN', 'CADASTROS', `Dados da van/motorista "${van.name}" (${van.driverName} - ${van.plate}) atualizados.`);
     } else {
-      list.push(van);
+      list.push(updatedVan);
       this.logAudit(user, 'INCLUSAO_MOTORISTA_VAN', 'CADASTROS', `Nova van cadastrada com motorista "${van.driverName}" (${van.plate} - ${van.name}).`);
     }
-    this.set(STORAGE_KEYS.VANS, list);
+    this.set(STORAGE_KEYS.VANS, list, true);
+    this.safeLocalStorageSet('vans_data', list);
+    vaultStorage.setItem('vans_data', list).catch(() => {});
+
+    this.pushEntityToRemote(STORAGE_KEYS.VANS, list);
+    this.pushEntityToRemote('vans_data', list);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
   }
 
   static updateVan(van: Van): void {
@@ -2357,7 +2462,12 @@ export class StorageService {
     const list = this.getVans();
     const targetVan = list.find(v => v.id === vanId);
     const updatedList = list.filter(v => v.id !== vanId);
-    this.set(STORAGE_KEYS.VANS, updatedList);
+    this.set(STORAGE_KEYS.VANS, updatedList, true);
+    this.safeLocalStorageSet('vans_data', updatedList);
+    vaultStorage.setItem('vans_data', updatedList).catch(() => {});
+
+    this.pushEntityToRemote(STORAGE_KEYS.VANS, updatedList);
+    this.pushEntityToRemote('vans_data', updatedList);
 
     // Unassign teams assigned to this van
     const teams = this.getTeams();
@@ -2369,11 +2479,16 @@ export class StorageService {
       }
     });
     if (teamsChanged) {
-      this.set(STORAGE_KEYS.TEAMS, teams);
+      this.set(STORAGE_KEYS.TEAMS, teams, true);
+      this.pushEntityToRemote(STORAGE_KEYS.TEAMS, teams);
     }
 
     const user = this.getCurrentUser();
     this.logAudit(user, 'EXCLUSAO_MOTORISTA_VAN', 'CADASTROS', `Van e motorista "${targetVan?.driverName || vanId}" (${targetVan?.plate}) excluído do sistema.`);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
   }
 
   // Campaign Calendar

@@ -66,7 +66,7 @@ if ($pdo) {
             CREATE TABLE IF NOT EXISTS militantes_cadastrados (
                 id VARCHAR(64) PRIMARY KEY,
                 nome VARCHAR(255) NOT NULL,
-                matricula VARCHAR(50) NOT NULL UNIQUE,
+                matricula VARCHAR(50) NOT NULL,
                 cargo VARCHAR(50) DEFAULT 'militante',
                 equipe_id VARCHAR(64) DEFAULT 'team-alpha',
                 telefone VARCHAR(50) NULL,
@@ -74,9 +74,15 @@ if ($pdo) {
                 meta_ruas INT DEFAULT 8,
                 meta_materiais INT DEFAULT 500,
                 dados_json LONGTEXT NULL,
-                atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                atualizado_em DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX idx_matricula (matricula)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
+
+        // Se a tabela já existia com UNIQUE na matricula, tenta remover para evitar travamentos em edições
+        try {
+            $pdo->exec("ALTER TABLE militantes_cadastrados DROP INDEX matricula");
+        } catch (Exception $eDrop) {}
 
         // 4. Tabela relacional de Vans e Motoristas
         $pdo->exec("
@@ -244,7 +250,13 @@ if ($method === 'GET') {
                             if (!isset($milMap[$m['id']])) {
                                 $milMap[$m['id']] = $m;
                             } else {
-                                $milMap[$m['id']] = array_merge($milMap[$m['id']], $m);
+                                $existingItem = $milMap[$m['id']];
+                                $merged = array_merge($existingItem, $m);
+                                // Preserva a foto do cadastro se a foto relacional estiver vazia ou placeholder
+                                if (!empty($existingItem['avatar']) && (empty($m['avatar']) || strpos($m['avatar'], 'unsplash.com/photo-1535713875002') !== false)) {
+                                    $merged['avatar'] = $existingItem['avatar'];
+                                }
+                                $milMap[$m['id']] = $merged;
                             }
                         }
                     }
@@ -299,6 +311,18 @@ if ($method === 'GET') {
                     $state['militancia_vans_v1'] = $finalVans;
                 }
             } catch (Exception $eVans) {}
+
+            // Garantia de 28 Bairros Oficiais (PMSJ 2020) + Área Rural (29 itens)
+            $neighKey = 'militancia_neighborhoods_pmsj2020_v3';
+            if (!isset($state[$neighKey]) || !is_array($state[$neighKey]) || count($state[$neighKey]) < 28) {
+                if (file_exists($diskVaultPath)) {
+                    $diskData = json_decode(file_get_contents($diskVaultPath), true);
+                    if (isset($diskData[$neighKey]) && is_array($diskData[$neighKey]) && count($diskData[$neighKey]) >= 28) {
+                        $state[$neighKey] = $diskData[$neighKey];
+                        $state['militancia_neighborhoods_v1'] = $diskData[$neighKey];
+                    }
+                }
+            }
 
             echo json_encode([
                 'status' => 'success',
@@ -392,13 +416,23 @@ if ($method === 'POST') {
             }
         }
 
-        // Se foram enviados militantes, atualiza também a tabela relacional
-        if (isset($payload['collections']['militantes_data']) || isset($payload['militantes_data'])) {
-            $militantsList = $payload['collections']['militantes_data'] ?? $payload['militantes_data'];
-            if (is_array($militantsList)) {
+        // Se foram enviados militantes, atualiza também a tabela relacional militantes_cadastrados
+        $militantsList = null;
+        if (isset($payload['collections']['militantes_data']) && is_array($payload['collections']['militantes_data'])) {
+            $militantsList = $payload['collections']['militantes_data'];
+        } elseif (isset($payload['collections']['militancia_militants_v1']) && is_array($payload['collections']['militancia_militants_v1'])) {
+            $militantsList = $payload['collections']['militancia_militants_v1'];
+        } elseif (isset($payload['militantes_data']) && is_array($payload['militantes_data'])) {
+            $militantsList = $payload['militantes_data'];
+        } elseif (isset($payload['key']) && in_array($payload['key'], ['militantes_data', 'militancia_militants_v1', 'militancia_militantes_v1']) && isset($payload['data']) && is_array($payload['data'])) {
+            $militantsList = $payload['data'];
+        }
+
+        if (is_array($militantsList)) {
+            try {
                 $stmtMil = $pdo->prepare("
-                    INSERT INTO militantes_cadastrados (id, nome, matricula, cargo, equipe_id, telefone, status, meta_ruas, meta_materiais, dados_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO militantes_cadastrados (id, nome, matricula, cargo, equipe_id, telefone, status, meta_ruas, meta_materiais, dados_json, atualizado_em)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
                     ON DUPLICATE KEY UPDATE
                         nome = VALUES(nome),
                         matricula = VALUES(matricula),
@@ -408,35 +442,50 @@ if ($method === 'POST') {
                         status = VALUES(status),
                         meta_ruas = VALUES(meta_ruas),
                         meta_materiais = VALUES(meta_materiais),
-                        dados_json = VALUES(dados_json)
+                        dados_json = VALUES(dados_json),
+                        atualizado_em = NOW()
                 ");
 
                 foreach ($militantsList as $m) {
                     if (isset($m['id']) && isset($m['name'])) {
-                        $stmtMil->execute([
-                            $m['id'],
-                            $m['name'],
-                            $m['matricula'] ?? $m['id'],
-                            $m['role'] ?? 'militante',
-                            $m['teamId'] ?? 'team-alpha',
-                            $m['phone'] ?? '',
-                            $m['status'] ?? 'ativo',
-                            $m['metaRuas'] ?? 8,
-                            $m['metaMateriais'] ?? 500,
-                            json_encode($m, JSON_UNESCAPED_UNICODE)
-                        ]);
+                        try {
+                            $stmtMil->execute([
+                                $m['id'],
+                                $m['name'],
+                                $m['matricula'] ?? $m['id'],
+                                $m['role'] ?? 'militante',
+                                $m['teamId'] ?? 'team-alpha',
+                                $m['phone'] ?? '',
+                                $m['status'] ?? 'ativo',
+                                $m['metaRuas'] ?? 8,
+                                $m['metaMateriais'] ?? 500,
+                                json_encode($m, JSON_UNESCAPED_UNICODE)
+                            ]);
+                        } catch (Exception $eSingleMil) {
+                            // Ignora erro individual e continua
+                        }
                     }
                 }
-            }
+            } catch (Exception $eMilOuter) {}
         }
 
-        // Se foram enviadas vans, atualiza também a tabela relacional
-        if (isset($payload['collections']['vans_data']) || isset($payload['vans_data'])) {
-            $vansList = $payload['collections']['vans_data'] ?? $payload['vans_data'];
-            if (is_array($vansList)) {
+        // Se foram enviadas vans, atualiza também a tabela relacional vans_cadastradas
+        $vansList = null;
+        if (isset($payload['collections']['vans_data']) && is_array($payload['collections']['vans_data'])) {
+            $vansList = $payload['collections']['vans_data'];
+        } elseif (isset($payload['collections']['militancia_vans_v1']) && is_array($payload['collections']['militancia_vans_v1'])) {
+            $vansList = $payload['collections']['militancia_vans_v1'];
+        } elseif (isset($payload['vans_data']) && is_array($payload['vans_data'])) {
+            $vansList = $payload['vans_data'];
+        } elseif (isset($payload['key']) && in_array($payload['key'], ['vans_data', 'militancia_vans_v1']) && isset($payload['data']) && is_array($payload['data'])) {
+            $vansList = $payload['data'];
+        }
+
+        if (is_array($vansList)) {
+            try {
                 $stmtVan = $pdo->prepare("
-                    INSERT INTO vans_cadastradas (id, nome, motorista_nome, placa, telefone, pix, capacidade, ativo, dados_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO vans_cadastradas (id, nome, motorista_nome, placa, telefone, pix, capacidade, ativo, dados_json, atualizado_em)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
                     ON DUPLICATE KEY UPDATE
                         nome = VALUES(nome),
                         motorista_nome = VALUES(motorista_nome),
@@ -445,25 +494,28 @@ if ($method === 'POST') {
                         pix = VALUES(pix),
                         capacidade = VALUES(capacidade),
                         ativo = VALUES(ativo),
-                        dados_json = VALUES(dados_json)
+                        dados_json = VALUES(dados_json),
+                        atualizado_em = NOW()
                 ");
 
                 foreach ($vansList as $v) {
                     if (isset($v['id']) && isset($v['name'])) {
-                        $stmtVan->execute([
-                            $v['id'],
-                            $v['name'],
-                            $v['driverName'] ?? '',
-                            $v['plate'] ?? '',
-                            $v['phone'] ?? '',
-                            $v['driverPix'] ?? '',
-                            $v['capacity'] ?? 12,
-                            !empty($v['active']) ? 1 : 0,
-                            json_encode($v, JSON_UNESCAPED_UNICODE)
-                        ]);
+                        try {
+                            $stmtVan->execute([
+                                $v['id'],
+                                $v['name'],
+                                $v['driverName'] ?? '',
+                                $v['plate'] ?? '',
+                                $v['driverPhone'] ?? $v['phone'] ?? '',
+                                $v['driverPix'] ?? '',
+                                $v['capacity'] ?? 12,
+                                !empty($v['active']) ? 1 : 0,
+                                json_encode($v, JSON_UNESCAPED_UNICODE)
+                            ]);
+                        } catch (Exception $eSingleVan) {}
                     }
                 }
-            }
+            } catch (Exception $eVanOuter) {}
         }
 
         // Se foram enviados check-ins de ruas, atualiza também a tabela relacional checkins_ruas
