@@ -47,8 +47,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias / Bosque das Mansões",
-    "lat": -27.5728693,
-    "lng": -48.6576116,
+    "lat": -27.57285,
+    "lng": -48.65503,
     "type": "rua"
   },
   {
@@ -60,8 +60,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias",
-    "lat": -27.5544705,
-    "lng": -48.624102,
+    "lat": -27.5539445,
+    "lng": -48.6218707,
     "type": "rua"
   },
   {
@@ -73,8 +73,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias / Bosque das Mansões",
-    "lat": -27.5751295,
-    "lng": -48.6567069,
+    "lat": -27.5755468,
+    "lng": -48.6541495,
     "type": "rua"
   },
   {
@@ -86,8 +86,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias / Bosque das Mansões",
-    "lat": -27.5750729,
-    "lng": -48.6650612,
+    "lat": -27.5753464,
+    "lng": -48.6625458,
     "type": "rua"
   },
   {
@@ -98,8 +98,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias",
-    "lat": -27.585,
-    "lng": -48.639,
+    "lat": -27.556488,
+    "lng": -48.6267151,
     "type": "rua"
   },
   {
@@ -110,8 +110,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias",
-    "lat": -27.586,
-    "lng": -48.641,
+    "lat": -27.5739592,
+    "lng": -48.6145662,
     "type": "rua"
   },
   {
@@ -122,8 +122,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias",
-    "lat": -27.584,
-    "lng": -48.636,
+    "lat": -27.5617879,
+    "lng": -48.6530289,
     "type": "rua"
   },
   {
@@ -135,8 +135,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias",
-    "lat": -27.568264,
-    "lng": -48.6452456,
+    "lat": -27.5519586,
+    "lng": -48.62073,
     "type": "rua"
   },
   {
@@ -147,8 +147,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "areias",
     "neighborhoodName": "Areias",
-    "lat": -27.583,
-    "lng": -48.637,
+    "lat": -27.5552588,
+    "lng": -48.6222622,
     "type": "rua"
   },
   {
@@ -160,8 +160,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.574,
-    "lng": -48.606,
+    "lat": -27.5703485,
+    "lng": -48.6067226,
     "type": "avenida"
   },
   {
@@ -173,8 +173,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.5693966,
-    "lng": -48.6174209,
+    "lat": -27.5696586,
+    "lng": -48.6152681,
     "type": "rua"
   },
   {
@@ -186,8 +186,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.5746871,
-    "lng": -48.6195935,
+    "lat": -27.5725516,
+    "lng": -48.6134587,
     "type": "rua"
   },
   {
@@ -199,8 +199,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.5736983,
-    "lng": -48.6115745,
+    "lat": -27.574346,
+    "lng": -48.6097739,
     "type": "rua"
   },
   {
@@ -212,8 +212,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.5695211,
-    "lng": -48.6230496,
+    "lat": -27.5671868,
+    "lng": -48.6167989,
     "type": "rua"
   },
   {
@@ -225,8 +225,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.556819,
-    "lng": -48.6286336,
+    "lat": -27.5569988,
+    "lng": -48.6263331,
     "type": "rua"
   },
   {
@@ -238,8 +238,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.566279,
-    "lng": -48.6436604,
+    "lat": -27.5637919,
+    "lng": -48.636692,
     "type": "rua"
   },
   {
@@ -250,8 +250,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.571,
-    "lng": -48.607,
+    "lat": -27.587792,
+    "lng": -48.6052268,
     "type": "rua"
   },
   {
@@ -263,8 +263,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.57497,
-    "lng": -48.60114,
+    "lat": -27.5845136,
+    "lng": -48.6061229,
     "type": "rua"
   },
   {
@@ -275,8 +275,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.572,
-    "lng": -48.609,
+    "lat": -27.5959164,
+    "lng": -48.6177097,
     "type": "rua"
   },
   {
@@ -289,8 +289,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.576,
-    "lng": -48.6045,
+    "lat": -27.5714932,
+    "lng": -48.6058069,
     "type": "rua"
   },
   {
@@ -301,8 +301,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.579,
-    "lng": -48.606,
+    "lat": -27.5787657,
+    "lng": -48.6068241,
     "type": "rua"
   },
   {
@@ -315,8 +315,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.5832546,
-    "lng": -48.6071024,
+    "lat": -27.5829116,
+    "lng": -48.6043488,
     "type": "rua"
   },
   {
@@ -327,8 +327,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.5735,
-    "lng": -48.603,
+    "lat": -27.5836512,
+    "lng": -48.6088316,
     "type": "rua"
   },
   {
@@ -340,8 +340,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.57195,
-    "lng": -48.61125,
+    "lat": -27.5739592,
+    "lng": -48.6145662,
     "type": "rua"
   },
   {
@@ -353,8 +353,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "barreiros",
     "neighborhoodName": "Barreiros",
-    "lat": -27.57351,
-    "lng": -48.60299,
+    "lat": -27.5735148,
+    "lng": -48.6029927,
     "type": "travessa"
   },
   {
@@ -366,8 +366,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5706684,
-    "lng": -48.6204173,
+    "lat": -27.5691924,
+    "lng": -48.615441,
     "type": "rua"
   },
   {
@@ -379,8 +379,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.568264,
-    "lng": -48.6452456,
+    "lat": -27.5684708,
+    "lng": -48.6424924,
     "type": "rua"
   },
   {
@@ -392,8 +392,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5702902,
-    "lng": -48.6210497,
+    "lat": -27.5702011,
+    "lng": -48.6185431,
     "type": "rua"
   },
   {
@@ -405,8 +405,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5711939,
-    "lng": -48.6203594,
+    "lat": -27.571199,
+    "lng": -48.6177721,
     "type": "rua"
   },
   {
@@ -418,8 +418,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5683458,
-    "lng": -48.6237371,
+    "lat": -27.5694222,
+    "lng": -48.622855,
     "type": "rua"
   },
   {
@@ -431,8 +431,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5733605,
-    "lng": -48.6278682,
+    "lat": -27.5733769,
+    "lng": -48.6252562,
     "type": "rua"
   },
   {
@@ -444,8 +444,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5726846,
-    "lng": -48.6267501,
+    "lat": -27.5727768,
+    "lng": -48.62409,
     "type": "rua"
   },
   {
@@ -457,8 +457,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5718347,
-    "lng": -48.6241535,
+    "lat": -27.5718888,
+    "lng": -48.621617,
     "type": "rua"
   },
   {
@@ -470,8 +470,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5704415,
-    "lng": -48.6276494,
+    "lat": -27.57044,
+    "lng": -48.62765,
     "type": "rua"
   },
   {
@@ -483,8 +483,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5762214,
-    "lng": -48.6239516,
+    "lat": -27.5762346,
+    "lng": -48.6213532,
     "type": "rua"
   },
   {
@@ -496,8 +496,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5690957,
-    "lng": -48.624882,
+    "lat": -27.5688612,
+    "lng": -48.6224819,
     "type": "rua"
   },
   {
@@ -509,8 +509,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5707628,
-    "lng": -48.6156463,
+    "lat": -27.5715749,
+    "lng": -48.6150196,
     "type": "rua"
   },
   {
@@ -522,8 +522,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.57162,
-    "lng": -48.6159,
+    "lat": -27.5716244,
+    "lng": -48.6159013,
     "type": "rua"
   },
   {
@@ -535,8 +535,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.57353,
-    "lng": -48.61663,
+    "lat": -27.5735274,
+    "lng": -48.6166253,
     "type": "rua"
   },
   {
@@ -573,8 +573,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.576,
-    "lng": -48.624,
+    "lat": -27.6221845,
+    "lng": -48.6343827,
     "type": "rua"
   },
   {
@@ -586,8 +586,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.56738,
-    "lng": -48.6198,
+    "lat": -27.5673835,
+    "lng": -48.6198308,
     "type": "rua"
   },
   {
@@ -610,8 +610,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.575,
-    "lng": -48.626,
+    "lat": -27.5734879,
+    "lng": -48.6181593,
     "type": "rua"
   },
   {
@@ -622,8 +622,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5745,
-    "lng": -48.625,
+    "lat": -27.5970125,
+    "lng": -48.6449838,
     "type": "rua"
   },
   {
@@ -659,8 +659,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5696136,
-    "lng": -48.621878,
+    "lat": -27.5691554,
+    "lng": -48.6211634,
     "type": "rua"
   },
   {
@@ -684,8 +684,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.57485,
-    "lng": -48.61818,
+    "lat": -27.5748544,
+    "lng": -48.6181783,
     "type": "rua"
   },
   {
@@ -734,8 +734,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bosque_das_mansoes",
     "neighborhoodName": "Bosque das Mansões",
-    "lat": -27.5975,
-    "lng": -48.6355,
+    "lat": -27.5610758,
+    "lng": -48.6344363,
     "type": "rua"
   },
   {
@@ -746,8 +746,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bosque_das_mansoes",
     "neighborhoodName": "Bosque das Mansões",
-    "lat": -27.597,
-    "lng": -48.635,
+    "lat": -27.5845762,
+    "lng": -48.6276745,
     "type": "rua"
   },
   {
@@ -758,8 +758,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bosque_das_mansoes",
     "neighborhoodName": "Bosque das Mansões",
-    "lat": -27.598,
-    "lng": -48.636,
+    "lat": -27.5839913,
+    "lng": -48.7147159,
     "type": "rua"
   },
   {
@@ -770,8 +770,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bosque_das_mansoes",
     "neighborhoodName": "Bosque das Mansões",
-    "lat": -27.599,
-    "lng": -48.6365,
+    "lat": -27.5972922,
+    "lng": -48.6176417,
     "type": "rua"
   },
   {
@@ -794,8 +794,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bosque_das_mansoes",
     "neighborhoodName": "Bosque das Mansões",
-    "lat": -27.596,
-    "lng": -48.634,
+    "lat": -27.5845762,
+    "lng": -48.6276745,
     "type": "rua"
   },
   {
@@ -821,8 +821,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "campinas",
     "neighborhoodName": "Campinas",
-    "lat": -27.5965,
-    "lng": -48.6085,
+    "lat": -27.6028425,
+    "lng": -48.6170857,
     "type": "avenida"
   },
   {
@@ -835,8 +835,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "campinas",
     "neighborhoodName": "Campinas",
-    "lat": -27.596,
-    "lng": -48.6105,
+    "lat": -27.5967141,
+    "lng": -48.6092339,
     "type": "avenida"
   },
   {
@@ -848,8 +848,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "campinas",
     "neighborhoodName": "Campinas",
-    "lat": -27.593,
-    "lng": -48.6125,
+    "lat": -27.5944684,
+    "lng": -48.6071455,
     "type": "avenida"
   },
   {
@@ -861,8 +861,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "campinas",
     "neighborhoodName": "Campinas",
-    "lat": -27.5974,
-    "lng": -48.6095,
+    "lat": -27.5974264,
+    "lng": -48.6094449,
     "type": "rua"
   },
   {
@@ -874,8 +874,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "campinas",
     "neighborhoodName": "Campinas",
-    "lat": -27.5955,
-    "lng": -48.6115,
+    "lat": -27.5870489,
+    "lng": -48.6101079,
     "type": "rua"
   },
   {
@@ -887,8 +887,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "campinas",
     "neighborhoodName": "Campinas",
-    "lat": -27.598,
-    "lng": -48.611,
+    "lat": -27.5984284,
+    "lng": -48.6111179,
     "type": "rua"
   },
   {
@@ -899,8 +899,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "campinas",
     "neighborhoodName": "Campinas",
-    "lat": -27.599,
-    "lng": -48.612,
+    "lat": -27.5910964,
+    "lng": -48.6148087,
     "type": "rua"
   },
   {
@@ -911,8 +911,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "centro",
     "neighborhoodName": "Centro",
-    "lat": -27.619,
-    "lng": -48.624,
+    "lat": -27.6162399,
+    "lng": -48.6270162,
     "type": "praca"
   },
   {
@@ -924,8 +924,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "centro",
     "neighborhoodName": "Centro",
-    "lat": -27.6185,
-    "lng": -48.6245,
+    "lat": -27.6158769,
+    "lng": -48.6275976,
     "type": "praca"
   },
   {
@@ -936,8 +936,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "centro",
     "neighborhoodName": "Centro",
-    "lat": -27.618,
-    "lng": -48.624,
+    "lat": -27.6149183,
+    "lng": -48.6264422,
     "type": "rua"
   },
   {
@@ -948,8 +948,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "centro",
     "neighborhoodName": "Centro",
-    "lat": -27.6175,
-    "lng": -48.6255,
+    "lat": -27.6095163,
+    "lng": -48.6282457,
     "type": "rua"
   },
   {
@@ -960,8 +960,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "fazenda_santo_antonio",
     "neighborhoodName": "Fazenda Santo Antônio",
-    "lat": -27.621,
-    "lng": -48.638,
+    "lat": -27.6248435,
+    "lng": -48.6344273,
     "type": "rua"
   },
   {
@@ -973,8 +973,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5757929,
-    "lng": -48.661112,
+    "lat": -27.5752006,
+    "lng": -48.6617073,
     "type": "avenida"
   },
   {
@@ -986,8 +986,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5725041,
-    "lng": -48.6708272,
+    "lat": -27.5726168,
+    "lng": -48.6676077,
     "type": "rua"
   },
   {
@@ -999,8 +999,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5741592,
-    "lng": -48.6740642,
+    "lat": -27.5775028,
+    "lng": -48.6722889,
     "type": "rua"
   },
   {
@@ -1012,8 +1012,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.575254,
-    "lng": -48.6731671,
+    "lat": -27.5658888,
+    "lng": -48.6645435,
     "type": "rua"
   },
   {
@@ -1024,8 +1024,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.57341,
-    "lng": -48.65782,
+    "lat": -27.5735244,
+    "lng": -48.6550187,
     "type": "rua"
   },
   {
@@ -1037,8 +1037,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5672434,
-    "lng": -48.6700578,
+    "lat": -27.5672541,
+    "lng": -48.6673606,
     "type": "rua"
   },
   {
@@ -1050,8 +1050,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5794143,
-    "lng": -48.6710062,
+    "lat": -27.5793806,
+    "lng": -48.6685319,
     "type": "rua"
   },
   {
@@ -1062,8 +1062,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.57442,
-    "lng": -48.6531,
+    "lat": -27.5744193,
+    "lng": -48.6531018,
     "type": "rua"
   },
   {
@@ -1075,8 +1075,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5809,
-    "lng": -48.6714349,
+    "lat": -27.5806455,
+    "lng": -48.6691286,
     "type": "rua"
   },
   {
@@ -1087,8 +1087,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.57732,
-    "lng": -48.67065,
+    "lat": -27.5773163,
+    "lng": -48.6706519,
     "type": "rua"
   },
   {
@@ -1100,8 +1100,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5761,
-    "lng": -48.6602,
+    "lat": -27.5760901,
+    "lng": -48.6602336,
     "type": "rua"
   },
   {
@@ -1113,8 +1113,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5771011,
-    "lng": -48.6592698,
+    "lat": -27.5766823,
+    "lng": -48.659159,
     "type": "rua"
   },
   {
@@ -1126,8 +1126,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.57573,
-    "lng": -48.66082,
+    "lat": -27.5757185,
+    "lng": -48.6607909,
     "type": "rua"
   },
   {
@@ -1139,8 +1139,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5768,
-    "lng": -48.6599,
+    "lat": -27.5771623,
+    "lng": -48.661744,
     "type": "rua"
   },
   {
@@ -1152,8 +1152,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5789673,
-    "lng": -48.6708845,
+    "lat": -27.5788755,
+    "lng": -48.668638,
     "type": "rua"
   },
   {
@@ -1164,16 +1164,16 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5651,
-    "lng": -48.67457,
+    "lat": -27.5650968,
+    "lng": -48.6745714,
     "type": "rua"
   },
   {
     "name": "Rua Sabiá",
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.56549,
-    "lng": -48.66758,
+    "lat": -27.57525,
+    "lng": -48.67316,
     "aliases": [
       "sabia",
       "r sabia",
@@ -1189,7 +1189,7 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.57559,
+    "lat": -27.5755907,
     "lng": -48.65356,
     "type": "rua"
   },
@@ -1202,8 +1202,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhas",
     "neighborhoodName": "Forquilhas",
-    "lat": -27.5746269,
-    "lng": -48.6516576,
+    "lat": -27.574659,
+    "lng": -48.651667,
     "type": "rua"
   },
   {
@@ -1215,8 +1215,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.6022455,
-    "lng": -48.6483546,
+    "lat": -27.6024588,
+    "lng": -48.6461692,
     "type": "rua"
   },
   {
@@ -1241,8 +1241,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.60221,
-    "lng": -48.64586,
+    "lat": -27.6022061,
+    "lng": -48.6458576,
     "type": "rua"
   },
   {
@@ -1254,8 +1254,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.59154,
-    "lng": -48.65135,
+    "lat": -27.5920236,
+    "lng": -48.6503167,
     "type": "rua"
   },
   {
@@ -1266,8 +1266,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.6035,
-    "lng": -48.651,
+    "lat": -27.5744193,
+    "lng": -48.6531018,
     "type": "rua"
   },
   {
@@ -1278,8 +1278,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.605,
-    "lng": -48.65,
+    "lat": -27.5865359,
+    "lng": -48.6171557,
     "type": "rua"
   },
   {
@@ -1290,8 +1290,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.5999,
-    "lng": -48.6433,
+    "lat": -27.6015755,
+    "lng": -48.6453365,
     "type": "rua"
   },
   {
@@ -1302,8 +1302,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.606,
-    "lng": -48.647,
+    "lat": -27.5967194,
+    "lng": -48.5935135,
     "type": "rua"
   },
   {
@@ -1314,8 +1314,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.604,
-    "lng": -48.649,
+    "lat": -27.6001106,
+    "lng": -48.6448081,
     "type": "rua"
   },
   {
@@ -1328,8 +1328,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.60029,
-    "lng": -48.64078,
+    "lat": -27.5989113,
+    "lng": -48.6419768,
     "type": "rua"
   },
   {
@@ -1341,8 +1341,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "forquilhinha",
     "neighborhoodName": "Forquilhinha",
-    "lat": -27.59801,
-    "lng": -48.63697,
+    "lat": -27.5980068,
+    "lng": -48.636975,
     "type": "rua"
   },
   {
@@ -1354,8 +1354,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "ipiranga",
     "neighborhoodName": "Ipiranga",
-    "lat": -27.5610606,
-    "lng": -48.6347006,
+    "lat": -27.5611184,
+    "lng": -48.6320708,
     "type": "rua"
   },
   {
@@ -1367,8 +1367,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "ipiranga",
     "neighborhoodName": "Ipiranga",
-    "lat": -27.56625,
-    "lng": -48.62374,
+    "lat": -27.5662486,
+    "lng": -48.6237388,
     "type": "rua"
   },
   {
@@ -1380,8 +1380,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "ipiranga",
     "neighborhoodName": "Ipiranga",
-    "lat": -27.56042,
-    "lng": -48.62351,
+    "lat": -27.5603846,
+    "lng": -48.6235286,
     "type": "rua"
   },
   {
@@ -1392,8 +1392,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "ipiranga",
     "neighborhoodName": "Ipiranga",
-    "lat": -27.588,
-    "lng": -48.631,
+    "lat": -27.60294,
+    "lng": -48.639776,
     "type": "rua"
   },
   {
@@ -1406,8 +1406,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "ipiranga",
     "neighborhoodName": "Ipiranga",
-    "lat": -27.56456,
-    "lng": -48.62722,
+    "lat": -27.5651062,
+    "lng": -48.6254931,
     "type": "rua"
   },
   {
@@ -1420,8 +1420,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.5945,
-    "lng": -48.618,
+    "lat": -27.5941402,
+    "lng": -48.613341,
     "type": "avenida"
   },
   {
@@ -1434,8 +1434,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.5955,
-    "lng": -48.6175,
+    "lat": -27.6019074,
+    "lng": -48.6178686,
     "type": "avenida"
   },
   {
@@ -1447,8 +1447,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.5955,
-    "lng": -48.6165,
+    "lat": -27.5937462,
+    "lng": -48.6127233,
     "type": "rua"
   },
   {
@@ -1459,8 +1459,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.595,
-    "lng": -48.617,
+    "lat": -27.589643,
+    "lng": -48.6137944,
     "type": "rua"
   },
   {
@@ -1471,8 +1471,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.5935,
-    "lng": -48.621,
+    "lat": -27.5910964,
+    "lng": -48.6148087,
     "type": "rua"
   },
   {
@@ -1483,8 +1483,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.5968,
-    "lng": -48.6215,
+    "lat": -27.6511068,
+    "lng": -48.6689262,
     "type": "rua"
   },
   {
@@ -1496,8 +1496,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.593,
-    "lng": -48.619,
+    "lat": -27.5941062,
+    "lng": -48.6154961,
     "type": "rua"
   },
   {
@@ -1508,8 +1508,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.597,
-    "lng": -48.616,
+    "lat": -27.5987702,
+    "lng": -48.613561,
     "type": "rua"
   },
   {
@@ -1521,8 +1521,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "kobrasol",
     "neighborhoodName": "Kobrasol",
-    "lat": -27.5919,
-    "lng": -48.61368,
+    "lat": -27.5919011,
+    "lng": -48.6136821,
     "type": "rua"
   },
   {
@@ -1534,8 +1534,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "nossa_senhora_do_rosario",
     "neighborhoodName": "Nossa Senhora do Rosário",
-    "lat": -27.576642,
-    "lng": -48.6186365,
+    "lat": -27.5781767,
+    "lng": -48.6175847,
     "type": "rua"
   },
   {
@@ -1560,8 +1560,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "ponta_de_baixo",
     "neighborhoodName": "Ponta de Baixo",
-    "lat": -27.632,
-    "lng": -48.623,
+    "lat": -27.6242278,
+    "lng": -48.6326512,
     "type": "rua"
   },
   {
@@ -1583,8 +1583,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "potecas",
     "neighborhoodName": "Potecas",
-    "lat": -27.5985,
-    "lng": -48.656,
+    "lat": -27.5617879,
+    "lng": -48.6530289,
     "type": "rua"
   },
   {
@@ -1595,8 +1595,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "potecas",
     "neighborhoodName": "Potecas",
-    "lat": -27.596,
-    "lng": -48.653,
+    "lat": -27.582736,
+    "lng": -48.6461451,
     "type": "rua"
   },
   {
@@ -1607,8 +1607,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "potecas",
     "neighborhoodName": "Potecas",
-    "lat": -27.597,
-    "lng": -48.654,
+    "lat": -27.5771601,
+    "lng": -48.650937,
     "type": "rua"
   },
   {
@@ -1631,8 +1631,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "praia_comprida",
     "neighborhoodName": "Praia Comprida",
-    "lat": -27.611,
-    "lng": -48.623,
+    "lat": -27.6082418,
+    "lng": -48.629079,
     "type": "rua"
   },
   {
@@ -1643,8 +1643,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "praia_comprida",
     "neighborhoodName": "Praia Comprida",
-    "lat": -27.6085,
-    "lng": -48.6225,
+    "lat": -27.6177036,
+    "lng": -48.6285197,
     "type": "rua"
   },
   {
@@ -1656,8 +1656,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "praia_comprida",
     "neighborhoodName": "Praia Comprida",
-    "lat": -27.6095,
-    "lng": -48.622,
+    "lat": -27.6071935,
+    "lng": -48.6299348,
     "type": "rua"
   },
   {
@@ -1669,8 +1669,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "real_parque",
     "neighborhoodName": "Real Parque",
-    "lat": -27.5659571,
-    "lng": -48.6382016,
+    "lat": -27.566157,
+    "lng": -48.635934,
     "type": "rua"
   },
   {
@@ -1681,8 +1681,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "real_parque",
     "neighborhoodName": "Real Parque",
-    "lat": -27.5682,
-    "lng": -48.6385,
+    "lat": -27.5684708,
+    "lng": -48.6424924,
     "type": "rua"
   },
   {
@@ -1695,8 +1695,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "real_parque",
     "neighborhoodName": "Real Parque",
-    "lat": -27.56733,
-    "lng": -48.64171,
+    "lat": -27.5673339,
+    "lng": -48.6417136,
     "type": "rua"
   },
   {
@@ -1733,8 +1733,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "real_parque",
     "neighborhoodName": "Real Parque",
-    "lat": -27.57022,
-    "lng": -48.63868,
+    "lat": -27.570394,
+    "lng": -48.6392128,
     "type": "rua"
   },
   {
@@ -1747,8 +1747,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "real_parque",
     "neighborhoodName": "Real Parque",
-    "lat": -27.5684,
-    "lng": -48.6395,
+    "lat": -27.5678193,
+    "lng": -48.6413514,
     "type": "rua"
   },
   {
@@ -1760,8 +1760,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "real_parque",
     "neighborhoodName": "Real Parque",
-    "lat": -27.5663716,
-    "lng": -48.6412376,
+    "lat": -27.5645331,
+    "lng": -48.6377915,
     "type": "rua"
   },
   {
@@ -1774,8 +1774,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "real_parque",
     "neighborhoodName": "Real Parque",
-    "lat": -27.5659571,
-    "lng": -48.6382016,
+    "lat": -27.566157,
+    "lng": -48.635934,
     "type": "rua"
   },
   {
@@ -1786,8 +1786,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "rocado",
     "neighborhoodName": "Roçado",
-    "lat": -27.604,
-    "lng": -48.629,
+    "lat": -27.5991424,
+    "lng": -48.6219917,
     "type": "rua"
   },
   {
@@ -1798,8 +1798,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "rocado",
     "neighborhoodName": "Roçado",
-    "lat": -27.606,
-    "lng": -48.631,
+    "lat": -27.5925077,
+    "lng": -48.6197031,
     "type": "rua"
   },
   {
@@ -1811,8 +1811,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.54669,
-    "lng": -48.6444782,
+    "lat": -27.5464797,
+    "lng": -48.6420833,
     "type": "rua"
   },
   {
@@ -1824,8 +1824,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5415527,
-    "lng": -48.6353586,
+    "lat": -27.5415373,
+    "lng": -48.6327915,
     "type": "rua"
   },
   {
@@ -1837,8 +1837,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5418858,
-    "lng": -48.6348447,
+    "lat": -27.5419317,
+    "lng": -48.6323232,
     "type": "rua"
   },
   {
@@ -1850,8 +1850,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5410805,
-    "lng": -48.6394808,
+    "lat": -27.5409207,
+    "lng": -48.6369685,
     "type": "rua"
   },
   {
@@ -1863,8 +1863,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5441439,
-    "lng": -48.6421579,
+    "lat": -27.5483587,
+    "lng": -48.6462312,
     "type": "rua"
   },
   {
@@ -1876,8 +1876,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5466594,
-    "lng": -48.6479617,
+    "lat": -27.5467386,
+    "lng": -48.6453016,
     "type": "rua"
   },
   {
@@ -1889,8 +1889,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5452057,
-    "lng": -48.6421826,
+    "lat": -27.5452421,
+    "lng": -48.6395147,
     "type": "rua"
   },
   {
@@ -1901,8 +1901,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.552,
-    "lng": -48.619,
+    "lat": -27.546274,
+    "lng": -48.6376334,
     "type": "rua"
   },
   {
@@ -1913,8 +1913,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.555,
-    "lng": -48.618,
+    "lat": -27.6080341,
+    "lng": -48.6305308,
     "type": "rua"
   },
   {
@@ -1928,8 +1928,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.54414,
-    "lng": -48.64216,
+    "lat": -27.5483587,
+    "lng": -48.6462312,
     "type": "rua"
   },
   {
@@ -1941,8 +1941,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5420953,
-    "lng": -48.6456811,
+    "lat": -27.5426368,
+    "lng": -48.6465482,
     "type": "rua"
   },
   {
@@ -1954,8 +1954,489 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "serraria",
     "neighborhoodName": "Serraria",
-    "lat": -27.5446229,
-    "lng": -48.6418904,
+    "lat": -27.5445936,
+    "lng": -48.6392361,
+    "type": "rua"
+  },
+  {
+    "name": "R. Algodoeiro",
+    "aliases": [
+      "r. algodoeiro",
+      "algodoeiro",
+      "r. algodoeiro (nº trecho geral)"
+    ],
+    "neighborhoodId": "potecas",
+    "neighborhoodName": "Potecas",
+    "lat": -27.55197,
+    "lng": -48.6573,
+    "type": "rua"
+  },
+  {
+    "name": "R. Uváia",
+    "aliases": [
+      "r. uváia",
+      "uváia",
+      "r. uváia (nº trecho geral)"
+    ],
+    "neighborhoodId": "potecas",
+    "neighborhoodName": "Potecas",
+    "lat": -27.55135,
+    "lng": -48.65768,
+    "type": "rua"
+  },
+  {
+    "name": "R. Reinaldo Ferreira De Souza",
+    "aliases": [
+      "r. reinaldo ferreira de souza",
+      "reinaldo ferreira de souza",
+      "r. reinaldo ferreira de souza (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5650968,
+    "lng": -48.6745714,
+    "type": "rua"
+  },
+  {
+    "name": "R. Sabiá",
+    "aliases": [
+      "r. sabiá",
+      "sabiá",
+      "r. sabiá (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.57525,
+    "lng": -48.67316,
+    "type": "rua"
+  },
+  {
+    "name": "R. Araçari",
+    "aliases": [
+      "r. araçari",
+      "araçari",
+      "r. araçari (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5672541,
+    "lng": -48.6673606,
+    "type": "rua"
+  },
+  {
+    "name": "R. Ulisses Siqueira Lima",
+    "aliases": [
+      "r. ulisses siqueira lima",
+      "ulisses siqueira lima",
+      "r. ulisses siqueira lima (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.574659,
+    "lng": -48.651667,
+    "type": "rua"
+  },
+  {
+    "name": "R. Otto Júlio Malina",
+    "aliases": [
+      "r. otto júlio malina",
+      "otto júlio malina",
+      "r. otto júlio malina (nº trecho geral)"
+    ],
+    "neighborhoodId": "ipiranga",
+    "neighborhoodName": "Ipiranga",
+    "lat": -27.5651062,
+    "lng": -48.6254931,
+    "type": "rua"
+  },
+  {
+    "name": "R. João Paulo Gaspar",
+    "aliases": [
+      "r. joão paulo gaspar",
+      "joão paulo gaspar",
+      "r. joão paulo gaspar (nº trecho geral)"
+    ],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.570394,
+    "lng": -48.6392128,
+    "type": "rua"
+  },
+  {
+    "name": "R. Mal. Rondon",
+    "aliases": [
+      "r. mal. rondon",
+      "marechal rondon",
+      "r. mal. rondon (nº trecho geral)"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5829116,
+    "lng": -48.6043488,
+    "type": "rua"
+  },
+  {
+    "name": "rua mariafrancisca conceição ribeiro",
+    "aliases": [
+      "rua mariafrancisca conceição ribeiro",
+      "maria francisca conceição ribeiro",
+      "rua mariafrancisca conceição ribeiro (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5771623,
+    "lng": -48.661744,
+    "type": "rua"
+  },
+  {
+    "name": "Av. Ceniro Luiz Ribeiro Martins",
+    "aliases": [
+      "av. ceniro luiz ribeiro martins",
+      "ceniro luiz ribeiro martins",
+      "av. ceniro luiz ribeiro martins (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5752006,
+    "lng": -48.6617073,
+    "type": "rua"
+  },
+  {
+    "name": "R. dos Lirios",
+    "aliases": [
+      "r. dos lirios",
+      "dos lirios",
+      "r. dos lirios (nº trecho geral)"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5426368,
+    "lng": -48.6465482,
+    "type": "rua"
+  },
+  {
+    "name": "R. Portimao",
+    "aliases": [
+      "r. portimao",
+      "portimao",
+      "r. portimao (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5788755,
+    "lng": -48.668638,
+    "type": "rua"
+  },
+  {
+    "name": "R. Açores",
+    "aliases": [
+      "r. açores",
+      "açores",
+      "r. açores (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5793806,
+    "lng": -48.6685319,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Arthur Mariano",
+    "aliases": [
+      "rua arthur mariano",
+      "arthur mariano",
+      "rua arthur mariano (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5989113,
+    "lng": -48.6419768,
+    "type": "rua"
+  },
+  {
+    "name": "Rua ararangua",
+    "aliases": [
+      "rua ararangua",
+      "araranguá",
+      "rua ararangua (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5715749,
+    "lng": -48.6150196,
+    "type": "rua"
+  },
+  {
+    "name": "R. Carlos Drumond de Andrade",
+    "aliases": [
+      "r. carlos drumond de andrade",
+      "carlos drumond de andrade",
+      "r. carlos drumond de andrade (nº trecho geral)"
+    ],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5673339,
+    "lng": -48.6417136,
+    "type": "rua"
+  },
+  {
+    "name": "R. Bento Águido Viêira",
+    "aliases": [
+      "r. bento águido viêira",
+      "bento águido vieira",
+      "r. bento águido viêira (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5716244,
+    "lng": -48.6159013,
+    "type": "rua"
+  },
+  {
+    "name": "R. do Iano",
+    "aliases": [
+      "r. do iano",
+      "do iano",
+      "r. do iano (nº trecho geral)"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5739592,
+    "lng": -48.6145662,
+    "type": "rua"
+  },
+  {
+    "name": "R. Curitiba",
+    "aliases": [
+      "r. curitiba",
+      "curitiba",
+      "r. curitiba (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5735274,
+    "lng": -48.6166253,
+    "type": "rua"
+  },
+  {
+    "name": "R. Recife",
+    "aliases": [
+      "r. recife",
+      "recife",
+      "r. recife (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5748544,
+    "lng": -48.6181783,
+    "type": "rua"
+  },
+  {
+    "name": "R. Ver. Arthur Manoel Mariano",
+    "aliases": [
+      "r. ver. arthur manoel mariano",
+      "arthur mariano",
+      "r. ver. arthur manoel mariano (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5989113,
+    "lng": -48.6419768,
+    "type": "rua"
+  },
+  {
+    "name": "R. Honória Virgilina Machado",
+    "aliases": [
+      "r. honória virgilina machado",
+      "honória virgilina machado",
+      "r. honória virgilina machado (nº trecho geral)"
+    ],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5688543,
+    "lng": -48.6390348,
+    "type": "rua"
+  },
+  {
+    "name": "R. Aimoré",
+    "aliases": [
+      "r. aimoré",
+      "aimoré",
+      "r. aimoré (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.60463,
+    "lng": -48.64938,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Vereador Arthur Mariano",
+    "aliases": [
+      "rua vereador arthur mariano",
+      "arthur mariano",
+      "rua vereador arthur mariano (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5989113,
+    "lng": -48.6419768,
+    "type": "rua"
+  },
+  {
+    "name": "R. Alexandre Plucinski",
+    "aliases": [
+      "r. alexandre plucinski",
+      "alexandre plucinski",
+      "r. alexandre plucinski (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5735244,
+    "lng": -48.6550187,
+    "type": "rua"
+  },
+  {
+    "name": "Rua aguas de Chapecó",
+    "aliases": [
+      "rua aguas de chapecó",
+      "águas de chapecó",
+      "rua aguas de chapecó"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5691895,
+    "lng": -48.6144004,
+    "type": "rua"
+  },
+  {
+    "name": "Rua rua candido amaro damasio",
+    "aliases": [
+      "rua rua candido amaro damasio",
+      "cândido amaro damásio",
+      "rua rua candido amaro damasio"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5671868,
+    "lng": -48.6167989,
+    "type": "rua"
+  },
+  {
+    "name": "rua Antenor Valentin da silva",
+    "aliases": [
+      "rua antenor valentin da silva",
+      "antenor valentim da silva",
+      "rua antenor valentin da silva"
+    ],
+    "neighborhoodId": "ipiranga",
+    "neighborhoodName": "Ipiranga",
+    "lat": -27.5662486,
+    "lng": -48.6237388,
+    "type": "rua"
+  },
+  {
+    "name": "rua jose Bartolomeu vieira",
+    "aliases": [
+      "rua jose bartolomeu vieira",
+      "josé bartolomeu vieira",
+      "rua jose bartolomeu vieira"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5773163,
+    "lng": -48.6706519,
+    "type": "rua"
+  },
+  {
+    "name": "rua vitorino jose Luiz",
+    "aliases": [
+      "rua vitorino jose luiz",
+      "vitorino josé luiz",
+      "rua vitorino jose luiz"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5980068,
+    "lng": -48.636975,
+    "type": "rua"
+  },
+  {
+    "name": "rua Alexandre plueinsk",
+    "aliases": [
+      "rua alexandre plueinsk",
+      "alexandre plucinski",
+      "rua alexandre plueinsk"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5735244,
+    "lng": -48.6550187,
+    "type": "rua"
+  },
+  {
+    "name": "rua bernadino freitas de Agostinho",
+    "aliases": [
+      "rua bernadino freitas de agostinho",
+      "bernardina de freitas de agostinho",
+      "rua bernadino freitas de agostinho"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5744193,
+    "lng": -48.6531018,
+    "type": "rua"
+  },
+  {
+    "name": "rua tulio Rodrigues martins",
+    "aliases": [
+      "rua tulio rodrigues martins",
+      "túlio rodrigues martins",
+      "rua tulio rodrigues martins (trecho leste)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5755907,
+    "lng": -48.65356,
+    "type": "rua"
+  },
+  {
+    "name": "Rua papagaio",
+    "aliases": [
+      "rua papagaio",
+      "papagaio",
+      "rua papagaio (nº lado par e impar)"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5467386,
+    "lng": -48.6453016,
+    "type": "rua"
+  },
+  {
+    "name": "R. Túlio Rodrigues Martins",
+    "aliases": [
+      "r. túlio rodrigues martins",
+      "túlio rodrigues martins",
+      "r. túlio rodrigues martins (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5755907,
+    "lng": -48.65356,
+    "type": "rua"
+  },
+  {
+    "name": "R. Bernardina de Freitas de Agostinho",
+    "aliases": [
+      "r. bernardina de freitas de agostinho",
+      "bernardina de freitas de agostinho",
+      "r. bernardina de freitas de agostinho (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5744193,
+    "lng": -48.6531018,
     "type": "rua"
   }
 ];

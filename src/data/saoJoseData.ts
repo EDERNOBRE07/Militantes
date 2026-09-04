@@ -449,8 +449,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "Rua Manoel Francisco de souza",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 19:12:32",
-    "latitude": -27.5999,
-    "longitude": -48.6433,
+    "latitude": -27.6015755,
+    "longitude": -48.6453365,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -478,8 +478,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "Rua allan kardec",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 19:10:35",
-    "latitude": -27.60221,
-    "longitude": -48.64586,
+    "latitude": -27.6022061,
+    "longitude": -48.6458576,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -797,8 +797,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua Antenor Valentin da silva",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 18:29:09",
-    "latitude": -27.56625,
-    "longitude": -48.62374,
+    "latitude": -27.5662486,
+    "longitude": -48.6237388,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -826,8 +826,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua jose Bartolomeu vieira",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 18:02:39",
-    "latitude": -27.57732,
-    "longitude": -48.67065,
+    "latitude": -27.5773163,
+    "longitude": -48.6706519,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -855,8 +855,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua vereador Arthur Manoel mariano",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 18:00:53",
-    "latitude": -27.60029,
-    "longitude": -48.64078,
+    "latitude": -27.5989113,
+    "longitude": -48.6419768,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -884,8 +884,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua vitorino jose Luiz",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 17:59:24",
-    "latitude": -27.59801,
-    "longitude": -48.63697,
+    "latitude": -27.5980068,
+    "longitude": -48.636975,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -913,8 +913,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua vitorino jose Luiz (Trecho Sul)",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 17:58:42",
-    "latitude": -27.59801,
-    "longitude": -48.63697,
+    "latitude": -27.5980068,
+    "longitude": -48.636975,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -942,8 +942,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua Alexandre plueinsk",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 17:29:32",
-    "latitude": -27.57341,
-    "longitude": -48.65782,
+    "latitude": -27.5735244,
+    "longitude": -48.6550187,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -971,8 +971,8 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua bernadino freitas de Agostinho",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 17:23:06",
-    "latitude": -27.57442,
-    "longitude": -48.6531,
+    "latitude": -27.5744193,
+    "longitude": -48.6531018,
     "accuracyMeters": 4.2,
     "photos": [
       "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
@@ -1000,7 +1000,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua tulio Rodrigues martins",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 17:11:14",
-    "latitude": -27.57559,
+    "latitude": -27.5755907,
     "longitude": -48.65356,
     "accuracyMeters": 4.2,
     "photos": [
@@ -1029,7 +1029,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "streetName": "rua tulio Rodrigues martins (Trecho Leste)",
     "houseNumberRange": "Trecho Geral",
     "timestamp": "2026-08-28 17:12:07",
-    "latitude": -27.57559,
+    "latitude": -27.5755907,
     "longitude": -48.65356,
     "accuracyMeters": 4.2,
     "photos": [
