@@ -1427,12 +1427,18 @@ export class StorageService {
         checkinsModified = true;
       }
 
-      // Regra 2: Calibragem de coordenadas se estava no placeholder de Kobrasol (-27.5962, -48.6190)
+      // Regra 2: Calibragem de coordenadas se estava no placeholder de Kobrasol (-27.5962, -48.6190) ou rua Honória
       const isPlaceholderGps = (
         Math.abs(updated.latitude - (-27.5962)) < 0.0008 &&
         Math.abs(updated.longitude - (-48.6190)) < 0.0008
       );
-      if (isPlaceholderGps && updated.neighborhoodId !== 'kobrasol') {
+      if (streetLower.includes('honoria') || streetLower.includes('honória')) {
+        updated.latitude = -27.5688543;
+        updated.longitude = -48.6390348;
+        updated.neighborhoodId = 'real_parque';
+        updated.neighborhoodName = 'Real Parque';
+        checkinsModified = true;
+      } else if (isPlaceholderGps && updated.neighborhoodId !== 'kobrasol') {
         const calibrated = resolveExactStreetCoordinates(updated.streetName, updated.neighborhoodId, INITIAL_NEIGHBORHOODS);
         updated.latitude = calibrated.lat;
         updated.longitude = calibrated.lng;

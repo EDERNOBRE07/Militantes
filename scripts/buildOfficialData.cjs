@@ -1023,8 +1023,8 @@ const OFFICIAL_SAO_JOSE_NEIGHBORHOODS = [
     "completedStreets": 0,
     "totalStreets": 24,
     "priority": "Baixa",
-    "lat": -27.588,
-    "lng": -48.649,
+    "lat": -27.5725,
+    "lng": -48.6432,
     "officialColor": "#85c0e8",
     "assignedTeamId": "team-bravo",
     "targetMaterials": {
@@ -1043,24 +1043,28 @@ const OFFICIAL_SAO_JOSE_NEIGHBORHOODS = [
     },
     "polygon": [
       [
-        -27.582,
-        -48.655
+        -27.5695,
+        -48.6445
       ],
       [
-        -27.582,
-        -48.643
+        -27.5710,
+        -48.6405
       ],
       [
-        -27.593,
-        -48.643
+        -27.5750,
+        -48.6415
       ],
       [
-        -27.594,
-        -48.653
+        -27.5775,
+        -48.6465
       ],
       [
-        -27.588,
-        -48.656
+        -27.5735,
+        -48.6485
+      ],
+      [
+        -27.5695,
+        -48.6445
       ]
     ]
   },
@@ -1302,8 +1306,8 @@ const OFFICIAL_SAO_JOSE_NEIGHBORHOODS = [
     "completedStreets": 0,
     "totalStreets": 34,
     "priority": "Média",
-    "lat": -27.582,
-    "lng": -48.653,
+    "lat": -27.5688543,
+    "lng": -48.6390348,
     "officialColor": "#e878a8",
     "assignedTeamId": "team-charlie",
     "targetMaterials": {
@@ -1322,24 +1326,36 @@ const OFFICIAL_SAO_JOSE_NEIGHBORHOODS = [
     },
     "polygon": [
       [
-        -27.575,
-        -48.662
+        -27.5630,
+        -48.6415
       ],
       [
-        -27.575,
-        -48.646
+        -27.5630,
+        -48.6360
       ],
       [
-        -27.588,
-        -48.646
+        -27.5665,
+        -48.6345
       ],
       [
-        -27.589,
-        -48.658
+        -27.5715,
+        -48.6355
       ],
       [
-        -27.583,
-        -48.662
+        -27.5730,
+        -48.6410
+      ],
+      [
+        -27.5695,
+        -48.6445
+      ],
+      [
+        -27.5645,
+        -48.6430
+      ],
+      [
+        -27.5630,
+        -48.6415
       ]
     ]
   },

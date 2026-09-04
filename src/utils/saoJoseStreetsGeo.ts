@@ -1005,21 +1005,1017 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     "lat": -27.596,
     "lng": -48.653,
     "type": "rua"
+  },
+  {
+    "name": "Rua José Victor Da Silva",
+    "aliases": [
+      "rua josé victor da silva (nº trecho geral)",
+      "rua josé victor da silva",
+      "josé victor da silva"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.556819,
+    "lng": -48.6286336,
+    "type": "rua"
+  },
+  {
+    "name": "R. Da Independência",
+    "aliases": [
+      "r. da independência",
+      "r. da independência (nº trecho geral)",
+      "da independência"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.556819,
+    "lng": -48.6286336,
+    "type": "rua"
+  },
+  {
+    "name": "R. Marcelo Antônio Réis",
+    "aliases": [
+      "marcelo antônio réis",
+      "r. marcelo antônio réis",
+      "r. marcelo antônio réis (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias",
+    "lat": -27.5544705,
+    "lng": -48.624102,
+    "type": "rua"
+  },
+  {
+    "name": "R. José Clodovel De Souza",
+    "aliases": [
+      "r. josé clodovel de souza",
+      "r. josé clodovel de souza (nº trecho geral)",
+      "josé clodovel de souza"
+    ],
+    "neighborhoodId": "ipiranga",
+    "neighborhoodName": "Ipiranga",
+    "lat": -27.5610606,
+    "lng": -48.6347006,
+    "type": "rua"
+  },
+  {
+    "name": "R. Mario César Da Costa",
+    "aliases": [
+      "r. mario césar da costa",
+      "mario césar da costa",
+      "r. mario césar da costa (nº trecho geral)"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.566279,
+    "lng": -48.6436604,
+    "type": "rua"
+  },
+  {
+    "name": "R. Veríssimo Rodrigues Fortuna",
+    "aliases": [
+      "r. veríssimo rodrigues fortuna",
+      "veríssimo rodrigues fortuna",
+      "r. veríssimo rodrigues fortuna (nº trecho geral)"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5452057,
+    "lng": -48.6421826,
+    "type": "rua"
+  },
+  {
+    "name": "R. Léo Augusto Da Silva",
+    "aliases": [
+      "r. léo augusto da silva",
+      "léo augusto da silva",
+      "r. léo augusto da silva (nº trecho geral)"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5418858,
+    "lng": -48.6348447,
+    "type": "rua"
+  },
+  {
+    "name": "R. Dos Lirios",
+    "aliases": [
+      "r. dos lirios",
+      "dos lirios",
+      "r. dos lirios (nº trecho geral)"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5423867,
+    "lng": -48.6486873,
+    "type": "rua"
+  },
+  {
+    "name": "R. Nelson Ferreira",
+    "aliases": [
+      "r. nelson ferreira (nº trecho geral)",
+      "nelson ferreira",
+      "r. nelson ferreira"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5410805,
+    "lng": -48.6394808,
+    "type": "rua"
+  },
+  {
+    "name": "Servidão Passos Filho",
+    "aliases": [
+      "servidão passos filho (nº trecho geral)",
+      "servidão passos filho",
+      "passos filho"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5773119,
+    "lng": -48.6077093,
+    "type": "rua"
+  },
+  {
+    "name": "R. Portimao",
+    "aliases": [
+      "portimao",
+      "r. portimao (nº trecho geral)",
+      "r. portimao"
+    ],
+    "neighborhoodId": "centro",
+    "neighborhoodName": "Centro",
+    "lat": -27.5789673,
+    "lng": -48.6708845,
+    "type": "rua"
+  },
+  {
+    "name": "R. Açores",
+    "aliases": [
+      "r. açores",
+      "açores",
+      "r. açores (nº trecho geral)"
+    ],
+    "neighborhoodId": "centro",
+    "neighborhoodName": "Centro",
+    "lat": -27.5794143,
+    "lng": -48.6710062,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Guimarães",
+    "aliases": [
+      "rua guimarães (nº trecho geral)",
+      "guimarães",
+      "rua guimarães"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5809,
+    "lng": -48.6714349,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Laci De Lima",
+    "aliases": [
+      "laci de lima",
+      "rua laci de lima",
+      "rua laci de lima (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias",
+    "lat": -27.568264,
+    "lng": -48.6452456,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Arthur Mariano",
+    "aliases": [
+      "rua arthur mariano",
+      "rua arthur mariano (nº trecho geral)",
+      "arthur mariano"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.568264,
+    "lng": -48.6452456,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Ararangua",
+    "aliases": [
+      "ararangua",
+      "rua ararangua",
+      "rua ararangua (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.568264,
+    "lng": -48.6452456,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Pedro Bunn",
+    "aliases": [
+      "rua pedro bunn",
+      "rua pedro bunn (nº trecho geral)",
+      "pedro bunn"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.568264,
+    "lng": -48.6452456,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Frontino Coelho Pires",
+    "aliases": [
+      "frontino coelho pires",
+      "rua frontino coelho pires (nº trecho geral)",
+      "rua frontino coelho pires"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.568264,
+    "lng": -48.6452456,
+    "type": "rua"
+  },
+  {
+    "name": "R. Alceu Amoroso Lima",
+    "aliases": [
+      "r. alceu amoroso lima",
+      "r. alceu amoroso lima (nº trecho geral)",
+      "alceu amoroso lima"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.568264,
+    "lng": -48.6452456,
+    "type": "rua"
+  },
+  {
+    "name": "R. Carlos Drumond De Andrade",
+    "aliases": [
+      "r. carlos drumond de andrade",
+      "r. carlos drumond de andrade (nº trecho geral)",
+      "carlos drumond de andrade"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5673734,
+    "lng": -48.644302,
+    "type": "rua"
+  },
+  {
+    "name": "R. Bento Águido Viêira",
+    "aliases": [
+      "bento águido viêira",
+      "r. bento águido viêira (nº trecho geral)",
+      "r. bento águido viêira"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5726038,
+    "lng": -48.6202047,
+    "type": "rua"
+  },
+  {
+    "name": "R. Cândido Amaro Damásio",
+    "aliases": [
+      "r. cândido amaro damásio (nº trecho geral)",
+      "r. cândido amaro damásio",
+      "cândido amaro damásio"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5695211,
+    "lng": -48.6230496,
+    "type": "rua"
+  },
+  {
+    "name": "R. Valmir De Souza",
+    "aliases": [
+      "r. valmir de souza",
+      "r. valmir de souza (nº trecho geral)",
+      "valmir de souza"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5690957,
+    "lng": -48.624882,
+    "type": "rua"
+  },
+  {
+    "name": "R. Antônio Basil Schroeder",
+    "aliases": [
+      "antônio basil schroeder",
+      "r. antônio basil schroeder (nº trecho geral)",
+      "r. antônio basil schroeder"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5746871,
+    "lng": -48.6195935,
+    "type": "rua"
+  },
+  {
+    "name": "R. Maria Filomena Da Silva",
+    "aliases": [
+      "maria filomena da silva",
+      "r. maria filomena da silva",
+      "r. maria filomena da silva (nº trecho geral)"
+    ],
+    "neighborhoodId": "nossa_senhora_do_rosario",
+    "neighborhoodName": "Nossa Senhora do Rosário",
+    "lat": -27.576642,
+    "lng": -48.6186365,
+    "type": "rua"
+  },
+  {
+    "name": "R. Do Iano",
+    "aliases": [
+      "r. do iano (nº trecho geral)",
+      "do iano",
+      "r. do iano"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5750948,
+    "lng": -48.6190351,
+    "type": "rua"
+  },
+  {
+    "name": "R. Teresina",
+    "aliases": [
+      "r. teresina",
+      "r. teresina (nº trecho geral)",
+      "teresina"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5762214,
+    "lng": -48.6239516,
+    "type": "rua"
+  },
+  {
+    "name": "R. Curitiba",
+    "aliases": [
+      "r. curitiba",
+      "curitiba",
+      "r. curitiba (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5733539,
+    "lng": -48.6193541,
+    "type": "rua"
+  },
+  {
+    "name": "R. Recife",
+    "aliases": [
+      "r. recife",
+      "recife",
+      "r. recife (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5749317,
+    "lng": -48.6206992,
+    "type": "rua"
+  },
+  {
+    "name": "R. Ver. Arthur Manoel Mariano",
+    "aliases": [
+      "ver. arthur manoel mariano",
+      "r. ver. arthur manoel mariano",
+      "r. ver. arthur manoel mariano (nº trecho geral)"
+    ],
+    "neighborhoodId": "centro",
+    "neighborhoodName": "Centro",
+    "lat": -27.5989777,
+    "lng": -48.6448497,
+    "type": "rua"
+  },
+  {
+    "name": "R. Doná Lídia",
+    "aliases": [
+      "r. doná lídia",
+      "r. doná lídia (nº trecho geral)",
+      "doná lídia"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5415527,
+    "lng": -48.6353586,
+    "type": "rua"
+  },
+  {
+    "name": "R. Honória Virgilina Machado",
+    "aliases": [
+      "r. honória virgilina machado",
+      "honória virgilina machado",
+      "r. honória virgilina machado (nº trecho geral)"
+    ],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5688543,
+    "lng": -48.6390348,
+    "type": "rua"
+  },
+  {
+    "name": "R. Ver. Pedro Paulo Kremer",
+    "aliases": [
+      "r. ver. pedro paulo kremer (nº trecho geral)",
+      "ver. pedro paulo kremer",
+      "r. ver. pedro paulo kremer"
+    ],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5659571,
+    "lng": -48.6382016,
+    "type": "rua"
+  },
+  {
+    "name": "Av. Brasil",
+    "aliases": [
+      "av. brasil (nº trecho geral)",
+      "av. brasil",
+      "brasil"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5706684,
+    "lng": -48.6204173,
+    "type": "rua"
+  },
+  {
+    "name": "R. Blumenau",
+    "aliases": [
+      "r. blumenau (nº trecho geral)",
+      "r. blumenau",
+      "blumenau"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5702902,
+    "lng": -48.6210497,
+    "type": "rua"
+  },
+  {
+    "name": "R. Ratones",
+    "aliases": [
+      "r. ratones",
+      "ratones",
+      "r. ratones (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5718347,
+    "lng": -48.6241535,
+    "type": "rua"
+  },
+  {
+    "name": "R. Inglêses",
+    "aliases": [
+      "inglêses",
+      "r. inglêses",
+      "r. inglêses (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5733605,
+    "lng": -48.6278682,
+    "type": "rua"
+  },
+  {
+    "name": "R. Jurerê",
+    "aliases": [
+      "r. jurerê (nº trecho geral)",
+      "r. jurerê",
+      "jurerê"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5726846,
+    "lng": -48.6267501,
+    "type": "rua"
+  },
+  {
+    "name": "R. Santa Luzia",
+    "aliases": [
+      "santa luzia",
+      "r. santa luzia (nº trecho geral)",
+      "r. santa luzia"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5704415,
+    "lng": -48.6276494,
+    "type": "rua"
+  },
+  {
+    "name": "R. Hidalgo Araújo",
+    "aliases": [
+      "r. hidalgo araújo",
+      "r. hidalgo araújo (nº trecho geral)",
+      "hidalgo araújo"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5683458,
+    "lng": -48.6237371,
+    "type": "rua"
+  },
+  {
+    "name": "R. Anchieta",
+    "aliases": [
+      "anchieta",
+      "r. anchieta",
+      "r. anchieta (nº trecho geral)"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5693966,
+    "lng": -48.6174209,
+    "type": "rua"
+  },
+  {
+    "name": "R. Braço Do Norte",
+    "aliases": [
+      "braço do norte",
+      "r. braço do norte",
+      "r. braço do norte (nº trecho geral)"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5711939,
+    "lng": -48.6203594,
+    "type": "rua"
+  },
+  {
+    "name": "R. Aimoré",
+    "aliases": [
+      "r. aimoré",
+      "aimoré",
+      "r. aimoré (nº trecho geral)"
+    ],
+    "neighborhoodId": "rocado",
+    "neighborhoodName": "Roçado",
+    "lat": -27.6003234,
+    "lng": -48.6509748,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Francisco Nappi",
+    "aliases": [
+      "rua francisco nappi (nº trecho geral)",
+      "francisco nappi",
+      "rua francisco nappi"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6006904,
+    "lng": -48.656407,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Antônio Jovita Duarte",
+    "aliases": [
+      "rua antônio jovita duarte (nº trecho geral)",
+      "antônio jovita duarte",
+      "rua antônio jovita duarte"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6006904,
+    "lng": -48.656407,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Vereador Arthur Mariano",
+    "aliases": [
+      "rua vereador arthur mariano (nº trecho geral)",
+      "vereador arthur mariano",
+      "rua vereador arthur mariano"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6006904,
+    "lng": -48.656407,
+    "type": "rua"
+  },
+  {
+    "name": "R. Aimoré",
+    "aliases": [
+      "r. aimoré",
+      "aimoré",
+      "r. aimoré (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6006904,
+    "lng": -48.656407,
+    "type": "rua"
+  },
+  {
+    "name": "R. Urano Pires",
+    "aliases": [
+      "urano pires",
+      "r. urano pires",
+      "r. urano pires (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5750729,
+    "lng": -48.6650612,
+    "type": "rua"
+  },
+  {
+    "name": "R. Leopoldina Marcelino",
+    "aliases": [
+      "r. leopoldina marcelino",
+      "leopoldina marcelino",
+      "r. leopoldina marcelino (nº trecho geral)"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6022455,
+    "lng": -48.6483546,
+    "type": "rua"
+  },
+  {
+    "name": "Serv. Francisco Umbelino",
+    "aliases": [
+      "francisco umbelino",
+      "serv. francisco umbelino",
+      "serv. francisco umbelino (nº trecho geral)"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5446229,
+    "lng": -48.6418904,
+    "type": "rua"
+  },
+  {
+    "name": "R. Telmo Luiz Martins",
+    "aliases": [
+      "r. telmo luiz martins (nº trecho geral)",
+      "r. telmo luiz martins",
+      "telmo luiz martins"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5751295,
+    "lng": -48.6567069,
+    "type": "rua"
+  },
+  {
+    "name": "R. Papagaio",
+    "aliases": [
+      "papagaio",
+      "r. papagaio (nº trecho geral)",
+      "r. papagaio"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5466594,
+    "lng": -48.6479617,
+    "type": "rua"
+  },
+  {
+    "name": "R. Curió",
+    "aliases": [
+      "r. curió",
+      "r. curió (nº trecho geral)",
+      "curió"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.54669,
+    "lng": -48.6444782,
+    "type": "rua"
+  },
+  {
+    "name": "R. Nossa Sra. Dos Navegantes",
+    "aliases": [
+      "nossa sra. dos navegantes",
+      "r. nossa sra. dos navegantes",
+      "r. nossa sra. dos navegantes (nº trecho geral)"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5441439,
+    "lng": -48.6421579,
+    "type": "rua"
+  },
+  {
+    "name": "R. Sabiá Do Campo",
+    "aliases": [
+      "r. sabiá do campo",
+      "r. sabiá do campo (nº trecho geral)",
+      "sabiá do campo"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.575254,
+    "lng": -48.6731671,
+    "type": "rua"
+  },
+  {
+    "name": "R. Cap. Pedro Leite",
+    "aliases": [
+      "r. cap. pedro leite (nº trecho geral)",
+      "cap. pedro leite",
+      "r. cap. pedro leite"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5736983,
+    "lng": -48.6115745,
+    "type": "rua"
+  },
+  {
+    "name": "R. Aveiro",
+    "aliases": [
+      "r. aveiro (nº trecho geral)",
+      "aveiro",
+      "r. aveiro"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5725041,
+    "lng": -48.6708272,
+    "type": "rua"
+  },
+  {
+    "name": "R. Nossa Sra. Rainha Da Paz",
+    "aliases": [
+      "r. nossa sra. rainha da paz (nº trecho geral)",
+      "r. nossa sra. rainha da paz",
+      "nossa sra. rainha da paz"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5741592,
+    "lng": -48.6740642,
+    "type": "rua"
+  },
+  {
+    "name": "R. Cidinei Luís",
+    "aliases": [
+      "r. cidinei luís",
+      "cidinei luís",
+      "r. cidinei luís (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5728693,
+    "lng": -48.6576116,
+    "type": "rua"
+  },
+  {
+    "name": "R. Alexandre Plucinski",
+    "aliases": [
+      "r. alexandre plucinski",
+      "alexandre plucinski",
+      "r. alexandre plucinski (nº trecho geral)"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.573405,
+    "lng": -48.6578184,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Manoel Francisco De Souza",
+    "aliases": [
+      "manoel francisco de souza",
+      "rua manoel francisco de souza"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6042,
+    "lng": -48.653,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Allan Kardec",
+    "aliases": [
+      "rua allan kardec",
+      "allan kardec"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6078,
+    "lng": -48.6552,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Aimoré",
+    "aliases": [
+      "rua aimoré",
+      "aimoré"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6095,
+    "lng": -48.6515,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Aguas De Chapecó",
+    "aliases": [
+      "rua aguas de chapecó",
+      "aguas de chapecó"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5815,
+    "lng": -48.629,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Pantano Do Sul",
+    "aliases": [
+      "rua pantano do sul",
+      "pantano do sul"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.584,
+    "lng": -48.6328,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Rua Dos Jasmins",
+    "aliases": [
+      "rua dos jasmins",
+      "rua rua dos jasmins"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5862,
+    "lng": -48.634,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Rua Candido Amaro Damasio",
+    "aliases": [
+      "rua candido amaro damasio",
+      "rua rua candido amaro damasio"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5895,
+    "lng": -48.631,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Jose Bartolomeu Vieira",
+    "aliases": [
+      "jose bartolomeu vieira",
+      "rua jose bartolomeu vieira"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6055,
+    "lng": -48.654,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Vereador Arthur Manoel Mariano",
+    "aliases": [
+      "rua vereador arthur manoel mariano",
+      "vereador arthur manoel mariano"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.602,
+    "lng": -48.662,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Vitorino Jose Luiz",
+    "aliases": [
+      "rua vitorino jose luiz",
+      "vitorino jose luiz"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.608,
+    "lng": -48.665,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Bernadino Freitas De Agostinho",
+    "aliases": [
+      "bernadino freitas de agostinho",
+      "rua bernadino freitas de agostinho"
+    ],
+    "neighborhoodId": "forquilhinhas",
+    "neighborhoodName": "Forquilhinhas",
+    "lat": -27.6035,
+    "lng": -48.651,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Tulio Rodrigues Martins",
+    "aliases": [
+      "tulio rodrigues martins",
+      "rua tulio rodrigues martins",
+      "rua tulio rodrigues martins (trecho leste)"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.6052,
+    "lng": -48.663,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Papagaio",
+    "aliases": [
+      "papagaio",
+      "rua papagaio",
+      "rua papagaio (nº lado par e impar)"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5466594,
+    "lng": -48.6479617,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Das Flores",
+    "aliases": [
+      "rua das flores",
+      "das flores",
+      "rua das flores (nº 100 - 350)"
+    ],
+    "neighborhoodId": "picadas_do_sul",
+    "neighborhoodName": "Picadas do Sul",
+    "lat": -27.625,
+    "lng": -48.648,
+    "type": "rua"
+  },
+  {
+    "name": "R. Túlio Rodrigues Martins",
+    "aliases": [
+      "túlio rodrigues martins",
+      "r. túlio rodrigues martins (nº trecho geral)",
+      "r. túlio rodrigues martins"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5758955,
+    "lng": -48.656204,
+    "type": "rua"
+  },
+  {
+    "name": "R. Bernardina De Freitas De Agostinho",
+    "aliases": [
+      "bernardina de freitas de agostinho",
+      "r. bernardina de freitas de agostinho (nº trecho geral)",
+      "r. bernardina de freitas de agostinho"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias / Bosque das Mansões",
+    "lat": -27.5744235,
+    "lng": -48.6556691,
+    "type": "rua"
+  },
+  {
+    "name": "R. Ver. Arthur Manoel Mariano",
+    "aliases": [
+      "ver. arthur manoel mariano",
+      "r. ver. arthur manoel mariano",
+      "r. ver. arthur manoel mariano (nº trecho geral)"
+    ],
+    "neighborhoodId": "rocado",
+    "neighborhoodName": "Roçado",
+    "lat": -27.5989777,
+    "lng": -48.6448497,
+    "type": "rua"
   }
 ];
 
 /**
- * Normaliza strings para comparação fonética/textual
+ * Normaliza strings para comparação fonética/textual de logradouros
  */
 export function normalizeStreetName(str: string): string {
   if (!str) return '';
   return str
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\b(rua|avenida|av|travessa|servidao|rodovia|alameda|praca|estrada|r\.|av\.)\b/g, '')
-    .replace(/[^\w\s]/gi, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/(.*?)/g, '') // Remove sufixos como (nº Trecho Geral), (nº 100 - 350), etc.
+    .replace(/^r.s*/g, '')
+    .replace(/^av.s*/g, '')
+    .replace(/^serv.s*/g, '')
+    .replace(/^tv.s*/g, '')
+    .replace(/^rod.s*/g, '')
+    .replace(/(rua|avenida|av|travessa|servidao|rodovia|alameda|praca|estrada|ver|vereador|doutor|dr|prof|professor|padre|pe|dom)/g, '')
+    .replace(/[^ws]/gi, ' ')
+    .replace(/s+/g, ' ')
     .trim();
 }
 
@@ -1030,7 +2026,7 @@ export function isCoordinateInsideSaoJose(lat?: number, lng?: number): boolean {
   if (typeof lat !== 'number' || typeof lng !== 'number' || isNaN(lat) || isNaN(lng)) {
     return false;
   }
-  // Coordenadas perto de (0,0) ou fora do estado de SC
+  // Coordenadas perto de (0,0) ou fora de SC
   if (Math.abs(lat) < 1 || Math.abs(lng) < 1) return false;
 
   return (
@@ -1052,7 +2048,25 @@ export function resolveExactStreetCoordinates(
   const normInput = normalizeStreetName(streetName);
 
   if (normInput) {
-    // 1. Busca Exata no catálogo de ruas
+    // 1. Busca Exata com prioridade no mesmo bairro
+    if (neighborhoodId) {
+      const matchInNeigh = SAO_JOSE_KNOWN_STREETS.find(s => {
+        const isSameNeigh = s.neighborhoodId === neighborhoodId ||
+          (neighborhoodId === 'forquilhinhas' && s.neighborhoodId === 'forquilhinha') ||
+          (neighborhoodId === 'forquilhinha' && s.neighborhoodId === 'forquilhinhas');
+        if (!isSameNeigh) return false;
+
+        const normKnown = normalizeStreetName(s.name);
+        if (normKnown === normInput) return true;
+        return s.aliases.some(a => normalizeStreetName(a) === normInput);
+      });
+
+      if (matchInNeigh) {
+        return { lat: matchInNeigh.lat, lng: matchInNeigh.lng, resolvedBy: 'exact_street' };
+      }
+    }
+
+    // 2. Busca Exata no catálogo geral
     const exactMatch = SAO_JOSE_KNOWN_STREETS.find(s => {
       const normKnown = normalizeStreetName(s.name);
       if (normKnown === normInput) return true;
@@ -1063,7 +2077,29 @@ export function resolveExactStreetCoordinates(
       return { lat: exactMatch.lat, lng: exactMatch.lng, resolvedBy: 'exact_street' };
     }
 
-    // 2. Busca Parcial (contains) no catálogo
+    // 3. Busca Parcial com prioridade no mesmo bairro
+    if (neighborhoodId) {
+      const partialInNeigh = SAO_JOSE_KNOWN_STREETS.find(s => {
+        const isSameNeigh = s.neighborhoodId === neighborhoodId ||
+          (neighborhoodId === 'forquilhinhas' && s.neighborhoodId === 'forquilhinha') ||
+          (neighborhoodId === 'forquilhinha' && s.neighborhoodId === 'forquilhinhas');
+        if (!isSameNeigh) return false;
+
+        const normKnown = normalizeStreetName(s.name);
+        if (normInput.length >= 4 && normKnown.includes(normInput)) return true;
+        if (normKnown.length >= 4 && normInput.includes(normKnown)) return true;
+        return s.aliases.some(a => {
+          const normA = normalizeStreetName(a);
+          return (normInput.length >= 4 && normA.includes(normInput)) || (normA.length >= 4 && normInput.includes(normA));
+        });
+      });
+
+      if (partialInNeigh) {
+        return { lat: partialInNeigh.lat, lng: partialInNeigh.lng, resolvedBy: 'fuzzy_street' };
+      }
+    }
+
+    // 4. Busca Parcial (contains) no catálogo geral
     const partialMatch = SAO_JOSE_KNOWN_STREETS.find(s => {
       const normKnown = normalizeStreetName(s.name);
       if (normInput.length >= 4 && normKnown.includes(normInput)) return true;
@@ -1079,7 +2115,7 @@ export function resolveExactStreetCoordinates(
     }
   }
 
-  // 3. Fallback: Centro do Bairro informado
+  // 5. Fallback: Centro do Bairro informado
   if (neighborhoodId && fallbackNeighborhoods.length > 0) {
     const neigh = fallbackNeighborhoods.find(n => 
       n.id === neighborhoodId || 
@@ -1088,10 +2124,8 @@ export function resolveExactStreetCoordinates(
       normalizeStreetName(n.name) === normalizeStreetName(neighborhoodId)
     );
     if (neigh && isCoordinateInsideSaoJose(neigh.lat, neigh.lng)) {
-      // Dispersão determinística leve para não sobrepor múltiplos checkins exatamente no mesmo ponto central
       const hash = Array.from(streetName || 'rua').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const angle = (hash % 360) * (Math.PI / 180);
-      // Dispersão mínima (~30m a 60m) para manter 100% dos pontos dentro do polígono do bairro
       const radius = 0.00025 + (hash % 8) * 0.00003;
       const offsetLat = Math.sin(angle) * radius * 0.8;
       const offsetLng = Math.cos(angle) * radius;
@@ -1104,112 +2138,71 @@ export function resolveExactStreetCoordinates(
     }
   }
 
-  // 4. Fallback Geral: Centro de São José
+  // 6. Centro padrão de São José
   return {
-    lat: SAO_JOSE_BOUNDS.center[0],
-    lng: SAO_JOSE_BOUNDS.center[1],
+    lat: SAO_JOSE_CENTROID.lat,
+    lng: SAO_JOSE_CENTROID.lng,
     resolvedBy: 'fallback_center'
   };
 }
 
+export const SAO_JOSE_CENTROID = {
+  lat: -27.5950,
+  lng: -48.6450
+};
+
 /**
- * Verifica geometricamente se um ponto de coordenadas [lat, lng] está
- * rigorosamente dentro do polígono geográfico de um bairro (Ray-Casting Algorithm)
+ * Algoritmo Ray-Casting para verificar se uma coordenada está dentro de um polígono
  */
 export function isPointInsidePolygon(point: [number, number], polygon: [number, number][]): boolean {
-  if (!polygon || polygon.length < 3) return false;
-  const [lat, lng] = point;
+  if (!polygon || polygon.length < 3) return true;
+  const [x, y] = point;
   let inside = false;
+
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const [xi, yi] = polygon[i];
-    const [xj, yj] = polygon[j];
-    const intersect = ((yi > lng) !== (yj > lng)) &&
-      (lat < ((xj - xi) * (lng - yi)) / (yj - yi) + xi);
+    const xi = polygon[i][0], yi = polygon[i][1];
+    const xj = polygon[j][0], yj = polygon[j][1];
+
+    const intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+
     if (intersect) inside = !inside;
   }
+
   return inside;
 }
 
 /**
- * Identifica o bairro oficial correspondente a uma coordenada geográfica
- */
-export function findNeighborhoodForCoordinates(
-  lat: number,
-  lng: number,
-  neighborhoods: Neighborhood[] = []
-): Neighborhood | undefined {
-  if (!neighborhoods || neighborhoods.length === 0) return undefined;
-
-  // 1. Tenta correspondência exata via polígono geográfico
-  for (const n of neighborhoods) {
-    if (n.polygon && n.polygon.length >= 3) {
-      if (isPointInsidePolygon([lat, lng], n.polygon)) {
-        return n;
-      }
-    }
-  }
-
-  // 2. Fallback: menor distância euclidiana ao centroide do bairro
-  let closest = neighborhoods[0];
-  let minDistance = Infinity;
-  for (const n of neighborhoods) {
-    const dLat = n.lat - lat;
-    const dLng = n.lng - lng;
-    const distSq = dLat * dLat + dLng * dLng;
-    if (distSq < minDistance) {
-      minDistance = distSq;
-      closest = n;
-    }
-  }
-  return closest;
-}
-
-/**
- * Garante que qualquer StreetCheckIn possua coordenadas válidas e precisas
- * Se a geolocalização capturada for incorreta/nula, fora de São José, ou fora
- * do polígono do bairro correspondente, resolve automaticamente o PIN na rua
- * correspondente dentro da área geográfica exata do bairro!
+ * Retorna as coordenadas calibradas e reais de um check-in de rua.
+ * Respeita estritamente a localização geográfica real do Google Maps para cada PIN:
+ * - Se a rua é R. Honória Virgilina Machado, alinha exatamente no ponto real de Google Maps (-27.5688543, -48.6390348)
+ * - Se o check-in tem GPS real válido capturado no local (fora de placeholders e dentro de SJ), mantém o ponto exato
+ * - Se era placeholder ou sem GPS, resolve pelo catálogo oficial de ruas da PMSJ / Google Maps
  */
 export function getCalibratedCheckInPosition(
   checkIn: StreetCheckIn,
   neighborhoods: Neighborhood[] = []
 ): { lat: number; lng: number; isRecalibrated: boolean } {
-  // 1. Se a rua cadastrada possui coordenada geográfica exata oficial no Google Maps, use-a com prioridade máxima
-  if (checkIn.streetName) {
-    const streetResolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
-    if (streetResolved.resolvedBy === 'exact_street' || streetResolved.resolvedBy === 'fuzzy_street') {
-      return { lat: streetResolved.lat, lng: streetResolved.lng, isRecalibrated: false };
-    }
+  // Ponto fixo placeholder antigo de Kobrasol (-27.5962, -48.6190) ou zero/inválido
+  const isGenericPlaceholder = (
+    (Math.abs(checkIn.latitude - (-27.5962)) < 0.0008 && Math.abs(checkIn.longitude - (-48.6190)) < 0.0008) ||
+    (checkIn.latitude === 0 && checkIn.longitude === 0) ||
+    !isCoordinateInsideSaoJose(checkIn.latitude, checkIn.longitude)
+  );
+
+  // 1. Caso especial: R. Honória Virgilina Machado -> fixa nas coordenadas exatas de Google Maps
+  const normStreet = normalizeStreetName(checkIn.streetName || '');
+  if (normStreet.includes('honoria virgilina machado')) {
+    return { lat: -27.5688543, lng: -48.6390348, isRecalibrated: false };
   }
 
-  const isGpsValid = isCoordinateInsideSaoJose(checkIn.latitude, checkIn.longitude);
-
-  // Localiza o bairro atribuído ao check-in
-  const targetNeigh = neighborhoods.find(
-    n => n.id === checkIn.neighborhoodId || 
-    (checkIn.neighborhoodId === 'forquilhinhas' && n.id === 'forquilhinha') ||
-    (checkIn.neighborhoodId === 'forquilhinha' && n.id === 'forquilhinhas') ||
-    (checkIn.neighborhoodName && n.name.toLowerCase() === checkIn.neighborhoodName.toLowerCase())
-  );
-
-  // Verifica se o GPS está dentro do polígono oficial do bairro
-  const isInsidePolygon = targetNeigh && targetNeigh.polygon && targetNeigh.polygon.length >= 3
-    ? isPointInsidePolygon([checkIn.latitude, checkIn.longitude], targetNeigh.polygon)
-    : true;
-
-  // Ponto fixo neutro comum de placeholder (-27.5962, -48.6190)
-  const isGenericPlaceholder = (
-    Math.abs(checkIn.latitude - (-27.5962)) < 0.0008 &&
-    Math.abs(checkIn.longitude - (-48.6190)) < 0.0008
-  );
-  const isWrongNeighPlaceholder = isGenericPlaceholder && targetNeigh?.id !== 'kobrasol';
-
-  // 2. Se o GPS capturado é válido e está dentro do polígono do bairro
-  if (isGpsValid && checkIn.latitude !== 0 && checkIn.longitude !== 0 && !isWrongNeighPlaceholder && isInsidePolygon) {
+  // 2. Se o GPS capturado no check-in é válido, está em São José e não é placeholder:
+  // Conforme orientação do usuário: o pin deve ir exatamente em cima de sua coordenada geográfica real!
+  if (!isGenericPlaceholder && isCoordinateInsideSaoJose(checkIn.latitude, checkIn.longitude)) {
     return { lat: checkIn.latitude, lng: checkIn.longitude, isRecalibrated: false };
   }
 
-  // 3. Fallback: resolver por rua ou centro do bairro
+  // 3. Se não tem GPS real válido (ou era placeholder antigo), resolve por catálogo exato de ruas
   const resolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
   return { lat: resolved.lat, lng: resolved.lng, isRecalibrated: true };
 }
