@@ -35,7 +35,9 @@
         "neighborhoodName": "Forquilhinhas",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 3
+      "completedStreets": 3,
+      "updatedAt": "2026-09-03T16:49:12.927Z",
+      "_localModified": true
     },
     {
       "id": "mil-douglas-005",
@@ -251,7 +253,9 @@
         "neighborhoodName": "Areias / Bosque das Mansões",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 14
+      "completedStreets": 14,
+      "updatedAt": "2026-09-03T16:48:21.917Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842489241",
@@ -285,7 +289,9 @@
         "neighborhoodName": "Forquilhas",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 0
+      "completedStreets": 0,
+      "updatedAt": "2026-09-03T16:48:43.485Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842561785",
@@ -387,7 +393,9 @@
         "neighborhoodName": "Serraria",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 0
+      "completedStreets": 0,
+      "updatedAt": "2026-09-03T16:49:27.352Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842774685",
@@ -4785,6 +4793,54 @@
           -48.755
         ]
       ]
+    },
+    {
+      "id": "forquilhinhas",
+      "name": "Forquilhinhas",
+      "zone": "Distrito Forquilhinhas",
+      "population": 32400,
+      "households": 12600,
+      "votersEstimated": 25900,
+      "totalStreets": 138,
+      "completedStreets": 13,
+      "lat": -27.604,
+      "lng": -48.665,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.592,
+          -48.68
+        ],
+        [
+          -27.592,
+          -48.65
+        ],
+        [
+          -27.615,
+          -48.65
+        ],
+        [
+          -27.615,
+          -48.68
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 58000,
+        "adesivos": 7200,
+        "adesivo_bola": 3200,
+        "adesivo_parachoque": 1600,
+        "colinhas": 39000
+      },
+      "deliveredMaterials": {
+        "santinhos": 600,
+        "adesivos": 100,
+        "adesivo_bola": 32,
+        "adesivo_parachoque": 16,
+        "colinhas": 400,
+        "abordagens": 122,
+        "comercio": 18
+      },
+      "assignedTeamId": "team-charlie"
     }
   ],
   "militancia_militants_v1": [
@@ -4820,7 +4876,9 @@
         "neighborhoodName": "Areias / Bosque das Mansões",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 14
+      "completedStreets": 14,
+      "updatedAt": "2026-09-03T16:48:21.917Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842489241",
@@ -4854,7 +4912,9 @@
         "neighborhoodName": "Forquilhas",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 0
+      "completedStreets": 0,
+      "updatedAt": "2026-09-03T16:48:43.485Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842561785",
@@ -4922,7 +4982,9 @@
         "neighborhoodName": "Forquilhinhas",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 3
+      "completedStreets": 3,
+      "updatedAt": "2026-09-03T16:49:12.927Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842651982",
@@ -4990,7 +5052,9 @@
         "neighborhoodName": "Serraria",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 0
+      "completedStreets": 0,
+      "updatedAt": "2026-09-03T16:49:27.352Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842774685",
@@ -5671,6 +5735,61 @@
     }
   ],
   "militancia_audit_logs_v1": [
+    {
+      "id": "log-1788454167355-825",
+      "timestamp": "2026-09-03 16:49:27",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "EDICAO_MILITANTE",
+      "category": "CADASTROS",
+      "ipAddress": "177.136.210.45",
+      "details": "Militante Eduardo (Mil006) atualizado com sucesso."
+    },
+    {
+      "id": "log-1788454152930-146",
+      "timestamp": "2026-09-03 16:49:12",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "EDICAO_MILITANTE",
+      "category": "CADASTROS",
+      "ipAddress": "177.136.210.45",
+      "details": "Militante Daiana (Mil004) atualizado com sucesso."
+    },
+    {
+      "id": "log-1788454123490-707",
+      "timestamp": "2026-09-03 16:48:43",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "EDICAO_MILITANTE",
+      "category": "CADASTROS",
+      "ipAddress": "177.136.210.45",
+      "details": "Militante Beatriz (Mil002) atualizado com sucesso."
+    },
+    {
+      "id": "log-1788454101922-735",
+      "timestamp": "2026-09-03 16:48:21",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "EDICAO_MILITANTE",
+      "category": "CADASTROS",
+      "ipAddress": "177.136.210.45",
+      "details": "Militante Luciano (Mil001) atualizado com sucesso."
+    },
+    {
+      "id": "log-1788452431063-107",
+      "timestamp": "2026-09-03 16:20:31",
+      "userId": "user-coord-geral",
+      "userName": "Pedro da Silva Rosa",
+      "userRole": "admin",
+      "action": "LOGIN_COORDENADOR",
+      "category": "AUTENTICACAO",
+      "ipAddress": "177.136.210.45",
+      "details": "Coordenador Geral Pedro da Silva Rosa autenticado com acesso total ao sistema."
+    },
     {
       "id": "log-1788449040350-492",
       "timestamp": "2026-09-03 15:24:00",
@@ -7552,7 +7671,9 @@
         "neighborhoodName": "Areias / Bosque das Mansões",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 14
+      "completedStreets": 14,
+      "updatedAt": "2026-09-03T16:48:21.917Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842489241",
@@ -7586,7 +7707,9 @@
         "neighborhoodName": "Forquilhas",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 0
+      "completedStreets": 0,
+      "updatedAt": "2026-09-03T16:48:43.485Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842561785",
@@ -7654,7 +7777,9 @@
         "neighborhoodName": "Forquilhinhas",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 3
+      "completedStreets": 3,
+      "updatedAt": "2026-09-03T16:49:12.927Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842651982",
@@ -7722,7 +7847,9 @@
         "neighborhoodName": "Serraria",
         "lastUpdate": "Agora mesmo"
       },
-      "completedStreets": 0
+      "completedStreets": 0,
+      "updatedAt": "2026-09-03T16:49:27.352Z",
+      "_localModified": true
     },
     {
       "id": "mil-1787842774685",
@@ -8459,7 +8586,7 @@
       "nextPickupTime": "08:00"
     }
   ],
-  "_lastServerSavedAt": "2026-09-03T16:20:10.546Z",
+  "_lastServerSavedAt": "2026-09-03T17:00:25.747Z",
   "militancia_neighborhoods_pmsj2020_v3": [
     {
       "id": "alto_forquilhas",
@@ -10241,6 +10368,54 @@
           -48.755
         ]
       ]
+    },
+    {
+      "id": "forquilhinhas",
+      "name": "Forquilhinhas",
+      "zone": "Distrito Forquilhinhas",
+      "population": 32400,
+      "households": 12600,
+      "votersEstimated": 25900,
+      "totalStreets": 138,
+      "completedStreets": 13,
+      "lat": -27.604,
+      "lng": -48.665,
+      "priority": "Alta",
+      "polygon": [
+        [
+          -27.592,
+          -48.68
+        ],
+        [
+          -27.592,
+          -48.65
+        ],
+        [
+          -27.615,
+          -48.65
+        ],
+        [
+          -27.615,
+          -48.68
+        ]
+      ],
+      "targetMaterials": {
+        "santinhos": 58000,
+        "adesivos": 7200,
+        "adesivo_bola": 3200,
+        "adesivo_parachoque": 1600,
+        "colinhas": 39000
+      },
+      "deliveredMaterials": {
+        "santinhos": 600,
+        "adesivos": 100,
+        "adesivo_bola": 32,
+        "adesivo_parachoque": 16,
+        "colinhas": 400,
+        "abordagens": 122,
+        "comercio": 18
+      },
+      "assignedTeamId": "team-charlie"
     }
   ]
 }

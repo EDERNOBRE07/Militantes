@@ -26,10 +26,12 @@ import {
   ChevronRight,
   Edit3,
   CheckCircle2,
-  Eye
+  Eye,
+  Flame
 } from 'lucide-react';
 
-export type MapLayerMode = 'atlas_pmsj' | 'demografia_ibge' | 'performance_militancia';
+export type MapLayerMode = 'atlas_pmsj' | 'mapa_calor' | 'demografia_ibge' | 'performance_militancia';
+export type HeatmapMetric = 'checkins' | 'santinhos' | 'adesivos' | 'eleitores';
 export type BaseMapProvider = 'google_streets' | 'google_satellite' | 'google_terrain' | 'carto_osm';
 
 interface CoverageMapViewProps {
@@ -37,6 +39,7 @@ interface CoverageMapViewProps {
   militants: Militant[];
   vans: Van[];
   checkIns: StreetCheckIn[];
+  initialLayerMode?: MapLayerMode;
   onSelectNeighborhood?: (neighborhood: Neighborhood) => void;
   onCheckInUpdated?: () => void;
 }
@@ -46,6 +49,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   militants,
   vans,
   checkIns,
+  initialLayerMode,
   onSelectNeighborhood,
   onCheckInUpdated
 }) => {
@@ -58,7 +62,8 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   const [baseMapProvider, setBaseMapProvider] = useState<BaseMapProvider>('google_streets');
 
   // Layer mode: Mapa Oficial PMSJ 2020 (Atlas IFSC) vs Demografia IBGE vs PINs Performance
-  const [layerMode, setLayerMode] = useState<MapLayerMode>('atlas_pmsj');
+  const [layerMode, setLayerMode] = useState<MapLayerMode>(initialLayerMode || 'atlas_pmsj');
+  const [heatMetric, setHeatMetric] = useState<HeatmapMetric>('checkins');
   const [showVans, setShowVans] = useState<boolean>(true);
   const [showMilitants, setShowMilitants] = useState<boolean>(true);
   const [showCheckins, setShowCheckins] = useState<boolean>(true);
@@ -178,6 +183,29 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
     // =========================================================================
     // 1. RENDER NEIGHBORHOOD POLYGONS ACCORDING TO ACTIVE LAYER MODE & SELECTION
     // =========================================================================
+    const chkCounts: Record<string, number> = {};
+    neighborhoods.forEach(n => { chkCounts[n.id] = 0; });
+    checkIns.forEach(c => {
+      if (c.neighborhoodId && chkCounts[c.neighborhoodId] !== undefined) {
+        chkCounts[c.neighborhoodId]++;
+      }
+    });
+
+    let maxChk = 1;
+    let maxSant = 1;
+    let maxAdes = 1;
+    let maxEleit = 1;
+    neighborhoods.forEach(b => {
+      const c = chkCounts[b.id] || 0;
+      if (c > maxChk) maxChk = c;
+      const s = b.deliveredMaterials?.santinhos || 0;
+      if (s > maxSant) maxSant = s;
+      const a = (b.deliveredMaterials?.adesivo_bola || 0) + (b.deliveredMaterials?.adesivo_parachoque || 0) + (b.deliveredMaterials?.adesivos || 0);
+      if (a > maxAdes) maxAdes = a;
+      const el = b.votersEstimated || 1;
+      if (el > maxEleit) maxEleit = el;
+    });
+
     neighborhoods.forEach(bairro => {
       const isSelected = selectedBairroFilter !== 'todos' && bairro.id === selectedBairroFilter;
       const isOtherWhenFiltered = selectedBairroFilter !== 'todos' && !isSelected;
@@ -212,6 +240,54 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
         strokeWidth = 2.0;
         strokeOpacity = 0.95;
         fillOpacity = 0.45;
+      } else if (layerMode === 'mapa_calor') {
+        let heatVal = 0;
+        let maxV = 1;
+        if (heatMetric === 'checkins') {
+          heatVal = chkCounts[bairro.id] || 0;
+          maxV = maxChk;
+        } else if (heatMetric === 'santinhos') {
+          heatVal = bairro.deliveredMaterials?.santinhos || 0;
+          maxV = maxSant;
+        } else if (heatMetric === 'adesivos') {
+          heatVal = (bairro.deliveredMaterials?.adesivo_bola || 0) + (bairro.deliveredMaterials?.adesivo_parachoque || 0) + (bairro.deliveredMaterials?.adesivos || 0);
+          maxV = maxAdes;
+        } else {
+          heatVal = bairro.votersEstimated || 0;
+          maxV = maxEleit;
+        }
+        const heatRatio = maxV > 0 ? heatVal / maxV : 0;
+        if (heatRatio >= 0.85) {
+          fillColor = '#dc2626'; // Hotspot Fogo Máximo
+          strokeColor = '#991b1b';
+          fillOpacity = 0.65;
+          strokeWidth = 2.5;
+        } else if (heatRatio >= 0.65) {
+          fillColor = '#ea580c'; // Laranja Intenso
+          strokeColor = '#c2410c';
+          fillOpacity = 0.55;
+          strokeWidth = 2.0;
+        } else if (heatRatio >= 0.45) {
+          fillColor = '#eab308'; // Amarelo Quente
+          strokeColor = '#a16207';
+          fillOpacity = 0.48;
+          strokeWidth = 1.8;
+        } else if (heatRatio >= 0.25) {
+          fillColor = '#10b981'; // Verde Moderado
+          strokeColor = '#047857';
+          fillOpacity = 0.40;
+          strokeWidth = 1.5;
+        } else if (heatRatio > 0.05) {
+          fillColor = '#06b6d4'; // Ciano
+          strokeColor = '#0e7490';
+          fillOpacity = 0.32;
+          strokeWidth = 1.2;
+        } else {
+          fillColor = '#3b82f6'; // Azul Frio
+          strokeColor = '#1d4ed8';
+          fillOpacity = 0.22;
+          strokeWidth = 1.0;
+        }
       } else if (layerMode === 'demografia_ibge') {
         // IBGE Population / Demography scale
         if (bairro.population >= 20000) {
@@ -262,7 +338,68 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       }
 
       // Customized Popup content per layer
-      const popupHtml = layerMode === 'atlas_pmsj' ? `
+      let heatValPopup = 0;
+      let maxVPopup = 1;
+      let heatUnitLabel = '';
+      if (heatMetric === 'checkins') {
+        heatValPopup = chkCounts[bairro.id] || 0;
+        maxVPopup = maxChk;
+        heatUnitLabel = heatValPopup + ' check-ins';
+      } else if (heatMetric === 'santinhos') {
+        heatValPopup = bairro.deliveredMaterials?.santinhos || 0;
+        maxVPopup = maxSant;
+        heatUnitLabel = heatValPopup.toLocaleString('pt-BR') + ' santinhos';
+      } else if (heatMetric === 'adesivos') {
+        heatValPopup = (bairro.deliveredMaterials?.adesivo_bola || 0) + (bairro.deliveredMaterials?.adesivo_parachoque || 0) + (bairro.deliveredMaterials?.adesivos || 0);
+        maxVPopup = maxAdes;
+        heatUnitLabel = heatValPopup.toLocaleString('pt-BR') + ' adesivos';
+      } else {
+        heatValPopup = bairro.votersEstimated || 0;
+        maxVPopup = maxEleit;
+        heatUnitLabel = heatValPopup.toLocaleString('pt-BR') + ' eleitores';
+      }
+      const heatPct = Math.round((maxVPopup > 0 ? heatValPopup / maxVPopup : 0) * 100);
+
+      const popupHtml = layerMode === 'mapa_calor' ? `
+        <div class="p-2 space-y-2 text-slate-800 font-sans min-w-[220px]">
+          <div class="flex items-center justify-between border-b border-orange-200 pb-1.5 bg-orange-50/80 -mx-2 -mt-2 p-2 rounded-t">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3.5 h-3.5 rounded-full inline-block shrink-0 shadow-xs border border-white" style="background-color: ${fillColor}"></span>
+              <div>
+                <span class="text-[9px] uppercase tracking-wider font-bold text-orange-700 block">
+                  Mapa de Calor • ${heatMetric.toUpperCase()}
+                </span>
+                <h4 class="font-bold text-sm text-slate-900 leading-tight">${bairro.name}</h4>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-orange-700 border border-orange-200 shadow-xs">
+              ${heatPct}% Calor
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+            <div class="p-1.5 rounded bg-orange-50/50 border border-orange-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">Métrica Selecionada:</p>
+              <p class="font-bold text-orange-950 text-sm">${heatUnitLabel}</p>
+            </div>
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">Check-ins Totais:</p>
+              <p class="font-bold text-slate-900 text-sm">${chkCounts[bairro.id] || 0}</p>
+            </div>
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">Santinhos Entregues:</p>
+              <p class="font-bold text-slate-900 text-sm">${(bairro.deliveredMaterials?.santinhos || 0).toLocaleString('pt-BR')}</p>
+            </div>
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-100">
+              <p class="text-slate-500 text-[10px] uppercase font-semibold">Adesivos Colados:</p>
+              <p class="font-bold text-slate-900 text-sm">${((bairro.deliveredMaterials?.adesivo_bola || 0) + (bairro.deliveredMaterials?.adesivo_parachoque || 0)).toLocaleString('pt-BR')}</p>
+            </div>
+          </div>
+          <p class="text-[9px] text-slate-500 italic pt-1 border-t border-slate-100 flex items-center justify-between">
+            <span>Eleitores TSE: <b>${bairro.votersEstimated.toLocaleString('pt-BR')}</b></span>
+            <span class="font-semibold text-orange-700">Prioridade: ${bairro.priority}</span>
+          </p>
+        </div>
+      ` : layerMode === 'atlas_pmsj' ? `
         <div class="p-2 space-y-2 text-slate-800 font-sans min-w-[220px]">
           <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 bg-slate-50 -mx-2 -mt-2 p-2 rounded-t">
             <div class="flex items-center gap-1.5">
@@ -380,7 +517,15 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       // 1.1 Render Labels on Center
       if (showLabels && (!isOtherWhenFiltered || selectedBairroFilter === 'todos')) {
         let labelHtml = '';
-        if (layerMode === 'atlas_pmsj') {
+        if (layerMode === 'mapa_calor') {
+          labelHtml = `
+            <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-orange-300'} text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${fillColor}"></span>
+              <span class="${isSelected ? 'font-bold text-rose-700' : ''}">${bairro.name}</span>
+              <span class="text-orange-700 font-bold font-mono text-[10px]">(${heatPct}% calor)</span>
+            </div>
+          `;
+        } else if (layerMode === 'atlas_pmsj') {
           labelHtml = `
             <div class="px-2 py-0.5 rounded-lg bg-white/95 backdrop-blur-xs border ${isSelected ? 'border-rose-400 ring-2 ring-rose-300' : 'border-slate-300'} text-[11px] font-semibold text-slate-800 whitespace-nowrap shadow-xs flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full border border-black/30 shrink-0" style="background-color: ${bairro.officialColor || fillColor}"></span>
@@ -672,7 +817,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       });
     }
 
-  }, [neighborhoods, militants, vans, checkIns, layerMode, showVans, showMilitants, showCheckins, showLabels, selectedBairroFilter, onSelectNeighborhood]);
+  }, [neighborhoods, militants, vans, checkIns, layerMode, heatMetric, showVans, showMilitants, showCheckins, showLabels, selectedBairroFilter, onSelectNeighborhood]);
 
   const zoomToSaoJose = () => {
     setSelectedBairroFilter('todos');
@@ -722,6 +867,21 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
 
           <button
             type="button"
+            onClick={() => setLayerMode('mapa_calor')}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              layerMode === 'mapa_calor'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+            title="Mapa de Calor Térmico de Atividades, Ruas e Materiais em São José"
+          >
+            <Flame className="w-3.5 h-3.5 text-orange-400" />
+            <span className="hidden sm:inline">Mapa de Calor</span>
+            <span className="sm:hidden">Calor</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setLayerMode('demografia_ibge')}
             className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               layerMode === 'demografia_ibge'
@@ -750,6 +910,54 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
             <span className="sm:hidden">PINs de Ruas</span>
           </button>
         </div>
+
+        {/* Floating Heatmap Metric Selector Toolbar */}
+        {layerMode === 'mapa_calor' && (
+          <div className="w-full flex items-center justify-between gap-2 bg-gradient-to-r from-orange-600/95 via-rose-600/95 to-red-600/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/25 shadow-lg pointer-events-auto text-white">
+            <div className="flex items-center gap-1.5">
+              <Flame className="w-4 h-4 text-amber-300" />
+              <span className="text-xs font-bold tracking-wide">Métrica de Calor:</span>
+            </div>
+            <div className="flex items-center gap-1 bg-black/20 p-0.5 rounded-xl text-xs">
+              <button
+                type="button"
+                onClick={() => setHeatMetric('checkins')}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition ${
+                  heatMetric === 'checkins' ? 'bg-white text-rose-700 shadow-xs' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                🔥 Ruas & Check-ins ({checkIns.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setHeatMetric('santinhos')}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition ${
+                  heatMetric === 'santinhos' ? 'bg-white text-rose-700 shadow-xs' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                📦 Santinhos
+              </button>
+              <button
+                type="button"
+                onClick={() => setHeatMetric('adesivos')}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition ${
+                  heatMetric === 'adesivos' ? 'bg-white text-rose-700 shadow-xs' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                🚗 Adesivos
+              </button>
+              <button
+                type="button"
+                onClick={() => setHeatMetric('eleitores')}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition ${
+                  heatMetric === 'eleitores' ? 'bg-white text-rose-700 shadow-xs' : 'text-white/80 hover:text-white'
+                }`}
+              >
+                👥 Eleitores TSE
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Map Type Provider (Google Maps Free vs Satellite vs Terrain) & Filters */}
         <div className="flex flex-wrap items-center gap-1.5 bg-white/95 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-slate-200 shadow-md pointer-events-auto text-xs">
@@ -881,7 +1089,29 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
       {/* Dynamic Bottom Left Map Legend */}
       <div className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200 shadow-md text-xs space-y-1.5 pointer-events-auto max-w-sm">
         
-        {layerMode === 'atlas_pmsj' ? (
+        {layerMode === 'mapa_calor' ? (
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-1.5 text-rose-900 font-bold text-[11px] uppercase tracking-wider">
+                <Flame className="w-3.5 h-3.5 text-rose-600" />
+                Termômetro de Calor ({heatMetric.toUpperCase()})
+              </div>
+              <span className="text-[9px] bg-rose-100 text-rose-800 font-bold px-1.5 py-0.5 rounded">Tempo Real</span>
+            </div>
+            <div className="w-full h-3 rounded-full bg-gradient-to-r from-blue-500 via-cyan-400 via-emerald-400 via-amber-400 via-orange-500 to-rose-600 shadow-inner mb-1" />
+            <div className="flex justify-between text-[9px] font-bold text-slate-500 font-mono">
+              <span>Frio</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100% Fogo</span>
+            </div>
+            <p className="text-[10px] text-slate-500 pt-1 border-t border-slate-100 mt-1 flex items-center justify-between">
+              <span>Halos no mapa: Ruas com Check-in</span>
+              <span className="font-semibold text-rose-600">{checkIns.length} ruas batidas</span>
+            </p>
+          </div>
+        ) : layerMode === 'atlas_pmsj' ? (
           <div>
             <div className="flex items-center justify-between gap-2 mb-1">
               <div className="flex items-center gap-1.5 text-slate-900 font-bold text-[11px] uppercase tracking-wider">
@@ -968,7 +1198,19 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
 
       {/* Dynamic Bottom Right KPI Summary Card */}
       <div className="absolute bottom-4 right-4 z-[1000] bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-200 shadow-md text-xs flex items-center gap-3 pointer-events-auto">
-        {layerMode === 'demografia_ibge' ? (
+        {layerMode === 'mapa_calor' ? (
+          <>
+            <div className="text-right">
+              <p className="text-[10px] text-slate-500 uppercase font-semibold">Ruas com Check-in</p>
+              <p className="font-bold text-rose-600 text-sm">{checkIns.length} ruas ativas</p>
+            </div>
+            <div className="h-7 w-px bg-slate-200" />
+            <div className="text-right">
+              <p className="text-[10px] text-slate-500 uppercase font-semibold">Territórios Oficiais</p>
+              <p className="font-bold text-slate-900 text-sm">{neighborhoods.length} Bairros PMSJ</p>
+            </div>
+          </>
+        ) : layerMode === 'demografia_ibge' ? (
           <>
             <div className="text-right">
               <p className="text-[10px] text-slate-500 uppercase font-semibold">População IBGE 2022</p>

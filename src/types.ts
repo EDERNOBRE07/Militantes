@@ -28,7 +28,7 @@ export interface MaterialCount {
 export interface Neighborhood {
   id: string;
   name: string;
-  zone: 'Distrito Sede' | 'Distrito Barreiros' | 'Distrito Forquilhinhas' | 'Distrito Forquilhinha' | 'Distrito Campinas';
+  zone: 'Distrito Sede' | 'Distrito Barreiros' | 'Distrito Forquilhinhas' | 'Distrito Forquilhinha' | 'Distrito Forquilhas' | 'Distrito Campinas' | 'Distrito Histórico' | 'Distrito Rural / Oeste' | 'Distrito Sul' | string;
   region?: string;
   color?: string;
   coordinates?: [number, number];

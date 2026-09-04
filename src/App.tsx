@@ -65,6 +65,7 @@ export default function App() {
   const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
   const [showAiAdvisor, setShowAiAdvisor] = useState<boolean>(false);
   const [showPermissionsPrompt, setShowPermissionsPrompt] = useState<boolean>(false);
+  const [initialMapLayer, setInitialMapLayer] = useState<'atlas_pmsj' | 'mapa_calor' | 'demografia_ibge' | 'performance_militancia'>('atlas_pmsj');
 
   // App Data State
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>(() => StorageService.getNeighborhoods());
@@ -118,7 +119,10 @@ export default function App() {
   };
 
   // Restrict navigation: militants (Mil001 to Mil050) can only view 'campo'
-  const handleNavigate = (view: string) => {
+  const handleNavigate = (view: string, subMode?: string) => {
+    if (subMode === 'mapa_calor') {
+      setInitialMapLayer('mapa_calor');
+    }
     if (currentUser?.role === 'militante') {
       setCurrentView('campo');
     } else {
@@ -205,6 +209,7 @@ export default function App() {
             checkIns={checkIns}
             militants={militants}
             vans={vans}
+            initialLayerMode={initialMapLayer}
             onCheckInUpdated={reloadData}
           />
         )}

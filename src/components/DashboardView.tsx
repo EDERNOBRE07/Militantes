@@ -34,7 +34,7 @@ interface DashboardViewProps {
   vans: Van[];
   stock: StockItem[];
   checkIns: StreetCheckIn[];
-  onNavigateTab: (tab: string) => void;
+  onNavigateTab: (tab: string, subMode?: string) => void;
   onOpenAiAdvisor: () => void;
 }
 
@@ -297,8 +297,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <p className="text-xs text-slate-500">Progresso de entrega de materiais em todas as ruas cadastradas</p>
               </div>
               <button
-                onClick={() => onNavigateTab('mapa')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
+                onClick={() => onNavigateTab('mapa', 'mapa_calor')}
+                className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 transition"
               >
                 Abrir Mapa de Calor
                 <ArrowRight className="w-3.5 h-3.5" />

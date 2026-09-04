@@ -261,6 +261,35 @@ export class StorageService {
     }, 600);
   }
 
+  /**
+   * Comunicação resiliente com o banco de dados Hostinger / MySQL com failover automático
+   */
+  static async requestSyncApi(method: 'GET' | 'POST', body?: any): Promise<{ ok: boolean; data?: any }> {
+    const endpoints = [
+      '/api/sync.php',
+      'https://militancia.mastervisionmarketing.com/api/sync.php'
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, {
+          method,
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          body: body ? JSON.stringify(body) : undefined
+        });
+        if (res.ok) {
+          const json = await res.json().catch(() => null);
+          if (json && (json.status === 'success' || json.data)) {
+            return { ok: true, data: json };
+          }
+        }
+      } catch {
+        // tenta o próximo endpoint
+      }
+    }
+    return { ok: false };
+  }
+
   static async pushEntityToRemote(key: string, value: any): Promise<boolean> {
     if (typeof window === 'undefined' || !navigator.onLine) {
       this.notifySync('offline', 'Modo offline - alterações salvas no dispositivo e cofre local');
@@ -269,22 +298,15 @@ export class StorageService {
 
     try {
       this.notifySync('syncing', 'Gravando no MySQL Hostinger e cofre...');
-      const response = await fetch('/api/sync.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          key,
-          data: value,
-          timestamp: new Date().toISOString()
-        })
+      const res = await this.requestSyncApi('POST', {
+        key,
+        data: value,
+        timestamp: new Date().toISOString()
       });
 
-      if (response.ok) {
-        const resJson = await response.json().catch(() => null);
-        if (resJson?.status === 'success') {
-          this.notifySync('synced', 'Sincronizado com MySQL Hostinger e cofre');
-          return true;
-        }
+      if (res.ok && res.data?.status === 'success') {
+        this.notifySync('synced', 'Sincronizado com MySQL Hostinger e cofre');
+        return true;
       }
       this.notifySync('synced', 'Salvo localmente e cofre blindado ativo');
       return true;
@@ -321,18 +343,11 @@ export class StorageService {
         }
       };
 
-      const res = await fetch('/api/sync.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const res = await this.requestSyncApi('POST', payload);
 
-      if (res.ok) {
-        const json = await res.json().catch(() => null);
-        if (json?.status === 'success') {
-          this.notifySync('synced', 'Tudo salvo no banco MySQL u844537895_Militantes!');
-          return true;
-        }
+      if (res.ok && res.data?.status === 'success') {
+        this.notifySync('synced', 'Tudo salvo no banco MySQL u844537895_Militantes!');
+        return true;
       }
       this.notifySync('synced', 'Sincronização concluída e salva no cofre.');
       return true;
@@ -351,13 +366,13 @@ export class StorageService {
 
     try {
       this.notifySync('syncing', 'Sincronizando dados em tempo real...');
-      const response = await fetch('/api/sync.php', { method: 'GET' });
-      if (!response.ok) {
+      const res = await this.requestSyncApi('GET');
+      if (!res.ok || !res.data) {
         this.notifySync('idle', 'Pronto');
         return false;
       }
 
-      const resJson = await response.json();
+      const resJson = res.data;
       if (resJson.status === 'success' && resJson.data && typeof resJson.data === 'object') {
         const remoteData = resJson.data;
         let hasChanges = false;
