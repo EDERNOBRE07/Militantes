@@ -69,6 +69,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   const [showCheckins, setShowCheckins] = useState<boolean>(true);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [selectedBairroFilter, setSelectedBairroFilter] = useState<string>('todos');
+  const prevSelectedFilterRef = useRef<string>(selectedBairroFilter);
   const [inspectedBairro, setInspectedBairro] = useState<Neighborhood | null>(null);
 
   // Selected check-in for detailed drawer / full multi-photo view
@@ -150,10 +151,16 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
     baseTileLayerRef.current.setUrl(config.url);
   }, [baseMapProvider]);
 
-  // Center/Zoom on neighborhood filter change
+  // Center/Zoom ONLY when neighborhood filter actually changes by user command
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
+
+    // Do NOT reset zoom or re-center if the filter has not changed (prevents unexpected zoom-out on background data updates)
+    if (prevSelectedFilterRef.current === selectedBairroFilter) {
+      return;
+    }
+    prevSelectedFilterRef.current = selectedBairroFilter;
 
     if (selectedBairroFilter === 'todos') {
       map.setView(SAO_JOSE_CENTER, 13);
@@ -821,6 +828,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
 
   const zoomToSaoJose = () => {
     setSelectedBairroFilter('todos');
+    prevSelectedFilterRef.current = 'todos';
     setInspectedBairro(null);
     setInspectedCheckIn(null);
     if (mapInstanceRef.current) {

@@ -64,6 +64,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
+  const prevBairroIdRef = useRef<string>('');
 
   const currentBairro = useMemo(() => {
     return neighborhoods.find(n => n.id === selectedBairroId) || neighborhoods[0];
@@ -125,13 +126,16 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
     layerGroup.clearLayers();
 
-    // Auto-fit and center map on check-ins
-    if (bairroCheckIns.length > 0) {
-      const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
-      const bounds = L.latLngBounds(latLngs);
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
-    } else {
-      map.setView([currentBairro.lat, currentBairro.lng], 15);
+    // Auto-fit and center map on check-ins ONLY when neighborhood actually changes
+    if (prevBairroIdRef.current !== currentBairro.id) {
+      prevBairroIdRef.current = currentBairro.id;
+      if (bairroCheckIns.length > 0) {
+        const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
+        const bounds = L.latLngBounds(latLngs);
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+      } else {
+        map.setView([currentBairro.lat, currentBairro.lng], 15);
+      }
     }
 
     // Draw all check-in streets in this neighborhood painted in RED
