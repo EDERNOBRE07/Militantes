@@ -655,12 +655,12 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
         const militantObj = militants.find(m => m.id === chk.militantId);
         const formattedDate = formatDateTimeBR(chk.timestamp);
 
-        // Render Elegant Street PIN
+        // Render Elegant Street PIN (perfeitamente alinhado na coordenada geográfica real do Google Maps)
         const pinHtml = `
-          <div class="relative group cursor-pointer flex flex-col items-center" style="transform: translate(-50%, -100%);">
+          <div class="relative group cursor-pointer flex flex-col items-center w-8 h-[38px]">
             
             <!-- Pulse ring for visual attention -->
-            <div class="absolute -inset-1 rounded-full bg-rose-500/40 animate-ping"></div>
+            <div class="absolute top-1 w-6 h-6 rounded-full bg-rose-500/40 animate-ping pointer-events-none"></div>
             
             <!-- Main Street Pin Badge -->
             <div class="relative flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-rose-600 via-red-600 to-amber-500 text-white shadow-xl ring-2 ring-white hover:scale-125 hover:ring-rose-300 transition-all">
@@ -682,11 +682,11 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
               </div>
             </div>
 
-            <!-- Pin Stem Needle -->
+            <!-- Pin Stem Needle (aponta exatamente para a coordenada no mapa) -->
             <div class="w-1.5 h-2 bg-gradient-to-b from-red-600 to-red-800 mx-auto -mt-0.5 rounded-b-full"></div>
             
             <!-- Street Name Capsule Tooltip on Hover -->
-            <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 bg-slate-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap pointer-events-none shadow-md z-50">
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-7 bg-slate-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap pointer-events-none shadow-md z-50">
               ${chk.streetName}
             </div>
 

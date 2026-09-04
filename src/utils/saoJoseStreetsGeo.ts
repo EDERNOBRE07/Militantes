@@ -25,707 +25,986 @@ export interface KnownStreetLocation {
 }
 
 export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
-  // KOBRASOL
-  {
-    name: 'Avenida Presidente Kennedy',
-    aliases: ['av presidente kennedy', 'presidente kennedy', 'av kennedy', 'kennedy'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5960,
-    lng: -48.6210,
-    type: 'avenida'
-  },
-  {
-    name: 'Avenida Lédio João Martins',
-    aliases: ['av ledio joao martins', 'ledio joao martins', 'av central kobrasol', 'rua central'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5945,
-    lng: -48.6180,
-    type: 'avenida'
-  },
-  {
-    name: 'Rua Koesa',
-    aliases: ['rua koesa', 'koesa', 'r koesa'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5940,
-    lng: -48.6195,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Emerson Ferrari',
-    aliases: ['rua emerson ferrari', 'emerson ferrari'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5970,
-    lng: -48.6160,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Adhemar da Silva',
-    aliases: ['rua adhemar da silva', 'adhemar da silva', 'rua ademar da silva'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5955,
-    lng: -48.6165,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Delamar José da Silva',
-    aliases: ['rua delamar jose da silva', 'delamar jose da silva', 'delamar'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5930,
-    lng: -48.6190,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Brasilpinho',
-    aliases: ['rua brasilpinho', 'brasilpinho'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5950,
-    lng: -48.6170,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Caetano José Ferreira',
-    aliases: ['caetano jose ferreira', 'rua caetano'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5935,
-    lng: -48.6215,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Capitão Augusto Vidal',
-    aliases: ['capitao augusto vidal', 'augusto vidal'],
-    neighborhoodId: 'kobrasol',
-    neighborhoodName: 'Kobrasol',
-    lat: -27.5968,
-    lng: -48.6225,
-    type: 'rua'
-  },
-
-  // CAMPINAS
-  {
-    name: 'Avenida Brigadeiro da Silva Paes',
-    aliases: ['av brigadeiro da silva paes', 'brigadeiro da silva paes', 'silva paes', 'av silva paes'],
-    neighborhoodId: 'campinas',
-    neighborhoodName: 'Campinas',
-    lat: -27.6025,
-    lng: -48.6255,
-    type: 'avenida'
-  },
-  {
-    name: 'Rua Altamiro Di Bernardi',
-    aliases: ['rua altamiro di bernardi', 'altamiro di bernardi', 'di bernardi'],
-    neighborhoodId: 'campinas',
-    neighborhoodName: 'Campinas',
-    lat: -27.6005,
-    lng: -48.6240,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Coronel Américo',
-    aliases: ['rua coronel americo', 'coronel americo'],
-    neighborhoodId: 'campinas',
-    neighborhoodName: 'Campinas',
-    lat: -27.5985,
-    lng: -48.6275,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Cruz e Souza',
-    aliases: ['rua cruz e souza', 'cruz e souza'],
-    neighborhoodId: 'campinas',
-    neighborhoodName: 'Campinas',
-    lat: -27.6015,
-    lng: -48.6285,
-    type: 'rua'
-  },
-  {
-    name: 'Rua José Ferreira',
-    aliases: ['rua jose ferreira', 'jose ferreira'],
-    neighborhoodId: 'campinas',
-    neighborhoodName: 'Campinas',
-    lat: -27.6035,
-    lng: -48.6265,
-    type: 'rua'
-  },
-  {
-    name: 'Avenida Governador Jorge Lacerda',
-    aliases: ['av governador jorge lacerda', 'jorge lacerda', 'av jorge lacerda'],
-    neighborhoodId: 'campinas',
-    neighborhoodName: 'Campinas',
-    lat: -27.6040,
-    lng: -48.6220,
-    type: 'avenida'
-  },
-
-  // BARREIROS
-  {
-    name: 'Avenida Leoberto Leal',
-    aliases: ['av leoberto leal', 'leoberto leal', 'av leoberto'],
-    neighborhoodId: 'barreiros',
-    neighborhoodName: 'Barreiros',
-    lat: -27.5740,
-    lng: -48.6070,
-    type: 'avenida'
-  },
-  {
-    name: 'Rua Eugênio Portela',
-    aliases: ['rua eugenio portela', 'eugenio portela'],
-    neighborhoodId: 'barreiros',
-    neighborhoodName: 'Barreiros',
-    lat: -27.5765,
-    lng: -48.6040,
-    type: 'rua'
-  },
-  {
-    name: 'Rua José Victor da Rosa',
-    aliases: ['rua jose victor da rosa', 'jose victor da rosa', 'jose victor'],
-    neighborhoodId: 'barreiros',
-    neighborhoodName: 'Barreiros',
-    lat: -27.5780,
-    lng: -48.6100,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Cirilo Pedroso de Oliveira',
-    aliases: ['rua cirilo pedroso de oliveira', 'cirilo pedroso'],
-    neighborhoodId: 'barreiros',
-    neighborhoodName: 'Barreiros',
-    lat: -27.5710,
-    lng: -48.6090,
-    type: 'rua'
-  },
-  {
-    name: 'Rua São Ludgero',
-    aliases: ['rua sao ludgero', 'sao ludgero'],
-    neighborhoodId: 'barreiros',
-    neighborhoodName: 'Barreiros',
-    lat: -27.5735,
-    lng: -48.6030,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Manoel Loureiro',
-    aliases: ['rua manoel loureiro', 'manoel loureiro'],
-    neighborhoodId: 'barreiros',
-    neighborhoodName: 'Barreiros',
-    lat: -27.5790,
-    lng: -48.6060,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Francisco Pedro Cunha',
-    aliases: ['francisco pedro cunha', 'rua francisco pedro cunha'],
-    neighborhoodId: 'barreiros',
-    neighborhoodName: 'Barreiros',
-    lat: -27.5720,
-    lng: -48.6120,
-    type: 'rua'
-  },
-
-  // PRAIA COMPRIDA & CENTRO HISTÓRICO
-  {
-    name: 'Rua Luiz Fagundes',
-    aliases: ['rua luiz fagundes', 'luiz fagundes', 'luis fagundes'],
-    neighborhoodId: 'praia_comprida',
-    neighborhoodName: 'Praia Comprida',
-    lat: -27.6185,
-    lng: -48.6240,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Getúlio Vargas',
-    aliases: ['rua getulio vargas', 'getulio vargas'],
-    neighborhoodId: 'praia_comprida',
-    neighborhoodName: 'Praia Comprida',
-    lat: -27.6140,
-    lng: -48.6290,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Domingos Filomeno',
-    aliases: ['rua domingos filomeno', 'domingos filomeno'],
-    neighborhoodId: 'praia_comprida',
-    neighborhoodName: 'Praia Comprida',
-    lat: -27.6170,
-    lng: -48.6230,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Gaspar Neves',
-    aliases: ['rua gaspar neves', 'gaspar neves'],
-    neighborhoodId: 'praia_comprida',
-    neighborhoodName: 'Centro Histórico / Praia Comprida',
-    lat: -27.6150,
-    lng: -48.6310,
-    type: 'rua'
-  },
-  {
-    name: 'Praça Arnoldo de Souza',
-    aliases: ['praca arnoldo de souza', 'praca centro historico', 'centro historico'],
-    neighborhoodId: 'praia_comprida',
-    neighborhoodName: 'Centro Histórico',
-    lat: -27.6145,
-    lng: -48.6300,
-    type: 'praca'
-  },
-  {
-    name: 'Rua Frederico Afonso',
-    aliases: ['rua frederico afonso', 'frederico afonso'],
-    neighborhoodId: 'praia_comprida',
-    neighborhoodName: 'Pontal / Praia Comprida',
-    lat: -27.6290,
-    lng: -48.6280,
-    type: 'rua'
-  },
-
-  // FORQUILHINHAS & FORQUILHAS
-  {
-    name: 'Rua Vereador Arthur Manoel Mariano',
-    aliases: ['rua vereador arthur manoel mariano', 'arthur manoel mariano', 'arthur mariano', 'ver arthur mariano'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6030,
-    lng: -48.6620,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Antônio Jovita Duarte',
-    aliases: ['rua antonio jovita duarte', 'antonio jovita duarte', 'jovita duarte'],
-    neighborhoodId: 'forquilhas',
-    neighborhoodName: 'Forquilhas',
-    lat: -27.6110,
-    lng: -48.6750,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Princesa Isabel',
-    aliases: ['rua princesa isabel', 'princesa isabel'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6055,
-    lng: -48.6600,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Prefeito Dib Cherem',
-    aliases: ['rua prefeito dib cherem', 'dib cherem'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6010,
-    lng: -48.6680,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Luiz Gonzaga',
-    aliases: ['rua luiz gonzaga', 'luiz gonzaga'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6065,
-    lng: -48.6670,
-    type: 'rua'
-  },
-
-  // SERRARIA
-  {
-    name: 'Rua João Amaral Rios',
-    aliases: ['rua joao amaral rios', 'joao amaral rios'],
-    neighborhoodId: 'serraria',
-    neighborhoodName: 'Serraria',
-    lat: -27.5550,
-    lng: -48.6150,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Nossa Senhora dos Navegantes',
-    aliases: ['rua nossa senhora dos navegantes', 'nossa senhora dos navegantes', 'navegantes'],
-    neighborhoodId: 'serraria',
-    neighborhoodName: 'Serraria',
-    lat: -27.5590,
-    lng: -48.6200,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Francisco Inácio da Silva',
-    aliases: ['rua francisco inacio da silva', 'francisco inacio'],
-    neighborhoodId: 'serraria',
-    neighborhoodName: 'Serraria',
-    lat: -27.5520,
-    lng: -48.6180,
-    type: 'rua'
-  },
-
-  // AREIAS (Bairro Oficial 10)
-  {
-    name: 'Rua São Pedro',
-    aliases: ['rua sao pedro', 'sao pedro'],
-    neighborhoodId: 'areias',
-    neighborhoodName: 'Areias',
-    lat: -27.5850,
-    lng: -48.6350,
-    type: 'rua'
-  },
-  {
-    name: 'Avenida das Torres',
-    aliases: ['av das torres', 'avenida das torres', 'av torres', 'torres'],
-    neighborhoodId: 'areias',
-    neighborhoodName: 'Areias',
-    lat: -27.5820,
-    lng: -48.6320,
-    type: 'avenida'
-  },
-  {
-    name: 'Rua Francisco Jacinto de Melo',
-    aliases: ['rua francisco jacinto de melo', 'francisco jacinto de melo', 'francisco jacinto'],
-    neighborhoodId: 'areias',
-    neighborhoodName: 'Areias',
-    lat: -27.5870,
-    lng: -48.6370,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Iano',
-    aliases: ['rua iano', 'iano'],
-    neighborhoodId: 'areias',
-    neighborhoodName: 'Areias',
-    lat: -27.5890,
-    lng: -48.6390,
-    type: 'rua'
-  },
-  {
-    name: 'Rua João José Martins',
-    aliases: ['joao jose martins', 'rua joao jose'],
-    neighborhoodId: 'areias',
-    neighborhoodName: 'Areias',
-    lat: -27.5840,
-    lng: -48.6340,
-    type: 'rua'
-  },
-
-  // BOSQUE DAS MANSÕES (Bairro Oficial 9 - Separado de Areias)
-  {
-    name: 'Rua Bosque das Mansões',
-    aliases: ['bosque das mansoes', 'rua bosque das mansoes', 'rua bosque', 'bosque'],
-    neighborhoodId: 'bosque_das_mansoes',
-    neighborhoodName: 'Bosque das Mansões',
-    lat: -27.5990,
-    lng: -48.6360,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Manoel Lourival de Souza',
-    aliases: ['rua manoel lourival de souza', 'manoel lourival de souza', 'lourival de souza'],
-    neighborhoodId: 'bosque_das_mansoes',
-    neighborhoodName: 'Bosque das Mansões',
-    lat: -27.6010,
-    lng: -48.6340,
-    type: 'rua'
-  },
-  {
-    name: 'Rua das Mansões',
-    aliases: ['rua das mansoes', 'das mansoes', 'mansoes'],
-    neighborhoodId: 'bosque_das_mansoes',
-    neighborhoodName: 'Bosque das Mansões',
-    lat: -27.5980,
-    lng: -48.6370,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Alaide Martins',
-    aliases: ['alaide martins', 'rua alaide martins'],
-    neighborhoodId: 'bosque_das_mansoes',
-    neighborhoodName: 'Bosque das Mansões',
-    lat: -27.5975,
-    lng: -48.6385,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Maria Bernardina da Silva',
-    aliases: ['maria bernardina da silva', 'rua maria bernardina'],
-    neighborhoodId: 'bosque_das_mansoes',
-    neighborhoodName: 'Bosque das Mansões',
-    lat: -27.6020,
-    lng: -48.6350,
-    type: 'rua'
-  },
-
-  // BELA VISTA
-  {
-    name: 'Rua Gisela',
-    aliases: ['rua gisela', 'gisela'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5720,
-    lng: -48.6320,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Frei Hermenegildo',
-    aliases: ['rua frei hermenegildo', 'frei hermenegildo'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5680,
-    lng: -48.6350,
-    type: 'rua'
-  },
-  {
-    name: 'Rua José Bonifácio',
-    aliases: ['rua jose bonifacio', 'jose bonifacio'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5745,
-    lng: -48.6300,
-    type: 'rua'
-  },
-
-  // ROÇADO
-  {
-    name: 'Rua João Grumiche',
-    aliases: ['rua joao grumiche', 'joao grumiche', 'grumiche'],
-    neighborhoodId: 'rocado',
-    neighborhoodName: 'Roçado',
-    lat: -27.6090,
-    lng: -48.6370,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Maria Mancio Rosa',
-    aliases: ['rua maria mancio rosa', 'maria mancio rosa', 'mancio rosa'],
-    neighborhoodId: 'rocado',
-    neighborhoodName: 'Roçado',
-    lat: -27.6070,
-    lng: -48.6410,
-    type: 'rua'
-  },
-
-  // FAZENDA SANTO ANTÔNIO
-  {
-    name: 'Rua Cândido Amaro Damásio',
-    aliases: ['rua candido amaro damasio', 'candido amaro damasio', 'candido amaro'],
-    neighborhoodId: 'fazenda_santo_antonio',
-    neighborhoodName: 'Fazenda Santo Antônio',
-    lat: -27.6240,
-    lng: -48.6410,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Benjamin Gerlach',
-    aliases: ['rua benjamin gerlach', 'benjamin gerlach'],
-    neighborhoodId: 'fazenda_santo_antonio',
-    neighborhoodName: 'Fazenda Santo Antônio',
-    lat: -27.6210,
-    lng: -48.6440,
-    type: 'rua'
-  },
-
-  // IPIRANGA
-  {
-    name: 'Rua Otto Júlio Malina',
-    aliases: ['rua otto julio malina', 'otto julio malina', 'otto malina'],
-    neighborhoodId: 'ipiranga',
-    neighborhoodName: 'Ipiranga',
-    lat: -27.5830,
-    lng: -48.6240,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Manoel Joaquim dos Santos',
-    aliases: ['rua manoel joaquim dos santos', 'manoel joaquim dos santos', 'manoel joaquim'],
-    neighborhoodId: 'ipiranga',
-    neighborhoodName: 'Ipiranga',
-    lat: -27.5810,
-    lng: -48.6200,
-    type: 'rua'
-  },
-
-  // POTECAS
-  {
-    name: 'Rua João José Martins',
-    aliases: ['rua joao jose martins', 'joao jose martins'],
-    neighborhoodId: 'potecas',
-    neighborhoodName: 'Potecas',
-    lat: -27.6190,
-    lng: -48.6820,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Kilian Heck',
-    aliases: ['rua kilian heck', 'kilian heck'],
-    neighborhoodId: 'potecas',
-    neighborhoodName: 'Potecas',
-    lat: -27.6230,
-    lng: -48.6870,
-    type: 'rua'
-  },
-
-  // RUAS CADASTRADAS PELAS EQUIPES DE CAMPO (DAIANA, LUCIANO, MILENA)
-  {
-    name: 'Rua Manoel Francisco de Souza',
-    aliases: ['rua manoel francisco de souza', 'manoel francisco de souza', 'manoel francisco'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6042,
-    lng: -48.6530,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Allan Kardec',
-    aliases: ['rua allan kardec', 'allan kardec', 'kardec'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6078,
-    lng: -48.6552,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Aimoré',
-    aliases: ['rua aimore', 'aimore', 'rua aimoré'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6095,
-    lng: -48.6515,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Águas de Chapecó',
-    aliases: ['rua aguas de chapeco', 'aguas de chapeco', 'aguas de chapecó'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5815,
-    lng: -48.6290,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Lagoa da Conceição',
-    aliases: ['rua lagoa da conceicao', 'lagoa da conceicao', 'lagoa da conceição'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5832,
-    lng: -48.6315,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Pântano do Sul',
-    aliases: ['rua pantano do sul', 'pantano do sul', 'pântano do sul'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5840,
-    lng: -48.6328,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Daniela',
-    aliases: ['rua daniela', 'daniela'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5825,
-    lng: -48.6305,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Giancarlo Griss Costa',
-    aliases: ['rua giancarlo griss costa', 'giancarlo griss costa', 'giancarlo griss'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5855,
-    lng: -48.6280,
-    type: 'rua'
-  },
-  {
-    name: 'Rua das Violetas',
-    aliases: ['rua das violetas', 'das violetas', 'violetas'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5870,
-    lng: -48.6335,
-    type: 'rua'
-  },
-  {
-    name: 'Rua dos Jasmins',
-    aliases: ['rua rua dos jasmins', 'rua dos jasmins', 'dos jasmins', 'jasmins'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5862,
-    lng: -48.6340,
-    type: 'rua'
-  },
-  {
-    name: 'Rua das Papoulas',
-    aliases: ['rua das papoulas', 'das papoulas', 'papoulas'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5880,
-    lng: -48.6345,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Cândido Amaro Damásio',
-    aliases: ['rua rua candido amaro damasio', 'candido amaro damasio', 'candido amaro'],
-    neighborhoodId: 'bela_vista',
-    neighborhoodName: 'Bela Vista',
-    lat: -27.5895,
-    lng: -48.6310,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Antenor Valentin da Silva',
-    aliases: ['rua antenor valentin da silva', 'antenor valentin da silva', 'antenor valentin'],
-    neighborhoodId: 'ipiranga',
-    neighborhoodName: 'Ipiranga',
-    lat: -27.5910,
-    lng: -48.6395,
-    type: 'rua'
-  },
-  {
-    name: 'Rua José Bartolomeu Vieira',
-    aliases: ['rua jose bartolomeu vieira', 'jose bartolomeu vieira', 'bartolomeu vieira'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6055,
-    lng: -48.6540,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Vitorino José Luiz',
-    aliases: ['rua vitorino jose luiz', 'vitorino jose luiz', 'vitorino luiz'],
-    neighborhoodId: 'forquilhas',
-    neighborhoodName: 'Forquilhas',
-    lat: -27.6080,
-    lng: -48.6650,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Alexandre Plueinsk',
-    aliases: ['rua alexandre plueinsk', 'alexandre plueinsk', 'alexandre plucinski'],
-    neighborhoodId: 'forquilhas',
-    neighborhoodName: 'Forquilhas',
-    lat: -27.6065,
-    lng: -48.6680,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Bernardino Freitas de Agostinho',
-    aliases: ['rua bernadino freitas de agostinho', 'bernadino freitas de agostinho', 'bernardino freitas'],
-    neighborhoodId: 'forquilhinhas',
-    neighborhoodName: 'Forquilhinhas',
-    lat: -27.6035,
-    lng: -48.6510,
-    type: 'rua'
-  },
-  {
-    name: 'Rua Túlio Rodrigues Martins',
-    aliases: ['rua tulio rodrigues martins', 'tulio rodrigues martins', 'tulio martins'],
-    neighborhoodId: 'forquilhas',
-    neighborhoodName: 'Forquilhas',
-    lat: -27.6050,
-    lng: -48.6635,
-    type: 'rua'
+  {
+    "name": "Avenida Presidente Kennedy",
+    "aliases": [
+      "av presidente kennedy",
+      "presidente kennedy",
+      "av kennedy",
+      "kennedy"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.5955,
+    "lng": -48.6175,
+    "type": "avenida"
+  },
+  {
+    "name": "Avenida Lédio João Martins",
+    "aliases": [
+      "av ledio joao martins",
+      "ledio joao martins",
+      "av central kobrasol",
+      "rua central"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.5945,
+    "lng": -48.618,
+    "type": "avenida"
+  },
+  {
+    "name": "Rua Koesa",
+    "aliases": [
+      "rua koesa",
+      "koesa",
+      "r koesa"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.594,
+    "lng": -48.6195,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Emerson Ferrari",
+    "aliases": [
+      "rua emerson ferrari",
+      "emerson ferrari"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.597,
+    "lng": -48.616,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Adhemar da Silva",
+    "aliases": [
+      "rua adhemar da silva",
+      "adhemar da silva",
+      "rua ademar da silva"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.5955,
+    "lng": -48.6165,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Delamar José da Silva",
+    "aliases": [
+      "rua delamar jose da silva",
+      "delamar jose da silva",
+      "delamar"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.593,
+    "lng": -48.619,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Brasilpinho",
+    "aliases": [
+      "rua brasilpinho",
+      "brasilpinho"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.595,
+    "lng": -48.617,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Caetano José Ferreira",
+    "aliases": [
+      "caetano jose ferreira",
+      "rua caetano"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.5935,
+    "lng": -48.621,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Capitão Augusto Vidal",
+    "aliases": [
+      "capitao augusto vidal",
+      "augusto vidal"
+    ],
+    "neighborhoodId": "kobrasol",
+    "neighborhoodName": "Kobrasol",
+    "lat": -27.5968,
+    "lng": -48.6215,
+    "type": "rua"
+  },
+  {
+    "name": "Avenida Brigadeiro da Silva Paes",
+    "aliases": [
+      "av brigadeiro silva paes",
+      "brigadeiro da silva paes",
+      "silva paes",
+      "brigadeiro silva paes"
+    ],
+    "neighborhoodId": "campinas",
+    "neighborhoodName": "Campinas",
+    "lat": -27.596,
+    "lng": -48.6105,
+    "type": "avenida"
+  },
+  {
+    "name": "Rua Altamiro Di Bernardi",
+    "aliases": [
+      "altamiro di bernardi",
+      "altamiro bernardi",
+      "r altamiro"
+    ],
+    "neighborhoodId": "campinas",
+    "neighborhoodName": "Campinas",
+    "lat": -27.5974,
+    "lng": -48.6095,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Coronel Américo",
+    "aliases": [
+      "coronel americo",
+      "rua cel americo",
+      "cel americo"
+    ],
+    "neighborhoodId": "campinas",
+    "neighborhoodName": "Campinas",
+    "lat": -27.5955,
+    "lng": -48.6115,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Cruz e Souza",
+    "aliases": [
+      "cruz e souza",
+      "cruz e sousa",
+      "rua cruz e souza"
+    ],
+    "neighborhoodId": "campinas",
+    "neighborhoodName": "Campinas",
+    "lat": -27.598,
+    "lng": -48.611,
+    "type": "rua"
+  },
+  {
+    "name": "Rua José Ferreira",
+    "aliases": [
+      "jose ferreira",
+      "rua jose ferreira"
+    ],
+    "neighborhoodId": "campinas",
+    "neighborhoodName": "Campinas",
+    "lat": -27.599,
+    "lng": -48.612,
+    "type": "rua"
+  },
+  {
+    "name": "Avenida Governador Jorge Lacerda",
+    "aliases": [
+      "jorge lacerda",
+      "gov jorge lacerda",
+      "av jorge lacerda"
+    ],
+    "neighborhoodId": "campinas",
+    "neighborhoodName": "Campinas",
+    "lat": -27.593,
+    "lng": -48.6125,
+    "type": "avenida"
+  },
+  {
+    "name": "Avenida Acioni Souza Filho (Beira-Mar)",
+    "aliases": [
+      "beira mar de sao jose",
+      "beira-mar",
+      "acioni souza filho"
+    ],
+    "neighborhoodId": "campinas",
+    "neighborhoodName": "Campinas",
+    "lat": -27.5965,
+    "lng": -48.6085,
+    "type": "avenida"
+  },
+  {
+    "name": "Avenida Leoberto Leal",
+    "aliases": [
+      "av leoberto leal",
+      "leoberto leal",
+      "leoberto"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.574,
+    "lng": -48.606,
+    "type": "avenida"
+  },
+  {
+    "name": "Rua Eugênio Portela",
+    "aliases": [
+      "eugenio portela",
+      "rua eugenio portela"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5765,
+    "lng": -48.604,
+    "type": "rua"
+  },
+  {
+    "name": "Rua José Victor da Rosa",
+    "aliases": [
+      "jose victor da rosa",
+      "jose victor",
+      "victor da rosa"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.578,
+    "lng": -48.61,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Cirilo Pedroso de Oliveira",
+    "aliases": [
+      "cirilo pedroso",
+      "cirilo pedroso de oliveira"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.571,
+    "lng": -48.607,
+    "type": "rua"
+  },
+  {
+    "name": "Rua São Ludgero",
+    "aliases": [
+      "sao ludgero",
+      "rua sao ludgero"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5735,
+    "lng": -48.603,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Manoel Loureiro",
+    "aliases": [
+      "manoel loureiro",
+      "rua manoel loureiro"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.579,
+    "lng": -48.606,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Francisco Pedro Cunha",
+    "aliases": [
+      "francisco pedro cunha",
+      "rua francisco pedro cunha"
+    ],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.572,
+    "lng": -48.609,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Luiz Fagundes",
+    "aliases": [
+      "luiz fagundes",
+      "rua luiz fagundes",
+      "av luiz fagundes"
+    ],
+    "neighborhoodId": "praia_comprida",
+    "neighborhoodName": "Praia Comprida",
+    "lat": -27.6095,
+    "lng": -48.622,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Domingos Filomeno",
+    "aliases": [
+      "domingos filomeno",
+      "rua domingos filomeno"
+    ],
+    "neighborhoodId": "praia_comprida",
+    "neighborhoodName": "Praia Comprida",
+    "lat": -27.611,
+    "lng": -48.623,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Homero de Miranda Gomes",
+    "aliases": [
+      "hospital regional",
+      "homero de miranda gomes"
+    ],
+    "neighborhoodId": "praia_comprida",
+    "neighborhoodName": "Praia Comprida",
+    "lat": -27.6085,
+    "lng": -48.6225,
+    "type": "rua"
+  },
+  {
+    "name": "Praça Hercílio Luz",
+    "aliases": [
+      "praca hercilio luz",
+      "hercilio luz centro",
+      "centro historico"
+    ],
+    "neighborhoodId": "centro",
+    "neighborhoodName": "Centro",
+    "lat": -27.6185,
+    "lng": -48.6245,
+    "type": "praca"
+  },
+  {
+    "name": "Rua Getúlio Vargas",
+    "aliases": [
+      "getulio vargas",
+      "rua getulio vargas"
+    ],
+    "neighborhoodId": "centro",
+    "neighborhoodName": "Centro",
+    "lat": -27.6175,
+    "lng": -48.6255,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Gaspar Neves",
+    "aliases": [
+      "gaspar neves",
+      "rua gaspar neves"
+    ],
+    "neighborhoodId": "centro",
+    "neighborhoodName": "Centro",
+    "lat": -27.618,
+    "lng": -48.624,
+    "type": "rua"
+  },
+  {
+    "name": "Praça Arnoldo de Souza",
+    "aliases": [
+      "arnoldo de souza",
+      "praca arnoldo de souza"
+    ],
+    "neighborhoodId": "centro",
+    "neighborhoodName": "Centro",
+    "lat": -27.619,
+    "lng": -48.624,
+    "type": "praca"
+  },
+  {
+    "name": "Rua Frederico Afonso",
+    "aliases": [
+      "frederico afonso",
+      "rua frederico afonso",
+      "estrada ponta de baixo"
+    ],
+    "neighborhoodId": "ponta_de_baixo",
+    "neighborhoodName": "Ponta de Baixo",
+    "lat": -27.632,
+    "lng": -48.623,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Manoel Francisco de Souza",
+    "aliases": [
+      "rua manoel francisco de souza",
+      "manoel francisco de souza",
+      "manoel francisco"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5999,
+    "lng": -48.6433,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Allan Kardec",
+    "aliases": [
+      "rua allan kardec",
+      "allan kardec",
+      "kardec"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.6022,
+    "lng": -48.6459,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Aimoré",
+    "aliases": [
+      "rua aimore",
+      "aimore",
+      "rua aimores"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5956,
+    "lng": -48.6479,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Vereador Arthur Manoel Mariano",
+    "aliases": [
+      "arthur manoel mariano",
+      "arthur mariano",
+      "rua arthur mariano",
+      "vereador arthur mariano"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.599,
+    "lng": -48.644,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Princesa Isabel",
+    "aliases": [
+      "princesa isabel",
+      "rua princesa isabel"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.604,
+    "lng": -48.649,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Prefeito Dib Cherem",
+    "aliases": [
+      "dib cherem",
+      "prefeito dib cherem"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.606,
+    "lng": -48.647,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Luiz Gonzaga",
+    "aliases": [
+      "luiz gonzaga",
+      "rua luiz gonzaga"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.605,
+    "lng": -48.65,
+    "type": "rua"
+  },
+  {
+    "name": "Rua José Bartolomeu Vieira",
+    "aliases": [
+      "jose bartolomeu vieira",
+      "bartolomeu vieira"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.6055,
+    "lng": -48.654,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Bernardino Freitas de Agostinho",
+    "aliases": [
+      "bernardino freitas de agostinho",
+      "bernardino freitas"
+    ],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.6035,
+    "lng": -48.651,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Antônio Jovita Duarte",
+    "aliases": [
+      "antonio jovita duarte",
+      "jovita duarte",
+      "antonio jovita"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.602,
+    "lng": -48.672,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Vitorino José Luiz",
+    "aliases": [
+      "vitorino jose luiz",
+      "vitorino jose",
+      "vitorino luiz"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.608,
+    "lng": -48.665,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Alexandre Plueinsk",
+    "aliases": [
+      "alexandre plueinsk",
+      "rua alexandre plueinsk"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.6065,
+    "lng": -48.668,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Túlio Rodrigues Martins",
+    "aliases": [
+      "tulio rodrigues martins",
+      "tulio rodrigues"
+    ],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.605,
+    "lng": -48.6635,
+    "type": "rua"
+  },
+  {
+    "name": "Rua João Amaral Rios",
+    "aliases": [
+      "joao amaral rios",
+      "amaral rios"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.555,
+    "lng": -48.618,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Nossa Senhora dos Navegantes",
+    "aliases": [
+      "nossa senhora dos navegantes",
+      "navegantes"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.558,
+    "lng": -48.62,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Francisco Inácio da Silva",
+    "aliases": [
+      "francisco inacio da silva",
+      "francisco inacio"
+    ],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.552,
+    "lng": -48.619,
+    "type": "rua"
+  },
+  {
+    "name": "Rua São Pedro",
+    "aliases": [
+      "sao pedro",
+      "rua sao pedro"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias",
+    "lat": -27.583,
+    "lng": -48.637,
+    "type": "rua"
+  },
+  {
+    "name": "Avenida das Torres",
+    "aliases": [
+      "av das torres",
+      "avenida das torres",
+      "das torres"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias",
+    "lat": -27.581,
+    "lng": -48.636,
+    "type": "avenida"
+  },
+  {
+    "name": "Rua Francisco Jacinto de Melo",
+    "aliases": [
+      "francisco jacinto de melo",
+      "jacinto de melo"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias",
+    "lat": -27.585,
+    "lng": -48.639,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Iano",
+    "aliases": [
+      "iano",
+      "rua iano"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias",
+    "lat": -27.586,
+    "lng": -48.641,
+    "type": "rua"
+  },
+  {
+    "name": "Rua João José Martins",
+    "aliases": [
+      "joao jose martins",
+      "rua joao jose martins"
+    ],
+    "neighborhoodId": "areias",
+    "neighborhoodName": "Areias",
+    "lat": -27.584,
+    "lng": -48.636,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Bosque das Mansões",
+    "aliases": [
+      "bosque das mansoes",
+      "condominio bosque das mansoes"
+    ],
+    "neighborhoodId": "bosque_das_mansoes",
+    "neighborhoodName": "Bosque das Mansões",
+    "lat": -27.597,
+    "lng": -48.635,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Manoel Lourival de Souza",
+    "aliases": [
+      "manoel lourival de souza",
+      "manoel lourival"
+    ],
+    "neighborhoodId": "bosque_das_mansoes",
+    "neighborhoodName": "Bosque das Mansões",
+    "lat": -27.598,
+    "lng": -48.636,
+    "type": "rua"
+  },
+  {
+    "name": "Rua das Mansões",
+    "aliases": [
+      "das mansoes",
+      "rua das mansoes"
+    ],
+    "neighborhoodId": "bosque_das_mansoes",
+    "neighborhoodName": "Bosque das Mansões",
+    "lat": -27.596,
+    "lng": -48.634,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Alaide Martins",
+    "aliases": [
+      "alaide martins",
+      "rua alaide martins"
+    ],
+    "neighborhoodId": "bosque_das_mansoes",
+    "neighborhoodName": "Bosque das Mansões",
+    "lat": -27.5975,
+    "lng": -48.6355,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Maria Bernardina da Silva",
+    "aliases": [
+      "maria bernardina da silva",
+      "maria bernardina"
+    ],
+    "neighborhoodId": "bosque_das_mansoes",
+    "neighborhoodName": "Bosque das Mansões",
+    "lat": -27.599,
+    "lng": -48.6365,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Águas de Chapecó",
+    "aliases": [
+      "aguas de chapeco",
+      "rua aguas de chapeco"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5815,
+    "lng": -48.629,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Lagoa da Conceição",
+    "aliases": [
+      "lagoa da conceicao",
+      "rua lagoa da conceicao"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5832,
+    "lng": -48.6315,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Pântano do Sul",
+    "aliases": [
+      "pantano do sul",
+      "rua pantano do sul"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.584,
+    "lng": -48.6328,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Daniela",
+    "aliases": [
+      "daniela",
+      "rua daniela"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5825,
+    "lng": -48.6305,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Giancarlo Griss Costa",
+    "aliases": [
+      "giancarlo griss costa",
+      "giancarlo griss"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5855,
+    "lng": -48.628,
+    "type": "rua"
+  },
+  {
+    "name": "Rua das Violetas",
+    "aliases": [
+      "das violetas",
+      "rua das violetas",
+      "violetas"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.587,
+    "lng": -48.6335,
+    "type": "rua"
+  },
+  {
+    "name": "Rua dos Jasmins",
+    "aliases": [
+      "dos jasmins",
+      "rua dos jasmins",
+      "jasmins",
+      "rua rua dos jasmins"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5862,
+    "lng": -48.634,
+    "type": "rua"
+  },
+  {
+    "name": "Rua das Papoulas",
+    "aliases": [
+      "das papoulas",
+      "rua das papoulas",
+      "papoulas"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.588,
+    "lng": -48.6345,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Cândido Amaro Damásio",
+    "aliases": [
+      "candido amaro damasio",
+      "rua candido amaro damasio",
+      "candido amaro",
+      "rua rua candido amaro damasio"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5895,
+    "lng": -48.631,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Gisela",
+    "aliases": [
+      "gisela",
+      "rua gisela"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.575,
+    "lng": -48.626,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Frei Hermenegildo",
+    "aliases": [
+      "frei hermenegildo",
+      "rua frei hermenegildo"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.576,
+    "lng": -48.624,
+    "type": "rua"
+  },
+  {
+    "name": "Rua José Bonifácio",
+    "aliases": [
+      "jose bonifacio",
+      "rua jose bonifacio"
+    ],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5745,
+    "lng": -48.625,
+    "type": "rua"
+  },
+  {
+    "name": "Rua João Grumiche",
+    "aliases": [
+      "joao grumiche",
+      "rua joao grumiche"
+    ],
+    "neighborhoodId": "rocado",
+    "neighborhoodName": "Roçado",
+    "lat": -27.604,
+    "lng": -48.629,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Maria Mancio Rosa",
+    "aliases": [
+      "maria mancio rosa",
+      "mancio rosa"
+    ],
+    "neighborhoodId": "rocado",
+    "neighborhoodName": "Roçado",
+    "lat": -27.606,
+    "lng": -48.631,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Benjamin Gerlach",
+    "aliases": [
+      "benjamin gerlach",
+      "rua benjamin gerlach"
+    ],
+    "neighborhoodId": "fazenda_santo_antonio",
+    "neighborhoodName": "Fazenda Santo Antônio",
+    "lat": -27.621,
+    "lng": -48.638,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Cândido Amaro Damásio (Fazenda)",
+    "aliases": [
+      "candido amaro fazenda"
+    ],
+    "neighborhoodId": "fazenda_santo_antonio",
+    "neighborhoodName": "Fazenda Santo Antônio",
+    "lat": -27.623,
+    "lng": -48.636,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Otto Júlio Malina",
+    "aliases": [
+      "otto julio malina",
+      "otto malina",
+      "rua otto julio malina"
+    ],
+    "neighborhoodId": "ipiranga",
+    "neighborhoodName": "Ipiranga",
+    "lat": -27.587,
+    "lng": -48.633,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Manoel Joaquim dos Santos",
+    "aliases": [
+      "manoel joaquim dos santos",
+      "manoel joaquim"
+    ],
+    "neighborhoodId": "ipiranga",
+    "neighborhoodName": "Ipiranga",
+    "lat": -27.588,
+    "lng": -48.631,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Antenor Valentin da Silva",
+    "aliases": [
+      "antenor valentin da silva",
+      "antenor valentin",
+      "rua antenor valentin"
+    ],
+    "neighborhoodId": "ipiranga",
+    "neighborhoodName": "Ipiranga",
+    "lat": -27.591,
+    "lng": -48.6395,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Kiliano Hames",
+    "aliases": [
+      "kiliano hames",
+      "rua kiliano hames"
+    ],
+    "neighborhoodId": "potecas",
+    "neighborhoodName": "Potecas",
+    "lat": -27.597,
+    "lng": -48.654,
+    "type": "rua"
+  },
+  {
+    "name": "Rua João José Martins (Potecas)",
+    "aliases": [
+      "joao jose martins potecas"
+    ],
+    "neighborhoodId": "potecas",
+    "neighborhoodName": "Potecas",
+    "lat": -27.5985,
+    "lng": -48.656,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Kilian Heck",
+    "aliases": [
+      "kilian heck",
+      "rua kilian heck"
+    ],
+    "neighborhoodId": "potecas",
+    "neighborhoodName": "Potecas",
+    "lat": -27.596,
+    "lng": -48.653,
+    "type": "rua"
   }
 ];
 
@@ -812,7 +1091,8 @@ export function resolveExactStreetCoordinates(
       // Dispersão determinística leve para não sobrepor múltiplos checkins exatamente no mesmo ponto central
       const hash = Array.from(streetName || 'rua').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       const angle = (hash % 360) * (Math.PI / 180);
-      const radius = 0.0018 + (hash % 12) * 0.00015; // ~180-350m
+      // Dispersão mínima (~30m a 60m) para manter 100% dos pontos dentro do polígono do bairro
+      const radius = 0.00025 + (hash % 8) * 0.00003;
       const offsetLat = Math.sin(angle) * radius * 0.8;
       const offsetLng = Math.cos(angle) * radius;
 
@@ -894,6 +1174,14 @@ export function getCalibratedCheckInPosition(
   checkIn: StreetCheckIn,
   neighborhoods: Neighborhood[] = []
 ): { lat: number; lng: number; isRecalibrated: boolean } {
+  // 1. Se a rua cadastrada possui coordenada geográfica exata oficial no Google Maps, use-a com prioridade máxima
+  if (checkIn.streetName) {
+    const streetResolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
+    if (streetResolved.resolvedBy === 'exact_street' || streetResolved.resolvedBy === 'fuzzy_street') {
+      return { lat: streetResolved.lat, lng: streetResolved.lng, isRecalibrated: false };
+    }
+  }
+
   const isGpsValid = isCoordinateInsideSaoJose(checkIn.latitude, checkIn.longitude);
 
   // Localiza o bairro atribuído ao check-in
@@ -916,12 +1204,12 @@ export function getCalibratedCheckInPosition(
   );
   const isWrongNeighPlaceholder = isGenericPlaceholder && targetNeigh?.id !== 'kobrasol';
 
-  // Se o GPS é válido, não é coordenada neutra equivocada e está dentro do polígono do bairro
+  // 2. Se o GPS capturado é válido e está dentro do polígono do bairro
   if (isGpsValid && checkIn.latitude !== 0 && checkIn.longitude !== 0 && !isWrongNeighPlaceholder && isInsidePolygon) {
     return { lat: checkIn.latitude, lng: checkIn.longitude, isRecalibrated: false };
   }
 
-  // GPS ausente, fora do polígono ou deslocado -> resolver com precisão na rua ou centro do bairro!
+  // 3. Fallback: resolver por rua ou centro do bairro
   const resolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
   return { lat: resolved.lat, lng: resolved.lng, isRecalibrated: true };
 }
