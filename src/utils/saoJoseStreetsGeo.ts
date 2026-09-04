@@ -26,6 +26,231 @@ export interface KnownStreetLocation {
 
 export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
   {
+    "name": "Rua Araçari",
+    "aliases": ["aracari", "r aracari", "rua aracari"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5672434,
+    "lng": -48.6700578,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Ulisses Siqueira Lima",
+    "aliases": ["ulisses siqueira lima", "r ulisses siqueira lima", "rua ulisses siqueira lima"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5746269,
+    "lng": -48.6516576,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Hon\u00f3ria Virgilina Machado",
+    "aliases": ["honoria virgilina machado", "r honoria virgilina machado", "rua honoria"],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5688543,
+    "lng": -48.6390348,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Vereador Pedro Paulo Kremer",
+    "aliases": ["ver pedro paulo kremer", "rua ver pedro paulo kremer", "pedro paulo kremer", "r ver pedro paulo kremer"],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5659571,
+    "lng": -48.6382016,
+    "type": "rua"
+  },
+  {
+    "name": "Rua M\u00e1rio C\u00e9sar da Costa",
+    "aliases": ["mario cesar da costa", "r mario cesar da costa", "rua mario cesar da costa"],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5663716,
+    "lng": -48.6412376,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Carlos Drummond de Andrade",
+    "aliases": ["carlos drumond de andrade", "carlos drummond de andrade", "r carlos drumond de andrade", "r carlos drummond de andrade"],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5673512,
+    "lng": -48.6417422,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Alceu Amoroso Lima",
+    "aliases": ["alceu amoroso lima", "r alceu amoroso lima"],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5682,
+    "lng": -48.6385,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Lacy de Lima",
+    "aliases": ["laci de lima", "lacy de lima", "rua laci de lima", "rua lacy de lima"],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.5684,
+    "lng": -48.6395,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Jo\u00e3o Paulo Gaspar",
+    "aliases": ["joao paulo gaspar", "r joao paulo gaspar", "rua joao paulo gaspar"],
+    "neighborhoodId": "real_parque",
+    "neighborhoodName": "Real Parque",
+    "lat": -27.57022,
+    "lng": -48.63868,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Ararangu\u00e1",
+    "aliases": ["ararangua", "rua ararangua", "r ararangua"],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5707628,
+    "lng": -48.6156463,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Pedro Bunn",
+    "aliases": ["pedro bunn", "rua pedro bunn", "r pedro bunn"],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.5696136,
+    "lng": -48.621878,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Frontino Coelho Pires",
+    "aliases": ["frontino coelho pires", "rua frontino coelho pires", "r frontino coelho pires"],
+    "neighborhoodId": "bela_vista",
+    "neighborhoodName": "Bela Vista",
+    "lat": -27.56738,
+    "lng": -48.6198,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Eug\u00eanio Portela",
+    "aliases": ["eugenio portela", "rua eugenio portela", "r eugenio portela"],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5826033,
+    "lng": -48.6050803,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Jos\u00e9 Victor da Rosa",
+    "aliases": ["jose victor da rosa", "jose victor da silva", "rua jose victor da rosa", "rua jose victor da silva"],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.576,
+    "lng": -48.6045,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Marechal Rondon",
+    "aliases": ["mal rondon", "marechal rondon", "r mal rondon", "rua mal rondon"],
+    "neighborhoodId": "barreiros",
+    "neighborhoodName": "Barreiros",
+    "lat": -27.5832546,
+    "lng": -48.6071024,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Justino Machado Loreto",
+    "aliases": ["justino machado loreto", "rua justino machado loreto", "justino machado"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.57573,
+    "lng": -48.66082,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Jovito Manoel Gon\u00e7alves",
+    "aliases": ["jovito manoel goncalves", "rua jovito manoel goncalves", "jovito manoel"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5761,
+    "lng": -48.6602,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Juliana Maria da Silva",
+    "aliases": ["juliana maria da silva", "rua juliana maria da silva", "juliana maria"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5771011,
+    "lng": -48.6592698,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Maria Francisca Concei\u00e7\u00e3o Ribeiro",
+    "aliases": ["mariafrancisca conceicao ribeiro", "maria francisca conceicao ribeiro", "rua mariafrancisca conceicao ribeiro"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5768,
+    "lng": -48.6599,
+    "type": "rua"
+  },
+  {
+    "name": "Avenida Ceniro Luiz Ribeiro Martins",
+    "aliases": ["ceniro luiz ribeiro martins", "av ceniro luiz ribeiro martins", "ceniro martins"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5757929,
+    "lng": -48.661112,
+    "type": "avenida"
+  },
+  {
+    "name": "Rua A\u00e7ores",
+    "aliases": ["acores", "r acores", "rua acores"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5794143,
+    "lng": -48.6710062,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Portim\u00e3o",
+    "aliases": ["portimao", "r portimao", "rua portimao"],
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
+    "lat": -27.5789673,
+    "lng": -48.6708845,
+    "type": "rua"
+  },
+  {
+    "name": "Rua Manoel Francisco de Souza",
+    "aliases": ["manoel francisco de souza", "rua manoel francisco de souza"],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5999,
+    "lng": -48.6433,
+    "type": "rua"
+  },
+  {
+    "name": "Avenida Vereador Arthur Manoel Mariano",
+    "aliases": ["arthur mariano", "rua arthur mariano", "ver arthur manoel mariano", "rua vereador arthur manoel mariano"],
+    "neighborhoodId": "forquilhinha",
+    "neighborhoodName": "Forquilhinha",
+    "lat": -27.5989777,
+    "lng": -48.6448497,
+    "type": "avenida"
+  },
+  {
+    "name": "Rua dos L\u00edrios",
+    "aliases": ["dos lirios", "rua dos lirios", "r dos lirios"],
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
+    "lat": -27.5420953,
+    "lng": -48.6456811,
+    "type": "rua"
+  },
+  {
     "name": "Avenida Presidente Kennedy",
     "aliases": [
       "av presidente kennedy",
@@ -2007,15 +2232,15 @@ export function normalizeStreetName(str: string): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
-    .replace(/(.*?)/g, '') // Remove sufixos como (nº Trecho Geral), (nº 100 - 350), etc.
-    .replace(/^r.s*/g, '')
-    .replace(/^av.s*/g, '')
-    .replace(/^serv.s*/g, '')
-    .replace(/^tv.s*/g, '')
-    .replace(/^rod.s*/g, '')
-    .replace(/(rua|avenida|av|travessa|servidao|rodovia|alameda|praca|estrada|ver|vereador|doutor|dr|prof|professor|padre|pe|dom)/g, '')
-    .replace(/[^ws]/gi, ' ')
-    .replace(/s+/g, ' ')
+    .replace(/\(.*?\)/g, '') // Remove sufixos como (nº Trecho Geral), etc.
+    .replace(/^r\.\s*/g, '')
+    .replace(/^av\.\s*/g, '')
+    .replace(/^serv\.\s*/g, '')
+    .replace(/^tv\.\s*/g, '')
+    .replace(/^rod\.\s*/g, '')
+    .replace(/(rua|avenida|av|travessa|servidao|servidão|rodovia|alameda|praca|praça|estrada|ver|vereador|doutor|dr|prof|professor|padre|pe|dom)/g, '')
+    .replace(/[^\w\s]/gi, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -2179,6 +2404,24 @@ export function isPointInsidePolygon(point: [number, number], polygon: [number, 
  * - Se o check-in tem GPS real válido capturado no local (fora de placeholders e dentro de SJ), mantém o ponto exato
  * - Se era placeholder ou sem GPS, resolve pelo catálogo oficial de ruas da PMSJ / Google Maps
  */
+/**
+ * Retorna a distância em metros aproximada entre duas coordenadas geográficas
+ */
+export function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const dLat = (lat2 - lat1) * 111139;
+  const dLng = (lng2 - lng1) * 111139 * Math.cos((lat1 * Math.PI) / 180);
+  return Math.hypot(dLat, dLng);
+}
+
+/**
+ * Retorna as coordenadas calibradas e reais de um check-in de rua.
+ * Respeita estritamente a localização geográfica real do Google Maps para cada PIN:
+ * - Se a rua é R. Honória Virgilina Machado, alinha exatamente no ponto real de Google Maps (-27.5688543, -48.6390348)
+ * - Se a rua possui correspondência no catálogo oficial de logradouros de São José (exact_street ou fuzzy_street):
+ *   - Se o GPS gravado está a mais de 450 metros da rua ou pertence a grupos repetidos fixos (ex: ponto estático remoto), calibra para a coordenada oficial da rua.
+ *   - Se o GPS gravado está a até 450 metros da rua, preserva a precisão do GPS de campo no local.
+ * - Se não possui GPS válido ou era placeholder genérico, resolve pelo catálogo exato de ruas.
+ */
 export function getCalibratedCheckInPosition(
   checkIn: StreetCheckIn,
   neighborhoods: Neighborhood[] = []
@@ -2196,13 +2439,43 @@ export function getCalibratedCheckInPosition(
     return { lat: -27.5688543, lng: -48.6390348, isRecalibrated: false };
   }
 
-  // 2. Se o GPS capturado no check-in é válido, está em São José e não é placeholder:
-  // Conforme orientação do usuário: o pin deve ir exatamente em cima de sua coordenada geográfica real!
+  // 2. Tenta resolver a rua pelo catálogo de alta precisão
+  const resolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
+
+  // Se a rua foi encontrada no catálogo oficial com coordenadas específicas:
+  if (resolved.resolvedBy === 'exact_street' || resolved.resolvedBy === 'fuzzy_street') {
+    // Se era placeholder ou sem GPS, usa a coordenada oficial
+    if (isGenericPlaceholder) {
+      return { lat: resolved.lat, lng: resolved.lng, isRecalibrated: true };
+    }
+
+    // Verifica pontos estáticos repetidos conhecidos (onde o militante enviou check-ins em lote de outro ponto)
+    const isKnownStalePoint = (
+      // Ponto remoto repetido em Bela Vista / Real Parque
+      (Math.abs(checkIn.latitude - (-27.568264)) < 0.0001 && Math.abs(checkIn.longitude - (-48.6452456)) < 0.0001) ||
+      // Ponto remoto repetido em Barreiros / Real Parque
+      (Math.abs(checkIn.latitude - (-27.566279)) < 0.0001 && Math.abs(checkIn.longitude - (-48.6436604)) < 0.0001) ||
+      // Ponto de divisa que deslocava ruas do Ceniro Martins / Forquilhas
+      (Math.abs(checkIn.latitude - (-27.5751295)) < 0.0002 && Math.abs(checkIn.longitude - (-48.6567015)) < 0.0002)
+    );
+
+    const dist = getDistanceMeters(checkIn.latitude, checkIn.longitude, resolved.lat, resolved.lng);
+
+    // Se a distância for maior que 450 metros ou for um ponto estático repetido conhecido:
+    // Deve alinhar na coordenada oficial real da rua!
+    if (dist > 450 || isKnownStalePoint) {
+      return { lat: resolved.lat, lng: resolved.lng, isRecalibrated: true };
+    }
+
+    // Se o militante estava a menos de 450 metros da rua, o GPS gravado é a posição exata de campo!
+    return { lat: checkIn.latitude, lng: checkIn.longitude, isRecalibrated: false };
+  }
+
+  // 3. Se não tem correspondência direta no catálogo:
   if (!isGenericPlaceholder && isCoordinateInsideSaoJose(checkIn.latitude, checkIn.longitude)) {
     return { lat: checkIn.latitude, lng: checkIn.longitude, isRecalibrated: false };
   }
 
-  // 3. Se não tem GPS real válido (ou era placeholder antigo), resolve por catálogo exato de ruas
-  const resolved = resolveExactStreetCoordinates(checkIn.streetName, checkIn.neighborhoodId, neighborhoods);
+  // 4. Fallback para centro do bairro / centro de São José
   return { lat: resolved.lat, lng: resolved.lng, isRecalibrated: true };
 }

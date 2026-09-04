@@ -672,12 +672,12 @@ export const OFFICIAL_SAO_JOSE_NEIGHBORHOODS: Neighborhood[] = [
     },
     "polygon": [
       [
-        -27.585,
-        -48.688
+        -27.570,
+        -48.680
       ],
       [
-        -27.585,
-        -48.665
+        -27.570,
+        -48.655
       ],
       [
         -27.596,
