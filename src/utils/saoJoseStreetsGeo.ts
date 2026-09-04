@@ -969,8 +969,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5815,
-    "lng": -48.629,
+    "lat": -27.5691895,
+    "lng": -48.6144004,
     "type": "rua"
   },
   {
@@ -981,8 +981,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5832,
-    "lng": -48.6315,
+    "lat": -27.5710684,
+    "lng": -48.6214521,
     "type": "rua"
   },
   {
@@ -993,8 +993,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.584,
-    "lng": -48.6328,
+    "lat": -27.5704639,
+    "lng": -48.620485,
     "type": "rua"
   },
   {
@@ -1005,8 +1005,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5825,
-    "lng": -48.6305,
+    "lat": -27.5710339,
+    "lng": -48.6206547,
     "type": "rua"
   },
   {
@@ -1017,8 +1017,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5855,
-    "lng": -48.628,
+    "lat": -27.5681,
+    "lng": -48.6178,
     "type": "rua"
   },
   {
@@ -1030,8 +1030,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.587,
-    "lng": -48.6335,
+    "lat": -27.5693455,
+    "lng": -48.6190888,
     "type": "rua"
   },
   {
@@ -1042,10 +1042,10 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
       "jasmins",
       "rua rua dos jasmins"
     ],
-    "neighborhoodId": "bela_vista",
-    "neighborhoodName": "Bela Vista",
-    "lat": -27.5862,
-    "lng": -48.634,
+    "neighborhoodId": "bosque_das_mansoes",
+    "neighborhoodName": "Bosque das Mansões",
+    "lat": -27.5825622,
+    "lng": -48.6286482,
     "type": "rua"
   },
   {
@@ -1057,8 +1057,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.588,
-    "lng": -48.6345,
+    "lat": -27.5672276,
+    "lng": -48.6160472,
     "type": "rua"
   },
   {
@@ -1071,8 +1071,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5895,
-    "lng": -48.631,
+    "lat": -27.5671868,
+    "lng": -48.6167989,
     "type": "rua"
   },
   {
@@ -1329,8 +1329,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
       "dos lirios",
       "r. dos lirios (nº trecho geral)"
     ],
-    "neighborhoodId": "barreiros",
-    "neighborhoodName": "Barreiros",
+    "neighborhoodId": "serraria",
+    "neighborhoodName": "Serraria",
     "lat": -27.5423867,
     "lng": -48.6486873,
     "type": "rua"
@@ -1368,8 +1368,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
       "r. portimao (nº trecho geral)",
       "r. portimao"
     ],
-    "neighborhoodId": "centro",
-    "neighborhoodName": "Centro",
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
     "lat": -27.5789673,
     "lng": -48.6708845,
     "type": "rua"
@@ -1381,8 +1381,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
       "açores",
       "r. açores (nº trecho geral)"
     ],
-    "neighborhoodId": "centro",
-    "neighborhoodName": "Centro",
+    "neighborhoodId": "forquilhas",
+    "neighborhoodName": "Forquilhas",
     "lat": -27.5794143,
     "lng": -48.6710062,
     "type": "rua"
@@ -2055,8 +2055,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5815,
-    "lng": -48.629,
+    "lat": -27.5691895,
+    "lng": -48.6144004,
     "type": "rua"
   },
   {
@@ -2067,8 +2067,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.584,
-    "lng": -48.6328,
+    "lat": -27.5704639,
+    "lng": -48.620485,
     "type": "rua"
   },
   {
@@ -2077,10 +2077,10 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
       "rua dos jasmins",
       "rua rua dos jasmins"
     ],
-    "neighborhoodId": "bela_vista",
-    "neighborhoodName": "Bela Vista",
-    "lat": -27.5862,
-    "lng": -48.634,
+    "neighborhoodId": "bosque_das_mansoes",
+    "neighborhoodName": "Bosque das Mansões",
+    "lat": -27.5825622,
+    "lng": -48.6286482,
     "type": "rua"
   },
   {
@@ -2091,8 +2091,8 @@ export const SAO_JOSE_KNOWN_STREETS: KnownStreetLocation[] = [
     ],
     "neighborhoodId": "bela_vista",
     "neighborhoodName": "Bela Vista",
-    "lat": -27.5895,
-    "lng": -48.631,
+    "lat": -27.5671868,
+    "lng": -48.6167989,
     "type": "rua"
   },
   {
