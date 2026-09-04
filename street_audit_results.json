@@ -1,0 +1,654 @@
+{
+  "discrepancies": [
+    {
+      "street": "Sabi\u00e1",
+      "raw": "R. Sabi\u00e1 (n\u00ba Trecho Geral)",
+      "nid": "forquilhas",
+      "nname": "Forquilhas",
+      "cur_lat": -27.565495,
+      "cur_lng": -48.6675757,
+      "osm_lat": -27.5477471,
+      "osm_lng": -48.6454246,
+      "dist": 2943.2959249969167,
+      "display": "Rua Sabi\u00e1, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-274, Brasil"
+    },
+    {
+      "street": "Eug\u00eanio Portela",
+      "raw": "Rua Eug\u00eanio Portela (n\u00ba Trecho Geral)",
+      "nid": "barreiros",
+      "nname": "Barreiros",
+      "cur_lat": -27.5826033,
+      "cur_lng": -48.6050803,
+      "osm_lat": -27.5749689,
+      "osm_lng": -48.6011431,
+      "dist": 933.3952619224517,
+      "display": "Rua Eug\u00eanio Portela, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88095-700, Brasil"
+    },
+    {
+      "street": "Bento \u00c1guido Vi\u00eaira",
+      "raw": "R. Bento \u00c1guido Vi\u00eaira (n\u00ba Trecho Geral)",
+      "nid": "bela_vista",
+      "nname": "Bela Vista",
+      "cur_lat": -27.5726038,
+      "cur_lng": -48.6202047,
+      "osm_lat": -27.5716244,
+      "osm_lng": -48.6159013,
+      "dist": 437.9279594074709,
+      "display": "Rua Bento \u00c1guido Vieira, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-030, Brasil"
+    },
+    {
+      "street": "Curitiba",
+      "raw": "R. Curitiba (n\u00ba Trecho Geral)",
+      "nid": "bela_vista",
+      "nname": "Bela Vista",
+      "cur_lat": -27.5733539,
+      "cur_lng": -48.6193541,
+      "osm_lat": -26.7757352,
+      "osm_lng": -53.170407,
+      "dist": 458817.9921024127,
+      "display": "Rua Curitiba, S\u00e3o Jos\u00e9, Maravilha, Santa Catarina, Regi\u00e3o Sul, 89874-000, Brasil"
+    },
+    {
+      "street": "Recife",
+      "raw": "R. Recife (n\u00ba Trecho Geral)",
+      "nid": "bela_vista",
+      "nname": "Bela Vista",
+      "cur_lat": -27.5749317,
+      "cur_lng": -48.6206992,
+      "osm_lat": -26.7756619,
+      "osm_lng": -53.1693589,
+      "dist": 458618.30266709434,
+      "display": "Rua Recife, S\u00e3o Jos\u00e9, Maravilha, Santa Catarina, Regi\u00e3o Sul, 89874-000, Brasil"
+    },
+    {
+      "street": "Brasil",
+      "raw": "Av. Brasil (n\u00ba Trecho Geral)",
+      "nid": "bela_vista",
+      "nname": "Bela Vista",
+      "cur_lat": -27.5706684,
+      "cur_lng": -48.6204173,
+      "osm_lat": -27.637136,
+      "osm_lng": -48.6305791,
+      "dist": 7458.381540385145,
+      "display": "Rua Assis Brasil, Ponta de Baixo, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88104-205, Brasil"
+    },
+    {
+      "street": "Aimor\u00e9",
+      "raw": "R. Aimor\u00e9 (n\u00ba Trecho Geral)",
+      "nid": "rocado",
+      "nname": "Ro\u00e7ado",
+      "cur_lat": -27.6003234,
+      "cur_lng": -48.6509748,
+      "osm_lat": -27.6046262,
+      "osm_lng": -48.6493813,
+      "dist": 503.55723357275343,
+      "display": "Rua Aimor\u00e9, Flor de N\u00e1polis, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-260, Brasil"
+    },
+    {
+      "street": "Francisco Nappi",
+      "raw": "Rua Francisco Nappi (n\u00ba Trecho Geral)",
+      "nid": "forquilhinha",
+      "nname": "Forquilhinha",
+      "cur_lat": -27.6006904,
+      "cur_lng": -48.656407,
+      "osm_lat": -27.5603846,
+      "osm_lng": -48.6235286,
+      "dist": 5530.56010161844,
+      "display": "Rua Francisco Nappi, Ipiranga, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88113-200, Brasil"
+    },
+    {
+      "street": "Ant\u00f4nio Jovita Duarte",
+      "raw": "Rua Ant\u00f4nio Jovita Duarte (n\u00ba Trecho Geral)",
+      "nid": "forquilhinha",
+      "nname": "Forquilhinha",
+      "cur_lat": -27.6006904,
+      "cur_lng": -48.656407,
+      "osm_lat": -27.5436459,
+      "osm_lng": -48.7050153,
+      "dist": 7949.178845548896,
+      "display": "Rua Ant\u00f4nio Jovita Duarte, Alto Forquilhas, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-745, Brasil"
+    },
+    {
+      "street": "allan kardec",
+      "raw": "Rua allan kardec",
+      "nid": "forquilhinha",
+      "nname": "Forquilhinha",
+      "cur_lat": -27.6078,
+      "cur_lng": -48.6552,
+      "osm_lat": -27.6022061,
+      "osm_lng": -48.6458576,
+      "dist": 1111.0134028431714,
+      "display": "Rua Allan Kardec, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-517, Brasil"
+    },
+    {
+      "street": "jose Bartolomeu vieira",
+      "raw": "rua jose Bartolomeu vieira",
+      "nid": "forquilhinha",
+      "nname": "Forquilhinha",
+      "cur_lat": -27.6055,
+      "cur_lng": -48.654,
+      "osm_lat": -27.5773163,
+      "osm_lng": -48.6706519,
+      "dist": 3537.5427177860606,
+      "display": "Rua Jos\u00e9 Bartolomeu Vieira, Parque Residencial Lisboa, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-500, Brasil"
+    },
+    {
+      "street": "vereador Arthur Manoel mariano",
+      "raw": "rua vereador Arthur Manoel mariano",
+      "nid": "forquilhinha",
+      "nname": "Forquilhinha",
+      "cur_lat": -27.5989777,
+      "cur_lng": -48.6448497,
+      "osm_lat": -27.602534,
+      "osm_lng": -48.6369536,
+      "dist": 872.8081379775319,
+      "display": "Rua Vereador Arthur Manoel Mariano, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-010, Brasil"
+    },
+    {
+      "street": "vitorino jose Luiz",
+      "raw": "rua vitorino jose Luiz",
+      "nid": "forquilhas",
+      "nname": "Forquilhas",
+      "cur_lat": -27.608,
+      "cur_lng": -48.665,
+      "osm_lat": -27.5980068,
+      "osm_lng": -48.636975,
+      "dist": 2976.723579064067,
+      "display": "Rua Vitorino Jos\u00e9 Luiz, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-600, Brasil"
+    },
+    {
+      "street": "tulio Rodrigues martins",
+      "raw": "rua tulio Rodrigues martins (Trecho Leste)",
+      "nid": "forquilhas",
+      "nname": "Forquilhas",
+      "cur_lat": -27.6052,
+      "cur_lng": -48.663,
+      "osm_lat": -27.5755907,
+      "osm_lng": -48.65356,
+      "dist": 3421.31607445353,
+      "display": "Rua T\u00falio Rodrigues Martins, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil"
+    },
+    {
+      "street": "Koesa",
+      "raw": "Rua Koesa (n\u00ba 100 - 350)",
+      "nid": "kobrasol",
+      "nname": "Kobrasol",
+      "cur_lat": -27.594,
+      "cur_lng": -48.6195,
+      "osm_lat": -27.5919011,
+      "osm_lng": -48.6136821,
+      "dist": 619.02252542899,
+      "display": "Rua Koesa, Kobrasol, Campinas, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88102-320, Brasil"
+    },
+    {
+      "street": "das Flores",
+      "raw": "Rua das Flores (n\u00ba 100 - 350)",
+      "nid": "picadas_do_sul",
+      "nname": "Picadas do Sul",
+      "cur_lat": -27.625,
+      "cur_lng": -48.648,
+      "osm_lat": -26.2533579,
+      "osm_lng": -48.6285335,
+      "dist": 152531.84850409863,
+      "display": "Rua das Flores, S\u00e3o Jos\u00e9 do Acara\u00ed, S\u00e3o Francisco do Sul, Santa Catarina, Regi\u00e3o Sul, 89331-135, Brasil"
+    }
+  ],
+  "all": {
+    "Algodoeiro": {
+      "osm_lat": -27.55197,
+      "osm_lng": -48.6573023,
+      "display_name": "Rua Algodoeiro, Loteamento Jardim Bot\u00e2nico, Potecas, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88119-414, Brasil",
+      "dist": 278.1340133278559
+    },
+    "Uv\u00e1ia": {
+      "osm_lat": -27.5513497,
+      "osm_lng": -48.6576848,
+      "display_name": "Rua Uvaia, Loteamento Jardim Bot\u00e2nico, Potecas, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88119-414, Brasil",
+      "dist": 253.9284469333795
+    },
+    "Reinaldo Ferreira De Souza": {
+      "osm_lat": -27.5650968,
+      "osm_lng": -48.6745714,
+      "display_name": "Rua Reinaldo Ferreira de Souza, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-540, Brasil",
+      "dist": 251.9216148692748
+    },
+    "Sabi\u00e1": {
+      "osm_lat": -27.5477471,
+      "osm_lng": -48.6454246,
+      "display_name": "Rua Sabi\u00e1, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-274, Brasil",
+      "dist": 2943.2959249969167
+    },
+    "Ara\u00e7ari": {
+      "osm_lat": -27.5672541,
+      "osm_lng": -48.6673606,
+      "display_name": "Rua Ara\u00e7ari, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-422, Brasil",
+      "dist": 265.86775225524576
+    },
+    "Ulisses Siqueira Lima": {
+      "osm_lat": -27.574659,
+      "osm_lng": -48.651667,
+      "display_name": "Rua Ulisses Siqueira Lima, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-503, Brasil",
+      "dist": 265.46236776643406
+    },
+    "Otto J\u00falio Malina": {
+      "osm_lat": -27.5651062,
+      "osm_lng": -48.6254931,
+      "display_name": "Rua Otto J\u00falio Malina, Ipiranga, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-510, Brasil",
+      "dist": 180.4010907492744
+    },
+    "Jo\u00e3o Paulo Gaspar": {
+      "osm_lat": -27.570394,
+      "osm_lng": -48.6392128,
+      "display_name": "Rua Jo\u00e3o Paulo Gaspar, Real Parque, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88113-480, Brasil",
+      "dist": 160.00026375813778
+    },
+    "Mal. Rondon": {
+      "osm_lat": -27.5829116,
+      "osm_lng": -48.6043488,
+      "display_name": "Rua Marechal Rondon, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88117-037, Brasil",
+      "dist": 274.05225029116195
+    },
+    "Justino machado loreto": {
+      "osm_lat": -27.5757185,
+      "osm_lng": -48.6607909,
+      "display_name": "Rua Justino Machado de Loreto, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil",
+      "dist": 3.1403315737951107
+    },
+    "jovito Manoel Gon\u00e7alves": {
+      "osm_lat": -27.5760901,
+      "osm_lng": -48.6602336,
+      "display_name": "Rua Jovito Manoel Gon\u00e7alves, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil",
+      "dist": 3.4898790592103466
+    },
+    "juliana maria da silva": {
+      "osm_lat": -27.5766823,
+      "osm_lng": -48.659159,
+      "display_name": "Rua Juliana Maria da Silva, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil",
+      "dist": 47.831793381049025
+    },
+    "Telmo Luiz Martins": {
+      "osm_lat": -27.5755468,
+      "osm_lng": -48.6541495,
+      "display_name": "Rua Telmo Luiz Martins, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil",
+      "dist": 255.77822570117254
+    },
+    "Marcelo Ant\u00f4nio R\u00e9is": {
+      "osm_lat": -27.5544741,
+      "osm_lng": -48.621505,
+      "display_name": "Rua Marcelo Ant\u00f4nio Reis, Areias, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88113-260, Brasil",
+      "dist": 256.0184059217494
+    },
+    "Jos\u00e9 Clodovel de Souza": {
+      "osm_lat": -27.5608784,
+      "osm_lng": -48.632252,
+      "display_name": "Rua Jos\u00e9 Clodovel de Souza, Ipiranga, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88113-730, Brasil",
+      "dist": 242.2229597799169
+    },
+    "Eug\u00eanio Portela": {
+      "osm_lat": -27.5749689,
+      "osm_lng": -48.6011431,
+      "display_name": "Rua Eug\u00eanio Portela, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88095-700, Brasil",
+      "dist": 933.3952619224517
+    },
+    "Ver\u00edssimo Rodrigues Fortuna": {
+      "osm_lat": -27.5452421,
+      "osm_lng": -48.6395147,
+      "display_name": "Rua Ver\u00edssimo Rodrigues Fortuna, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-273, Brasil",
+      "dist": 263.0608614820497
+    },
+    "L\u00e9o Augusto da Silva": {
+      "osm_lat": -27.5419317,
+      "osm_lng": -48.6323232,
+      "display_name": "Rua L\u00e9o Augusto da Silva, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-273, Brasil",
+      "dist": 248.6559531813779
+    },
+    "dos Lirios": {
+      "osm_lat": -27.5426368,
+      "osm_lng": -48.6465482,
+      "display_name": "Rua dos L\u00edrios, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-273, Brasil",
+      "dist": 212.72588459714197
+    },
+    "Nelson Ferreira": {
+      "osm_lat": -27.5409207,
+      "osm_lng": -48.6369685,
+      "display_name": "Rua Nelson Ferreira, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-273, Brasil",
+      "dist": 248.33507499415995
+    },
+    "Portimao": {
+      "osm_lat": -27.5788755,
+      "osm_lng": -48.668638,
+      "display_name": "Rua Portim\u00e3o, Parque Residencial Lisboa, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-422, Brasil",
+      "dist": 221.65085859959314
+    },
+    "A\u00e7ores": {
+      "osm_lat": -27.5793806,
+      "osm_lng": -48.6685319,
+      "display_name": "Rua A\u00e7ores, Parque Residencial Lisboa, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-422, Brasil",
+      "dist": 243.89545006621304
+    },
+    "Guimar\u00e3es": {
+      "osm_lat": -27.5806455,
+      "osm_lng": -48.6691286,
+      "display_name": "Rua Guimar\u00e3es, Parque Residencial Lisboa, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-100, Brasil",
+      "dist": 229.06057229742308
+    },
+    "Arthur Mariano": {
+      "osm_lat": -27.5989113,
+      "osm_lng": -48.6419768,
+      "display_name": "Rua Ver. Arthur Manoel Mariano, 1170 S\u00e3o Jos\u00e9 SC, 1170, Rua Vereador Arthur Manoel Mariano, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-501, Brasil",
+      "dist": 283.19841073532405
+    },
+    "ararangua": {
+      "osm_lat": -27.5715749,
+      "osm_lng": -48.6150196,
+      "display_name": "Rua Ararangu\u00e1, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-030, Brasil",
+      "dist": 109.40811123435513
+    },
+    "Pedro bunn": {
+      "osm_lat": -27.5691554,
+      "osm_lng": -48.6211634,
+      "display_name": "Rua Pedro Bunn, Jardim Cidade de Florian\u00f3polis, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 86.93254221352656
+    },
+    "frontino coelho pires": {
+      "osm_lat": -27.5673835,
+      "osm_lng": -48.6198308,
+      "display_name": "Rua Frontino Coelho Pires, Jardim Cidade de Florian\u00f3polis, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 3.0608191640441107
+    },
+    "Alceu Amoroso Lima": {
+      "osm_lat": -27.5684708,
+      "osm_lng": -48.6424924,
+      "display_name": "Rua Alceu Amoroso Lima, Real Parque, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88113-480, Brasil",
+      "dist": 394.6803961790361
+    },
+    "Bento \u00c1guido Vi\u00eaira": {
+      "osm_lat": -27.5716244,
+      "osm_lng": -48.6159013,
+      "display_name": "Rua Bento \u00c1guido Vieira, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-030, Brasil",
+      "dist": 437.9279594074709
+    },
+    "C\u00e2ndido Amaro Dam\u00e1sio": {
+      "osm_lat": -27.5671868,
+      "osm_lng": -48.6167989,
+      "display_name": "Rua C\u00e2ndido Amaro Dam\u00e1sio, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-800, Brasil",
+      "dist": 0.0
+    },
+    "Valmir de Souza": {
+      "osm_lat": -27.5688612,
+      "osm_lng": -48.6224819,
+      "display_name": "Rua Valmir de Souza, Jardim Cidade de Florian\u00f3polis, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 238.00864071907645
+    },
+    "Ant\u00f4nio Basil Schroeder": {
+      "osm_lat": -27.5751341,
+      "osm_lng": -48.6176421,
+      "display_name": "Rua Ant\u00f4nio Basil Schroeder, Nossa Senhora do Ros\u00e1rio, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-603, Brasil",
+      "dist": 198.65609557752055
+    },
+    "Maria Filomena da Silva": {
+      "osm_lat": -27.5766742,
+      "osm_lng": -48.6160618,
+      "display_name": "Rua Maria Filomena da Silva, Nossa Senhora do Ros\u00e1rio, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-624, Brasil",
+      "dist": 253.7936658445927
+    },
+    "Teresina": {
+      "osm_lat": -27.5762346,
+      "osm_lng": -48.6213532,
+      "display_name": "Rua Teresina, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-798, Brasil",
+      "dist": 256.1095452417968
+    },
+    "Curitiba": {
+      "osm_lat": -26.7757352,
+      "osm_lng": -53.170407,
+      "display_name": "Rua Curitiba, S\u00e3o Jos\u00e9, Maravilha, Santa Catarina, Regi\u00e3o Sul, 89874-000, Brasil",
+      "dist": 458817.9921024127
+    },
+    "Recife": {
+      "osm_lat": -26.7756619,
+      "osm_lng": -53.1693589,
+      "display_name": "Rua Recife, S\u00e3o Jos\u00e9, Maravilha, Santa Catarina, Regi\u00e3o Sul, 89874-000, Brasil",
+      "dist": 458618.30266709434
+    },
+    "Ver. Arthur Manoel Mariano": {
+      "osm_lat": -27.5989113,
+      "osm_lng": -48.6419768,
+      "display_name": "Rua Ver. Arthur Manoel Mariano, 1170 S\u00e3o Jos\u00e9 SC, 1170, Rua Vereador Arthur Manoel Mariano, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-501, Brasil",
+      "dist": 283.19841073532405
+    },
+    "Don\u00e1 L\u00eddia": {
+      "osm_lat": -27.5415373,
+      "osm_lng": -48.6327915,
+      "display_name": "Rua Dona L\u00eddia, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-273, Brasil",
+      "dist": 253.10606287495636
+    },
+    "Brasil": {
+      "osm_lat": -27.637136,
+      "osm_lng": -48.6305791,
+      "display_name": "Rua Assis Brasil, Ponta de Baixo, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88104-205, Brasil",
+      "dist": 7458.381540385145
+    },
+    "Blumenau": {
+      "osm_lat": -27.5702011,
+      "osm_lng": -48.6185431,
+      "display_name": "Rua Blumenau, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-800, Brasil",
+      "dist": 247.26931696018062
+    },
+    "Ratones": {
+      "osm_lat": -27.5718888,
+      "osm_lng": -48.621617,
+      "display_name": "Rua Ratones, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 250.08661825714822
+    },
+    "Ingl\u00eases": {
+      "osm_lat": -27.5733769,
+      "osm_lng": -48.6252562,
+      "display_name": "Rua Ingleses, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-798, Brasil",
+      "dist": 257.4589599722879
+    },
+    "Jurer\u00ea": {
+      "osm_lat": -27.5727768,
+      "osm_lng": -48.62409,
+      "display_name": "Rua Jurer\u00ea, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-798, Brasil",
+      "dist": 262.3953761314435
+    },
+    "Santa Luzia": {
+      "osm_lat": -27.5705636,
+      "osm_lng": -48.6249666,
+      "display_name": "Rua Santa Luzia, Jardim Cidade de Florian\u00f3polis, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-798, Brasil",
+      "dist": 264.7861369644942
+    },
+    "Hidalgo Ara\u00fajo": {
+      "osm_lat": -27.5694222,
+      "osm_lng": -48.622855,
+      "display_name": "Rua Hidalgo Ara\u00fajo, Jardim Cidade de Florian\u00f3polis, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 147.9381640948174
+    },
+    "Anchieta": {
+      "osm_lat": -27.5696586,
+      "osm_lng": -48.6152681,
+      "display_name": "Rua Anchieta, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-800, Brasil",
+      "dist": 214.18927908124834
+    },
+    "Bra\u00e7o do Norte": {
+      "osm_lat": -27.571199,
+      "osm_lng": -48.6177721,
+      "display_name": "Rua Bra\u00e7o do Norte, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-800, Brasil",
+      "dist": 255.0236184203382
+    },
+    "Aimor\u00e9": {
+      "osm_lat": -27.6046262,
+      "osm_lng": -48.6493813,
+      "display_name": "Rua Aimor\u00e9, Flor de N\u00e1polis, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-260, Brasil",
+      "dist": 503.55723357275343
+    },
+    "Francisco Nappi": {
+      "osm_lat": -27.5603846,
+      "osm_lng": -48.6235286,
+      "display_name": "Rua Francisco Nappi, Ipiranga, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88113-200, Brasil",
+      "dist": 5530.56010161844
+    },
+    "Ant\u00f4nio Jovita Duarte": {
+      "osm_lat": -27.5436459,
+      "osm_lng": -48.7050153,
+      "display_name": "Rua Ant\u00f4nio Jovita Duarte, Alto Forquilhas, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-745, Brasil",
+      "dist": 7949.178845548896
+    },
+    "Vereador Arthur Mariano": {
+      "osm_lat": -27.5989113,
+      "osm_lng": -48.6419768,
+      "display_name": "Rua Ver. Arthur Manoel Mariano, 1170 S\u00e3o Jos\u00e9 SC, 1170, Rua Vereador Arthur Manoel Mariano, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-501, Brasil",
+      "dist": 283.19841073532405
+    },
+    "Urano Pires": {
+      "osm_lat": -27.5753464,
+      "osm_lng": -48.6625458,
+      "display_name": "Rua Urano Pires, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-422, Brasil",
+      "dist": 249.7851954285732
+    },
+    "Leopoldina Marcelino": {
+      "osm_lat": -27.6024588,
+      "osm_lng": -48.6461692,
+      "display_name": "Rua Leopoldina Marcelino, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-517, Brasil",
+      "dist": 216.64980513965847
+    },
+    "Papagaio": {
+      "osm_lat": -27.5467386,
+      "osm_lng": -48.6453016,
+      "display_name": "Rua Papagaio, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88130-000, Brasil",
+      "dist": 262.40501643595763
+    },
+    "Curi\u00f3": {
+      "osm_lat": -27.5464797,
+      "osm_lng": -48.6420833,
+      "display_name": "Rua Curi\u00f3, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-250, Brasil",
+      "dist": 237.26673184943212
+    },
+    "Cap. Pedro Leite": {
+      "osm_lat": -27.574346,
+      "osm_lng": -48.6097739,
+      "display_name": "Rua Capit\u00e3o Pedro Leite, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88117-750, Brasil",
+      "dist": 191.5322403900773
+    },
+    "Aveiro": {
+      "osm_lat": -27.5726168,
+      "osm_lng": -48.6676077,
+      "display_name": "Rua Aveiro, Loteamento Jardim Los Angeles, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-422, Brasil",
+      "dist": 317.5805893663721
+    },
+    "Alexandre Plucinski": {
+      "osm_lat": -27.5735244,
+      "osm_lng": -48.6550187,
+      "display_name": "Rua Alexandre Plucinski, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil",
+      "dist": 276.2721621491894
+    },
+    "Manoel Francisco de souza": {
+      "osm_lat": -27.6015755,
+      "osm_lng": -48.6453365,
+      "display_name": "Rua Manoel Francisco de Souza, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-517, Brasil",
+      "dist": 273.8284718323876
+    },
+    "allan kardec": {
+      "osm_lat": -27.6022061,
+      "osm_lng": -48.6458576,
+      "display_name": "Rua Allan Kardec, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-517, Brasil",
+      "dist": 1111.0134028431714
+    },
+    "aguas de Chapec\u00f3": {
+      "osm_lat": -27.5691895,
+      "osm_lng": -48.6144004,
+      "display_name": "Rua \u00c1guas de Chapec\u00f3, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-110, Brasil",
+      "dist": 0.0
+    },
+    "lagoa da concei\u00e7\u00e3o": {
+      "osm_lat": -27.5710684,
+      "osm_lng": -48.6214521,
+      "display_name": "Rua Lagoa da Concei\u00e7\u00e3o, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 0.0
+    },
+    "pantano do sul": {
+      "osm_lat": -27.5704639,
+      "osm_lng": -48.620485,
+      "display_name": "Rua P\u00e2ntano do Sul, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 0.0
+    },
+    "Daniela": {
+      "osm_lat": -27.5710339,
+      "osm_lng": -48.6206547,
+      "display_name": "Rua Daniela, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-300, Brasil",
+      "dist": 0.0
+    },
+    "das violetas": {
+      "osm_lat": -27.5693455,
+      "osm_lng": -48.6190888,
+      "display_name": "Rua das Violetas, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88110-800, Brasil",
+      "dist": 0.0
+    },
+    "das papoulas": {
+      "osm_lat": -27.5672276,
+      "osm_lng": -48.6160472,
+      "display_name": "Rua das Papoulas, Bela Vista, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88111-110, Brasil",
+      "dist": 0.0
+    },
+    "jose Bartolomeu vieira": {
+      "osm_lat": -27.5773163,
+      "osm_lng": -48.6706519,
+      "display_name": "Rua Jos\u00e9 Bartolomeu Vieira, Parque Residencial Lisboa, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-500, Brasil",
+      "dist": 3537.5427177860606
+    },
+    "vereador Arthur Manoel mariano": {
+      "osm_lat": -27.602534,
+      "osm_lng": -48.6369536,
+      "display_name": "Rua Vereador Arthur Manoel Mariano, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-010, Brasil",
+      "dist": 872.8081379775319
+    },
+    "vitorino jose Luiz": {
+      "osm_lat": -27.5980068,
+      "osm_lng": -48.636975,
+      "display_name": "Rua Vitorino Jos\u00e9 Luiz, Forquilhinha, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88106-600, Brasil",
+      "dist": 2976.723579064067
+    },
+    "tulio Rodrigues martins": {
+      "osm_lat": -27.5755907,
+      "osm_lng": -48.65356,
+      "display_name": "Rua T\u00falio Rodrigues Martins, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil",
+      "dist": 3421.31607445353
+    },
+    "Nossa Senhora dos Navegantes": {
+      "osm_lat": -27.5440258,
+      "osm_lng": -48.6393657,
+      "display_name": "Rua Nossa Senhora dos Navegantes, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88115-273, Brasil",
+      "dist": 275.6004262184917
+    },
+    "papagaio": {
+      "osm_lat": -27.5467386,
+      "osm_lng": -48.6453016,
+      "display_name": "Rua Papagaio, Serraria, Barreiros, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88130-000, Brasil",
+      "dist": 262.40501643595763
+    },
+    "Koesa": {
+      "osm_lat": -27.5919011,
+      "osm_lng": -48.6136821,
+      "display_name": "Rua Koesa, Kobrasol, Campinas, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88102-320, Brasil",
+      "dist": 619.02252542899
+    },
+    "das Flores": {
+      "osm_lat": -26.2533579,
+      "osm_lng": -48.6285335,
+      "display_name": "Rua das Flores, S\u00e3o Jos\u00e9 do Acara\u00ed, S\u00e3o Francisco do Sul, Santa Catarina, Regi\u00e3o Sul, 89331-135, Brasil",
+      "dist": 152531.84850409863
+    },
+    "T\u00falio Rodrigues Martins": {
+      "osm_lat": -27.5755907,
+      "osm_lng": -48.65356,
+      "display_name": "Rua T\u00falio Rodrigues Martins, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-479, Brasil",
+      "dist": 262.7956194099332
+    },
+    "Bernardina de Freitas de Agostinho": {
+      "osm_lat": -27.5744193,
+      "osm_lng": -48.6531018,
+      "display_name": "Rua Bernardina de Freitas de Agostinho, Forquilhas Leste, Centro Hist\u00f3rico de S\u00e3o Jos\u00e9, S\u00e3o Jos\u00e9, Santa Catarina, Regi\u00e3o Sul, 88107-503, Brasil",
+      "dist": 253.0446368272498
+    }
+  }
+}

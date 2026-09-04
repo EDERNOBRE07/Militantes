@@ -1421,7 +1421,7 @@ export class StorageService {
           updated.neighborhoodName = 'Bosque das Mansões';
           checkinsModified = true;
         }
-      } else if (neighIdLower === 'areias_bosque' || ((streetLower.includes('são pedro') || streetLower.includes('sao pedro') || streetLower.includes('iano')) && updated.neighborhoodId !== 'areias')) {
+      } else if (neighIdLower === 'areias_bosque' || ((streetLower.includes('são pedro') || streetLower.includes('sao pedro') || streetLower.includes('francisco jacinto de melo')) && updated.neighborhoodId !== 'areias')) {
         updated.neighborhoodId = 'areias';
         updated.neighborhoodName = 'Areias';
         checkinsModified = true;
