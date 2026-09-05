@@ -18,6 +18,7 @@ import { formatDateTimeBR } from '../utils/formatters';
 import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
 import { StorageService } from '../services/storageService';
 import { compressImageFile } from '../utils/imageCompressor';
+import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
 import {
   MapPin,
   Building2,
@@ -45,6 +46,7 @@ interface NeighborhoodReportSectionProps {
   onZoomPhoto: (photo: string) => void;
   selectedBairroId?: string;
   onSelectBairro?: (id: string) => void;
+  onEditStreet?: (chk: StreetCheckIn) => void;
 }
 
 export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps> = ({
@@ -54,7 +56,8 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   teams,
   onZoomPhoto,
   selectedBairroId: externalBairroId,
-  onSelectBairro
+  onSelectBairro,
+  onEditStreet
 }) => {
   const [internalBairroId, setInternalBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
   const selectedBairroId = externalBairroId || internalBairroId;
@@ -89,6 +92,22 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       return false;
     });
   }, [checkIns, currentBairro]);
+
+  // Recupera todas as fotos (inclusive fotos recuperadas do banco de dados) vinculadas a este bairro
+  const allBairroPhotos = useMemo(() => {
+    return bairroCheckIns.flatMap((chk) => {
+      const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
+      const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
+      const resolved = validPhotos.length > 0 ? validPhotos : (dbPhoto ? [dbPhoto] : []);
+      return resolved.map((photo, pIdx) => ({
+        key: `${chk.id}-${pIdx}`,
+        photo,
+        streetName: chk.streetName,
+        timestamp: chk.timestamp,
+        militantName: chk.militantName
+      }));
+    });
+  }, [bairroCheckIns]);
 
   // Aggregate stats for current neighborhood
   const totalSantinhos = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
@@ -141,10 +160,36 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
     layerGroup.clearLayers();
 
-    // Auto-fit and center map on check-ins ONLY when neighborhood actually changes
+    // 0. Locate official polygon for this neighborhood
+    const officialBairro = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
+      o => o.id === currentBairro.id || o.name.toLowerCase() === currentBairro.name.toLowerCase()
+    );
+    const bairroPolygon: [number, number][] = (officialBairro?.polygon || (currentBairro as any).polygon || []) as [number, number][];
+
+    // Desenha o polígono da área delimitada oficial do bairro
+    if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
+      const polygonColor = officialBairro?.officialColor || '#2563eb';
+      const poly = L.polygon(bairroPolygon, {
+        color: polygonColor,
+        weight: 3.5,
+        dashArray: '8, 6',
+        fillColor: polygonColor,
+        fillOpacity: 0.12
+      });
+      poly.bindTooltip(`<strong>Área Delimitada Oficial</strong><br/>${currentBairro.name}`, {
+        sticky: true,
+        className: 'text-xs'
+      });
+      layerGroup.addLayer(poly);
+    }
+
+    // Auto-fit and center map on the EXACT delimited polygon of the neighborhood
     if (prevBairroIdRef.current !== currentBairro.id) {
       prevBairroIdRef.current = currentBairro.id;
-      if (bairroCheckIns.length > 0) {
+      if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
+        const bounds = L.latLngBounds(bairroPolygon);
+        map.fitBounds(bounds, { padding: [35, 35] });
+      } else if (bairroCheckIns.length > 0) {
         const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
         const bounds = L.latLngBounds(latLngs);
         map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
@@ -413,30 +458,30 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             </h4>
           </div>
           <span className="text-xs text-slate-500 font-medium">
-            {bairroCheckIns.flatMap(c => c.photos || []).length} fotos registradas
+            {allBairroPhotos.length} fotos registradas
           </span>
         </div>
 
-        {bairroCheckIns.length > 0 ? (
+        {allBairroPhotos.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {bairroCheckIns.flatMap((chk) => (chk.photos || []).map((photo, pIdx) => (
+            {allBairroPhotos.map((item) => (
               <div
-                key={`${chk.id}-${pIdx}`}
-                onClick={() => onZoomPhoto(photo)}
+                key={item.key}
+                onClick={() => onZoomPhoto(item.photo)}
                 className="group relative rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shadow-2xs hover:shadow-md cursor-pointer transition-all hover:scale-102"
               >
                 <img
-                  src={photo}
-                  alt={chk.streetName}
+                  src={item.photo}
+                  alt={item.streetName}
                   className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90 p-2 flex flex-col justify-end text-white">
-                  <span className="text-[10px] font-bold line-clamp-1 leading-tight">{chk.streetName}</span>
-                  <span className="text-[9px] text-slate-300 font-mono">{formatDateTimeBR(chk.timestamp)}</span>
-                  <span className="text-[8px] text-blue-300 font-medium">{chk.militantName}</span>
+                  <span className="text-[10px] font-bold line-clamp-1 leading-tight">{item.streetName}</span>
+                  <span className="text-[9px] text-slate-300 font-mono">{formatDateTimeBR(item.timestamp)}</span>
+                  <span className="text-[8px] text-blue-300 font-medium">{item.militantName}</span>
                 </div>
               </div>
-            )))}
+            ))}
           </div>
         ) : (
           <p className="text-xs text-slate-400 italic py-4 text-center">
@@ -481,7 +526,9 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
               ) : (
                 bairroCheckIns.map(chk => {
                   const militantObj = militants.find(m => m.id === chk.militantId);
-                  const firstPhoto = chk.photos && chk.photos.length > 0 ? chk.photos[0] : null;
+                  const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
+                  const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
+                  const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : dbPhoto;
 
                   return (
                     <tr key={chk.id} className="hover:bg-slate-50/80 transition">
@@ -553,9 +600,20 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                       </td>
 
                       <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          ✓ Validado
-                        </span>
+                        <div className="inline-flex items-center gap-1.5 justify-center">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            ✓ Validado
+                          </span>
+                          {onEditStreet && (
+                            <button
+                              onClick={() => onEditStreet(chk)}
+                              className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-[10px] border border-blue-200 cursor-pointer"
+                              title="Editar ou Excluir Definitivamente este Registro"
+                            >
+                              Editar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

@@ -50,18 +50,26 @@ async function startServer() {
       if (Array.isArray(incomingValue)) {
         const currentArray = Array.isArray(result[key]) ? result[key] : [];
         const itemMap = new Map<string, any>();
+        const deletedCheckinIds = new Set<string>((result['deleted_checkins_ids'] || []).map(String));
 
-        // 1. Index all existing server items
+        // 1. Index all existing server items, respecting deleted blacklist
         currentArray.forEach((item: any) => {
           if (item && item.id) {
-            itemMap.set(String(item.id), item);
+            const idStr = String(item.id);
+            if (key === 'militancia_checkins_v1' && deletedCheckinIds.has(idStr)) {
+              return; // Skip permanently deleted checkin
+            }
+            itemMap.set(idStr, item);
           }
         });
 
-        // 2. Merge incoming items non-destructively
+        // 2. Merge incoming items non-destructively, respecting deleted blacklist
         incomingValue.forEach((incomingItem: any) => {
           if (incomingItem && incomingItem.id) {
             const idStr = String(incomingItem.id);
+            if (key === 'militancia_checkins_v1' && deletedCheckinIds.has(idStr)) {
+              return; // Skip permanently deleted checkin
+            }
             const existingItem = itemMap.get(idStr);
 
             if (!existingItem) {
@@ -355,7 +363,8 @@ async function startServer() {
   const handleCheckInGet = async (req: express.Request, res: express.Response) => {
     const targetUrl = 'https://militancia.mastervisionmarketing.com/api/checkin.php';
     const vault = readServerVault();
-    const localCheckins = vault['militancia_checkins_v1'] || [];
+    const deletedCheckinIds = new Set<string>((vault['deleted_checkins_ids'] || []).map(String));
+    const localCheckins = (vault['militancia_checkins_v1'] || []).filter((c: any) => !deletedCheckinIds.has(String(c.id)));
 
     try {
       const controller = new AbortController();
@@ -409,10 +418,12 @@ async function startServer() {
 
         const mergedMap = new Map();
         localCheckins.forEach((c: any) => {
-          if (c && c.id) mergedMap.set(String(c.id), c);
+          if (c && c.id && !deletedCheckinIds.has(String(c.id))) {
+            mergedMap.set(String(c.id), c);
+          }
         });
         remoteCheckins.forEach((c: any) => {
-          if (c && c.id) {
+          if (c && c.id && !deletedCheckinIds.has(String(c.id))) {
             const idStr = String(c.id);
             const exist = mergedMap.get(idStr);
             const finalPhotos = (exist?.photos && exist.photos.length > 0) ? exist.photos : c.photos;
@@ -435,6 +446,42 @@ async function startServer() {
   const handleSyncPost = async (req: express.Request, res: express.Response) => {
     const syncData = req.body;
     const targetUrl = 'https://militancia.mastervisionmarketing.com/api/sync.php';
+
+    // 0. Handle explicit definitive deletion of check-in / street
+    if (syncData.action === 'delete_checkin') {
+      try {
+        const checkInId = String(syncData.checkInId || syncData.id);
+        const current = readServerVault();
+        const chkList = (current['militancia_checkins_v1'] || []).filter((c: any) => String(c.id) !== checkInId);
+        const deletedCheckinsList: string[] = Array.isArray(current['deleted_checkins_ids'])
+          ? [...current['deleted_checkins_ids']]
+          : [];
+        if (!deletedCheckinsList.includes(checkInId)) {
+          deletedCheckinsList.push(checkInId);
+        }
+
+        const updatedVault = {
+          ...current,
+          militancia_checkins_v1: chkList,
+          checkins_data: chkList,
+          deleted_checkins_ids: deletedCheckinsList,
+          _lastServerSavedAt: new Date().toISOString()
+        };
+        fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updatedVault, null, 2), 'utf-8');
+        try {
+          const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+          if (fs.existsSync(path.dirname(publicVaultPath))) {
+            fs.writeFileSync(publicVaultPath, JSON.stringify(updatedVault, null, 2), 'utf-8');
+          }
+        } catch {}
+
+        broadcastRealTimeUpdate('checkin_deleted', { checkInId });
+        return res.json({ status: 'success', deletedCheckInId: checkInId });
+      } catch (e) {
+        console.error('Error in delete_checkin:', e);
+        return res.status(500).json({ status: 'error', message: 'Erro ao excluir check-in definitivamente.' });
+      }
+    }
 
     // 0. Handle explicit definitive deletion of militant (with cascading removal of all check-ins)
     if (syncData.action === 'delete_militant') {
@@ -620,6 +667,80 @@ async function startServer() {
 
   app.get('/api/sync', handleSyncGet);
   app.get('/api/sync.php', handleSyncGet);
+
+  // Explicit endpoints for deleting a street check-in
+  app.delete('/api/checkin/:id', async (req, res) => {
+    try {
+      const checkInId = String(req.params.id);
+      const current = readServerVault();
+      const chkList = (current['militancia_checkins_v1'] || []).filter((c: any) => String(c.id) !== checkInId);
+      const deletedCheckinsList: string[] = Array.isArray(current['deleted_checkins_ids'])
+        ? [...current['deleted_checkins_ids']]
+        : [];
+      if (!deletedCheckinsList.includes(checkInId)) {
+        deletedCheckinsList.push(checkInId);
+      }
+
+      const updatedVault = {
+        ...current,
+        militancia_checkins_v1: chkList,
+        checkins_data: chkList,
+        deleted_checkins_ids: deletedCheckinsList,
+        _lastServerSavedAt: new Date().toISOString()
+      };
+      fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updatedVault, null, 2), 'utf-8');
+      try {
+        const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+        if (fs.existsSync(path.dirname(publicVaultPath))) {
+          fs.writeFileSync(publicVaultPath, JSON.stringify(updatedVault, null, 2), 'utf-8');
+        }
+      } catch {}
+
+      broadcastRealTimeUpdate('checkin_deleted', { checkInId });
+      return res.json({ status: 'success', deletedCheckInId: checkInId });
+    } catch (e) {
+      console.error('Error in DELETE /api/checkin/:id', e);
+      return res.status(500).json({ status: 'error', message: 'Erro ao excluir check-in.' });
+    }
+  });
+
+  app.post('/api/checkin/delete', async (req, res) => {
+    try {
+      const checkInId = String(req.body.id || req.body.checkInId);
+      if (!checkInId) {
+        return res.status(400).json({ status: 'error', message: 'ID do check-in não informado.' });
+      }
+      const current = readServerVault();
+      const chkList = (current['militancia_checkins_v1'] || []).filter((c: any) => String(c.id) !== checkInId);
+      const deletedCheckinsList: string[] = Array.isArray(current['deleted_checkins_ids'])
+        ? [...current['deleted_checkins_ids']]
+        : [];
+      if (!deletedCheckinsList.includes(checkInId)) {
+        deletedCheckinsList.push(checkInId);
+      }
+
+      const updatedVault = {
+        ...current,
+        militancia_checkins_v1: chkList,
+        checkins_data: chkList,
+        deleted_checkins_ids: deletedCheckinsList,
+        _lastServerSavedAt: new Date().toISOString()
+      };
+      fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updatedVault, null, 2), 'utf-8');
+      try {
+        const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+        if (fs.existsSync(path.dirname(publicVaultPath))) {
+          fs.writeFileSync(publicVaultPath, JSON.stringify(updatedVault, null, 2), 'utf-8');
+        }
+      } catch {}
+
+      broadcastRealTimeUpdate('checkin_deleted', { checkInId });
+      return res.json({ status: 'success', deletedCheckInId: checkInId });
+    } catch (e) {
+      console.error('Error in POST /api/checkin/delete', e);
+      return res.status(500).json({ status: 'error', message: 'Erro ao excluir check-in.' });
+    }
+  });
 
   // AI Campaign Strategist endpoint using Gemini SDK
   app.post('/api/ai-strategy', async (req, res) => {

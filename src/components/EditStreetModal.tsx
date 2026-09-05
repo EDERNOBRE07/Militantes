@@ -37,6 +37,7 @@ interface EditStreetModalProps {
   neighborhoods: Neighborhood[];
   onClose: () => void;
   onSave: (updatedCheckIn: StreetCheckIn) => Promise<void> | void;
+  onDelete?: (checkInId: string) => Promise<void> | void;
 }
 
 export const EditStreetModal: React.FC<EditStreetModalProps> = ({
@@ -44,9 +45,12 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
   checkIn,
   neighborhoods,
   onClose,
-  onSave
+  onSave,
+  onDelete
 }) => {
   if (!isOpen || !checkIn) return null;
+
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const [streetName, setStreetName] = useState(checkIn.streetName || '');
   const [houseNumberRange, setHouseNumberRange] = useState(checkIn.houseNumberRange || '');
@@ -951,23 +955,66 @@ export const EditStreetModal: React.FC<EditStreetModalProps> = ({
         </form>
 
         {/* Footer */}
-        <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2.5">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
-          >
-            <Save className="w-3.5 h-3.5" />
-            {isSaving ? 'Salvando...' : 'Salvar Alterações da Rua'}
-          </button>
+        <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2.5">
+          {onDelete ? (
+            <div>
+              {isConfirmingDelete ? (
+                <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 p-1.5 rounded-xl animate-in fade-in">
+                  <span className="text-[11px] font-bold text-rose-800">Confirmar exclusão definitiva?</span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setIsSaving(true);
+                      try {
+                        await onDelete(checkIn.id);
+                        onClose();
+                      } finally {
+                        setIsSaving(false);
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] transition cursor-pointer"
+                  >
+                    Sim, Excluir
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsConfirmingDelete(false)}
+                    className="px-2 py-1 rounded-lg bg-white border border-slate-300 text-slate-700 font-semibold text-[11px] hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    Não
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsConfirmingDelete(true)}
+                  className="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Excluir Registro</span>
+                </button>
+              )}
+            </div>
+          ) : <div />}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSaving}
+              className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+            >
+              <Save className="w-3.5 h-3.5" />
+              {isSaving ? 'Salvando...' : 'Salvar Alterações da Rua'}
+            </button>
+          </div>
         </div>
 
       </div>

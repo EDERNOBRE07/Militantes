@@ -147,6 +147,8 @@ export class StorageService {
 
   // Cache em memória de check-ins para acesso imediato de 0ms sem limites de quota
   private static checkinsMemoryCache: StreetCheckIn[] | null = null;
+  // Cache dedicado de fotos de alta resolução do cofre do banco de dados (ID -> fotos[])
+  public static photoVaultCache: Map<string, string[]> = new Map();
 
   static subscribeSyncStatus(callback: (status: 'idle' | 'syncing' | 'synced' | 'error' | 'offline', lastSync: Date | null, msg: string) => void): () => void {
     this.syncListeners.add(callback);
@@ -379,20 +381,21 @@ export class StorageService {
 
         // 1. Sincronização e Fusão Segura de CHECKINS
         if (remoteData[STORAGE_KEYS.CHECKINS] && Array.isArray(remoteData[STORAGE_KEYS.CHECKINS])) {
-          const localCheckins = this.getCheckIns();
+          const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
+          const localCheckins = this.getCheckIns().filter(c => !deletedIds.has(String(c.id)));
           const remoteCheckins: StreetCheckIn[] = remoteData[STORAGE_KEYS.CHECKINS];
           const checkinMap = new Map<string, StreetCheckIn>();
 
-          // Carrega remotos primeiro
+          // Carrega remotos primeiro, ignorando estritamente registros excluídos
           for (const rem of remoteCheckins) {
-            if (rem && rem.id) {
+            if (rem && rem.id && !deletedIds.has(String(rem.id))) {
               checkinMap.set(String(rem.id), rem);
             }
           }
 
           // Mescla com locais garantindo preservação de fotos e dados editados
           for (const loc of localCheckins) {
-            if (!loc || !loc.id) continue;
+            if (!loc || !loc.id || deletedIds.has(String(loc.id))) continue;
             const idStr = String(loc.id);
             const existingRem = checkinMap.get(idStr);
             if (!existingRem) {
@@ -401,9 +404,9 @@ export class StorageService {
               hasChanges = true;
             } else {
               // Check-in existe em ambos: preserva a versão mais rica (fotos reais, observações)
-              const hasLocalPhotos = Array.isArray(loc.photos) && loc.photos.length > 0;
-              const hasRemotePhotos = Array.isArray(existingRem.photos) && existingRem.photos.length > 0;
-              const localPhotos = hasLocalPhotos ? loc.photos : (hasRemotePhotos ? existingRem.photos : []);
+              const hasLocalPhotos = Array.isArray(loc.photos) && loc.photos.length > 0 && loc.photos[0] !== '[vault_photo]';
+              const hasRemotePhotos = Array.isArray(existingRem.photos) && existingRem.photos.length > 0 && existingRem.photos[0] !== '[vault_photo]';
+              const localPhotos = hasLocalPhotos ? loc.photos : (hasRemotePhotos ? existingRem.photos : (this.photoVaultCache.get(idStr) || []));
 
               const merged: StreetCheckIn = {
                 ...existingRem,
@@ -677,23 +680,28 @@ export class StorageService {
       this.set(STORAGE_KEYS.STOCK_TX, INITIAL_STOCK_TRANSACTIONS, false);
     }
 
-    // 2. Proteção definitiva de Check-ins: se vazio, carrega os 21 checkins reais de INITIAL_CHECKINS
+    // 2. Proteção definitiva de Check-ins: se vazio, carrega os checkins reais respeitando exclusões
+    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
     const currentCheckins = this.get<StreetCheckIn[]>(STORAGE_KEYS.CHECKINS, []);
     if (!currentCheckins || currentCheckins.length === 0) {
-      this.set(STORAGE_KEYS.CHECKINS, INITIAL_CHECKINS, false);
+      const filteredInit = INITIAL_CHECKINS.filter(c => !deletedIds.has(String(c.id)));
+      this.set(STORAGE_KEYS.CHECKINS, filteredInit, false);
     } else {
-      // Se houver checkins, certifique-se de que os 21 checkins históricos estejam incluídos
+      // Se houver checkins, mantém apenas os válidos e nunca ressuscita itens excluídos
       const currentMap = new Map<string, StreetCheckIn>();
-      currentCheckins.forEach(c => currentMap.set(c.id, c));
+      currentCheckins.forEach(c => {
+        if (!deletedIds.has(String(c.id))) {
+          currentMap.set(String(c.id), c);
+        }
+      });
       INITIAL_CHECKINS.forEach(initC => {
-        if (!currentMap.has(initC.id)) {
-          currentMap.set(initC.id, initC);
+        const idStr = String(initC.id);
+        if (!deletedIds.has(idStr) && !currentMap.has(idStr)) {
+          currentMap.set(idStr, initC);
         }
       });
       const combined = Array.from(currentMap.values());
-      if (combined.length !== currentCheckins.length) {
-        this.set(STORAGE_KEYS.CHECKINS, combined, false);
-      }
+      this.set(STORAGE_KEYS.CHECKINS, combined, false);
     }
 
     if (!localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS)) {
@@ -732,6 +740,7 @@ export class StorageService {
       setTimeout(() => {
         this.fetchRemoteState();
         this.syncAllPendingCheckins();
+        this.recoverAllDatabasePhotos();
       }, 300);
 
       // 2. Real-Time Server-Sent Events (SSE) Listener for zero-latency multi-user updates
@@ -1408,10 +1417,13 @@ export class StorageService {
 
   // Check-ins & Offline queue
   static getCheckIns(): StreetCheckIn[] {
+    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
+
     if (this.checkinsMemoryCache && this.checkinsMemoryCache.length > 0) {
-      return this.checkinsMemoryCache;
+      return this.checkinsMemoryCache.filter(c => !deletedIds.has(String(c.id)));
     }
     let fromLocal = this.get<StreetCheckIn[]>(STORAGE_KEYS.CHECKINS, INITIAL_CHECKINS);
+    fromLocal = fromLocal.filter(c => !deletedIds.has(String(c.id)));
 
     // Realoção e normalização automática para as regras dos 24 bairros oficiais
     let checkinsModified = false;
@@ -1451,17 +1463,25 @@ export class StorageService {
         checkinsModified = true;
       }
 
+      // Hidratação de fotos a partir do cofre dedicado
+      const idStr = String(chk.id);
+      const cachedPhotos = this.photoVaultCache.get(idStr);
+      const hasRealPhotos = Array.isArray(chk.photos) && chk.photos.length > 0 && chk.photos[0] !== '[vault_photo]';
+      if (!hasRealPhotos && cachedPhotos && cachedPhotos.length > 0) {
+        updated.photos = cachedPhotos;
+      }
+
       return updated;
     });
 
-    // Assegura a presença de check-ins de amostra em Areias e Bosque das Mansões
-    if (!reallocated.some(c => c.neighborhoodId === 'areias')) {
-      const areiasSamples = INITIAL_CHECKINS.filter(c => c.neighborhoodId === 'areias');
+    // Assegura a presença de check-ins de amostra em Areias e Bosque das Mansões (apenas se não excluídos)
+    if (!reallocated.some(c => c.neighborhoodId === 'areias') && !deletedIds.has('areias-sample-1')) {
+      const areiasSamples = INITIAL_CHECKINS.filter(c => c.neighborhoodId === 'areias' && !deletedIds.has(String(c.id)));
       reallocated.push(...areiasSamples);
       checkinsModified = true;
     }
-    if (!reallocated.some(c => c.neighborhoodId === 'bosque_das_mansoes')) {
-      const bosqueSamples = INITIAL_CHECKINS.filter(c => c.neighborhoodId === 'bosque_das_mansoes');
+    if (!reallocated.some(c => c.neighborhoodId === 'bosque_das_mansoes') && !deletedIds.has('bosque-sample-1')) {
+      const bosqueSamples = INITIAL_CHECKINS.filter(c => c.neighborhoodId === 'bosque_das_mansoes' && !deletedIds.has(String(c.id)));
       reallocated.push(...bosqueSamples);
       checkinsModified = true;
     }
@@ -1469,7 +1489,6 @@ export class StorageService {
     if (checkinsModified) {
       fromLocal = reallocated;
       this.safeLocalStorageSet(STORAGE_KEYS.CHECKINS, fromLocal);
-      vaultStorage.setItem(STORAGE_KEYS.CHECKINS, fromLocal).catch(() => {});
     }
 
     this.checkinsMemoryCache = fromLocal;
@@ -1478,10 +1497,20 @@ export class StorageService {
     if (typeof window !== 'undefined') {
       vaultStorage.getItem<StreetCheckIn[]>(STORAGE_KEYS.CHECKINS).then(vaultItems => {
         if (vaultItems && Array.isArray(vaultItems) && vaultItems.length > 0) {
+          const currentDeleted = new Set(this.get<string[]>('deleted_entities_vault', []));
+          const validVaultItems = vaultItems.filter(v => v && v.id && !currentDeleted.has(String(v.id)));
+
+          // Alimenta o cache de fotos com as fotos de alta resolução do IndexedDB
+          validVaultItems.forEach(v => {
+            if (v && v.id && Array.isArray(v.photos) && v.photos.length > 0 && v.photos[0] !== '[vault_photo]') {
+              this.photoVaultCache.set(String(v.id), v.photos);
+            }
+          });
+
           const current = this.checkinsMemoryCache || [];
-          if (vaultItems.length > current.length) {
-            this.checkinsMemoryCache = vaultItems;
-            this.safeLocalStorageSet(STORAGE_KEYS.CHECKINS, vaultItems);
+          if (validVaultItems.length > current.length) {
+            this.checkinsMemoryCache = validVaultItems;
+            this.safeLocalStorageSet(STORAGE_KEYS.CHECKINS, validVaultItems);
             window.dispatchEvent(new CustomEvent('militancia_data_updated'));
           }
         }
@@ -1491,24 +1520,287 @@ export class StorageService {
     return fromLocal;
   }
 
-  static deleteCheckIn(checkInId: string): void {
+  /**
+   * Exclusão definitiva e permanente de check-in / rua com proteção de cofre
+   */
+  static async deleteCheckIn(checkInId: string): Promise<boolean> {
+    const idStr = String(checkInId);
+
+    // 1. Marca no cofre de entidades excluídas de forma permanente (localStorage + IndexedDB)
+    const deletedIds = this.get<string[]>('deleted_entities_vault', []);
+    if (!deletedIds.includes(idStr)) {
+      deletedIds.push(idStr);
+      this.set('deleted_entities_vault', deletedIds, false);
+      if (typeof window !== 'undefined') {
+        try {
+          await vaultStorage.setItem('deleted_entities_vault', deletedIds);
+        } catch {}
+      }
+    }
+
+    // 2. Remove da memória RAM, do cache dedicado de fotos e de todas as chaves locais
     const allCheckins = this.getCheckIns();
-    const target = allCheckins.find(c => c.id === checkInId);
-    const updated = allCheckins.filter(c => c.id !== checkInId);
-    this.set(STORAGE_KEYS.CHECKINS, updated);
+    const target = allCheckins.find(c => String(c.id) === idStr);
+    const updated = allCheckins.filter(c => String(c.id) !== idStr);
 
-    // Also remove from offline queue if present
+    this.photoVaultCache.delete(idStr);
+    this.checkinsMemoryCache = updated;
+
+    this.set(STORAGE_KEYS.CHECKINS, updated, true);
+    this.safeLocalStorageSet('checkins_data', updated);
+    this.safeLocalStorageSet('militancia_checkins_v1', updated);
+
+    if (typeof window !== 'undefined') {
+      try {
+        await vaultStorage.setItem(STORAGE_KEYS.CHECKINS, updated);
+        await vaultStorage.setItem('militancia_checkins_v1', updated);
+        await vaultStorage.setItem('checkins_data', updated);
+      } catch {}
+    }
+
+    // 3. Remove da fila offline se estiver pendente
     const queue = this.get<StreetCheckIn[]>(STORAGE_KEYS.OFFLINE_QUEUE, []);
-    const updatedQueue = queue.filter(c => c.id !== checkInId);
-    this.set(STORAGE_KEYS.OFFLINE_QUEUE, updatedQueue);
+    const updatedQueue = queue.filter(c => String(c.id) !== idStr);
+    this.set(STORAGE_KEYS.OFFLINE_QUEUE, updatedQueue, true);
 
+    // 4. Recalcula estatísticas operacionais imediatamente
+    this.recalculateAllStatsFromCheckins(updated);
+
+    // 5. Comunica exclusão imediata ao servidor (Node e banco remoto)
+    try {
+      await fetch(`/api/checkin/${idStr}`, { method: 'DELETE' }).catch(() => {});
+      await this.requestSyncApi('POST', {
+        action: 'delete_checkin',
+        checkInId: idStr,
+        replace: true
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('Erro ao sincronizar exclusão com servidor:', e);
+    }
+
+    // 6. Notifica todos os componentes e telas
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
+
+    // 7. Registro de auditoria
     const user = this.getCurrentUser();
     this.logAudit(
       user,
       'EXCLUSAO_CHECKIN_RUA',
       'CHECKIN_RUA',
-      `Rua/Check-in ${target?.streetName || checkInId} (${target?.neighborhoodName || 'São José'}) registrado por ${target?.militantName || 'Militante'} foi apagado pelo coordenador.`
+      `Rua/Check-in ${target?.streetName || idStr} (${target?.neighborhoodName || 'São José'}) registrado por ${target?.militantName || 'Militante'} foi excluído definitivamente pelo coordenador.`
     );
+
+    return true;
+  }
+
+  /**
+   * Helper para buscar foto real de um checkin ou de sua rua correspondente
+   */
+  static getPhotoForCheckIn(checkInId: string, neighborhoodId?: string, streetName?: string): string {
+    const idStr = String(checkInId);
+
+    // 1. Verifica cache dedicado de fotos
+    const cached = this.photoVaultCache.get(idStr);
+    if (cached && cached.length > 0 && cached[0] !== '[vault_photo]') {
+      return cached[0];
+    }
+
+    // 2. Verifica no cache de checkins em memória
+    if (this.checkinsMemoryCache) {
+      const match = this.checkinsMemoryCache.find(c => String(c.id) === idStr);
+      if (match && Array.isArray(match.photos) && match.photos.length > 0 && match.photos[0] !== '[vault_photo]') {
+        this.photoVaultCache.set(idStr, match.photos);
+        return match.photos[0];
+      }
+    }
+
+    // 3. Verifica por rua e bairro correspondentes
+    if (neighborhoodId && streetName && this.checkinsMemoryCache) {
+      const sNorm = streetName.trim().toLowerCase();
+      const nNorm = neighborhoodId.trim().toLowerCase();
+      const matchStreet = this.checkinsMemoryCache.find(c =>
+        (c.neighborhoodId || '').toLowerCase() === nNorm &&
+        (c.streetName || '').toLowerCase() === sNorm &&
+        Array.isArray(c.photos) && c.photos.length > 0 && c.photos[0] !== '[vault_photo]'
+      );
+      if (matchStreet && matchStreet.photos[0]) {
+        return matchStreet.photos[0];
+      }
+    }
+
+    return '';
+  }
+
+  /**
+   * Recupera todas as fotos lançadas no banco de dados e as associa perfeitamente
+   * às ruas correspondentes em memória, IndexedDB e relatórios.
+   */
+  static async recoverAllDatabasePhotos(): Promise<{
+    success: boolean;
+    recoveredPhotosCount: number;
+    totalStreetsWithPhotos: number;
+    message: string;
+  }> {
+    let recoveredCount = 0;
+    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
+
+    try {
+      // 1. Tenta carregar do endpoint /api/checkin e /api/data_server_vault.json
+      let dbCheckins: any[] = [];
+      try {
+        const res = await fetch('/api/checkin');
+        if (res.ok) {
+          const json = await res.json();
+          if (json && Array.isArray(json.data)) {
+            dbCheckins = json.data;
+          }
+        }
+      } catch {}
+
+      if (dbCheckins.length === 0) {
+        try {
+          const res = await fetch('/api/data_server_vault.json');
+          if (res.ok) {
+            const vault = await res.json();
+            if (vault && Array.isArray(vault['militancia_checkins_v1'])) {
+              dbCheckins = vault['militancia_checkins_v1'];
+            }
+          }
+        } catch {}
+      }
+
+      if (dbCheckins.length === 0) {
+        try {
+          const res = await fetch('/data_server_vault.json');
+          if (res.ok) {
+            const vault = await res.json();
+            if (vault && Array.isArray(vault['militancia_checkins_v1'])) {
+              dbCheckins = vault['militancia_checkins_v1'];
+            }
+          }
+        } catch {}
+      }
+
+      // 2. Extrai fotos válidas para o cache de fotos
+      const photoByCheckinId = new Map<string, string[]>();
+      const photoByStreetKey = new Map<string, string[]>();
+
+      dbCheckins.forEach((item: any) => {
+        if (!item) return;
+        const idStr = String(item.id);
+        if (deletedIds.has(idStr)) return; // Ignora registros excluídos
+
+        let photos: string[] = [];
+        if (Array.isArray(item.photos)) {
+          photos = item.photos.filter((p: any) => typeof p === 'string' && p && p !== '[vault_photo]');
+        } else if (typeof item.fotos_json === 'string' && item.fotos_json.trim()) {
+          try {
+            const parsed = JSON.parse(item.fotos_json);
+            if (Array.isArray(parsed)) {
+              photos = parsed.filter((p: any) => typeof p === 'string' && p && p !== '[vault_photo]');
+            }
+          } catch {}
+        }
+
+        if (photos.length > 0) {
+          photoByCheckinId.set(idStr, photos);
+          this.photoVaultCache.set(idStr, photos);
+
+          const streetNorm = (item.streetName || item.nome_rua || '').trim().toLowerCase();
+          const neighNorm = (item.neighborhoodId || item.bairro_id || '').trim().toLowerCase();
+          if (streetNorm) {
+            const key = `${neighNorm}:::${streetNorm}`;
+            photoByStreetKey.set(key, photos);
+          }
+        }
+      });
+
+      // 3. Atualiza os check-ins atuais associando as fotos recuperadas às ruas correspondentes
+      const currentCheckins = this.getCheckIns();
+      const currentMap = new Map<string, StreetCheckIn>();
+      currentCheckins.forEach(c => {
+        if (!deletedIds.has(String(c.id))) {
+          currentMap.set(String(c.id), c);
+        }
+      });
+
+      // Se houver checkins no banco que não estão no local e não foram excluídos, adiciona-os!
+      dbCheckins.forEach((item: any) => {
+        const idStr = String(item.id);
+        if (deletedIds.has(idStr)) return;
+        if (!currentMap.has(idStr)) {
+          const normalized = normalizeCheckInFromMySQL(item);
+          const photos = photoByCheckinId.get(idStr) || [];
+          if (photos.length > 0) {
+            normalized.photos = photos;
+          }
+          currentMap.set(idStr, normalized);
+          recoveredCount++;
+        }
+      });
+
+      // Para todas as ruas existentes, se não tiver foto ou tiver [vault_photo], preenche com a foto do banco
+      const updatedList: StreetCheckIn[] = Array.from(currentMap.values()).map(chk => {
+        const idStr = String(chk.id);
+        const hasValidPhoto = Array.isArray(chk.photos) && chk.photos.length > 0 && chk.photos[0] !== '[vault_photo]';
+        if (hasValidPhoto) return chk;
+
+        // Tenta por ID
+        const byId = photoByCheckinId.get(idStr);
+        if (byId && byId.length > 0) {
+          recoveredCount++;
+          return { ...chk, photos: byId };
+        }
+
+        // Tenta por Nome da Rua + Bairro
+        const streetNorm = (chk.streetName || '').trim().toLowerCase();
+        const neighNorm = (chk.neighborhoodId || '').trim().toLowerCase();
+        const key = `${neighNorm}:::${streetNorm}`;
+        const byKey = photoByStreetKey.get(key);
+        if (byKey && byKey.length > 0) {
+          recoveredCount++;
+          return { ...chk, photos: byKey };
+        }
+
+        return chk;
+      });
+
+      // 4. Salva os dados atualizados com fotos na memória e no IndexedDB
+      this.checkinsMemoryCache = updatedList;
+      this.safeLocalStorageSet(STORAGE_KEYS.CHECKINS, updatedList);
+
+      if (typeof window !== 'undefined') {
+        try {
+          await vaultStorage.setItem(STORAGE_KEYS.CHECKINS, updatedList);
+          await vaultStorage.setItem('militancia_checkins_v1', updatedList);
+        } catch {}
+      }
+
+      this.recalculateAllStatsFromCheckins(updatedList);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+      }
+
+      const totalStreetsWithPhotos = updatedList.filter(c => Array.isArray(c.photos) && c.photos.length > 0 && c.photos[0] !== '[vault_photo]').length;
+
+      return {
+        success: true,
+        recoveredPhotosCount: recoveredCount,
+        totalStreetsWithPhotos,
+        message: `${totalStreetsWithPhotos} ruas com fotos identificadas e associadas com sucesso!`
+      };
+    } catch (err: any) {
+      console.error('Erro na recuperação de fotos do banco:', err);
+      return {
+        success: false,
+        recoveredPhotosCount: 0,
+        totalStreetsWithPhotos: 0,
+        message: 'Falha ao recuperar fotos: ' + (err?.message || 'Erro desconhecido')
+      };
+    }
   }
 
   static async updateCheckIn(updatedCheckIn: StreetCheckIn): Promise<void> {

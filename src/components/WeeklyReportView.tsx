@@ -26,6 +26,7 @@ import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
 import { NeighborhoodReportSection } from './NeighborhoodReportSection';
 import { StorageService } from '../services/storageService';
 import { EditStreetModal } from './EditStreetModal';
+import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
 import {
   FileText,
   Printer,
@@ -48,7 +49,10 @@ import {
   AlertCircle,
   Camera,
   Compass,
-  Edit3
+  Edit3,
+  Trash2,
+  RefreshCw,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface WeeklyReportViewProps {
@@ -75,6 +79,37 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const [editingCheckIn, setEditingCheckIn] = useState<StreetCheckIn | null>(null);
+  const [deletingCheckInId, setDeletingCheckInId] = useState<string | null>(null);
+  const [isRecoveringPhotos, setIsRecoveringPhotos] = useState(false);
+  const [photoRecoveryFeedback, setPhotoRecoveryFeedback] = useState<string | null>(null);
+
+  const handleRecoverPhotos = async () => {
+    setIsRecoveringPhotos(true);
+    setPhotoRecoveryFeedback(null);
+    try {
+      const recoveredCount = await StorageService.recoverAllDatabasePhotos();
+      setPhotoRecoveryFeedback(`✓ ${recoveredCount} foto(s) recuperadas do banco de dados e vinculadas às ruas correspondentes!`);
+      onCheckInUpdated?.();
+      setTimeout(() => setPhotoRecoveryFeedback(null), 6000);
+    } catch (e: any) {
+      setPhotoRecoveryFeedback('Erro ao recuperar fotos: ' + (e?.message || 'Falha na sincronização'));
+    } finally {
+      setIsRecoveringPhotos(false);
+    }
+  };
+
+  const handleDeleteCheckIn = async (id: string) => {
+    try {
+      await StorageService.deleteCheckIn(id);
+      setDeletingCheckInId(null);
+      if (editingCheckIn?.id === id) {
+        setEditingCheckIn(null);
+      }
+      onCheckInUpdated?.();
+    } catch (e: any) {
+      console.error('Error permanently deleting checkIn:', e);
+    }
+  };
 
   const chartsContainerRef = useRef<HTMLDivElement>(null);
 
@@ -302,24 +337,49 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     ctx.fillStyle = '#f1f5f9';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Determine Geo Bounds centered around the check-in streets or neighborhood center
+    // Localiza o bairro oficial com o polígono delimitado pelo Plano Diretor de São José
+    const officialBairro = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
+      o => o.id === bairro.id || o.name.toLowerCase() === bairro.name.toLowerCase()
+    );
+    const bairroPolygon: [number, number][] = (officialBairro?.polygon || (bairro as any).polygon || []) as [number, number][];
+
+    // Determine Geo Bounds delimitados exatamente pelo polígono do bairro
     let minLat = 90;
     let maxLat = -90;
     let minLng = 180;
     let maxLng = -180;
 
+    if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 0) {
+      bairroPolygon.forEach(pt => {
+        const lat = Number(pt[0]);
+        const lng = Number(pt[1]);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+        }
+      });
+    }
+
+    // Se houver check-ins, inclui no envelope caso algum ponto esteja ligeiramente na borda
     if (bCheckIns && bCheckIns.length > 0) {
       bCheckIns.forEach(chk => {
-        if (chk.latitude < minLat) minLat = chk.latitude;
-        if (chk.latitude > maxLat) maxLat = chk.latitude;
-        if (chk.longitude < minLng) minLng = chk.longitude;
-        if (chk.longitude > maxLng) maxLng = chk.longitude;
+        if (chk.latitude && chk.longitude) {
+          if (chk.latitude < minLat) minLat = chk.latitude;
+          if (chk.latitude > maxLat) maxLat = chk.latitude;
+          if (chk.longitude < minLng) minLng = chk.longitude;
+          if (chk.longitude > maxLng) maxLng = chk.longitude;
+        }
       });
-    } else {
-      minLat = bairro.lat - 0.005;
-      maxLat = bairro.lat + 0.005;
-      minLng = bairro.lng - 0.007;
-      maxLng = bairro.lng + 0.007;
+    }
+
+    // Fallback de segurança se coordenadas estiverem inválidas
+    if (minLat >= maxLat || minLng >= maxLng) {
+      minLat = (bairro.lat || -27.5962) - 0.012;
+      maxLat = (bairro.lat || -27.5962) + 0.012;
+      minLng = (bairro.lng || -48.6190) - 0.015;
+      maxLng = (bairro.lng || -48.6190) + 0.015;
     }
 
     const centerLat = (minLat + maxLat) / 2;
@@ -327,11 +387,17 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     const rawLatSpan = Math.max(maxLat - minLat, 0.003);
     const rawLngSpan = Math.max(maxLng - minLng, 0.004);
 
-    // Determine optimal Google Maps zoom level
-    let zoom = 15;
-    if (rawLatSpan > 0.03 || rawLngSpan > 0.04) zoom = 13;
-    else if (rawLatSpan > 0.015 || rawLngSpan > 0.02) zoom = 14;
-    else if (rawLatSpan < 0.004 && rawLngSpan < 0.005) zoom = 16;
+    // Determina o nível exato de zoom mercator para enquadrar perfeitamente o polígono no canvas
+    const zoomLng = Math.log2((canvas.width * 0.82) / ((rawLngSpan / 360) * 256));
+    const latRadMin = (minLat * Math.PI) / 180;
+    const latRadMax = (maxLat * Math.PI) / 180;
+    const yMin = (1 - Math.log(Math.tan(latRadMax) + 1 / Math.cos(latRadMax)) / Math.PI) / 2;
+    const yMax = (1 - Math.log(Math.tan(latRadMin) + 1 / Math.cos(latRadMin)) / Math.PI) / 2;
+    const ySpan = Math.abs(yMax - yMin);
+    const zoomLat = Math.log2((canvas.height * 0.78) / (ySpan * 256));
+
+    let zoom = Math.floor(Math.min(zoomLng, zoomLat));
+    zoom = Math.min(Math.max(zoom, 13), 16);
 
     // Web Mercator conversions (EPSG:3857)
     const latLngToWorldPixel = (lat: number, lng: number, z: number) => {
@@ -411,6 +477,32 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         ctx.lineTo(canvas.width, y);
         ctx.stroke();
       }
+    }
+
+    // 0. Desenhar Polígono Delimitado do Bairro (Área Territorial Oficial PMSJ)
+    if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
+      ctx.save();
+      ctx.beginPath();
+      bairroPolygon.forEach((pt, idx) => {
+        const x = toX(Number(pt[1]), Number(pt[0]));
+        const y = toY(Number(pt[0]), Number(pt[1]));
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+
+      // Preenchimento suave translúcido da área delimitada
+      const polygonColor = officialBairro?.officialColor || '#2563eb';
+      ctx.fillStyle = polygonColor + '18';
+      ctx.fill();
+
+      // Linha de contorno oficial tracejada delimitando o bairro
+      ctx.strokeStyle = polygonColor;
+      ctx.lineWidth = 3.5;
+      ctx.setLineDash([8, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
     }
 
     // 1. Draw Registered Streets in Vibrant RED exactly on the road bed
@@ -509,16 +601,16 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(16, 16, 340, 42, 6);
+    ctx.roundRect(16, 16, 400, 46, 6);
     ctx.fill();
     ctx.stroke();
 
     ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#1e293b';
-    ctx.fillText('🗺️ Google Maps • Vista Cartográfica Oficial', 26, 36);
+    ctx.fillText(`🗺️ ÁREA DELIMITADA: ${bairro.name.toUpperCase()}`, 26, 35);
     ctx.font = '10px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#64748b';
-    ctx.fillText(`Bairro ${bairro.name.toUpperCase()} • São José - SC (Zoom ${zoom})`, 26, 50);
+    ctx.fillText(`Perímetro Oficial PMSJ • ${bCheckIns.length} ruas auditadas (Zoom ${zoom})`, 26, 50);
 
     // 4. Bottom-Left Map Legend Box
     ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
@@ -1219,8 +1311,14 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         bairroCheckIns.forEach(chk => {
           const mObj = militants.find(m => m.id === chk.militantId);
           const mat = mObj?.matricula || 'Mil001';
-          if (chk.photos && chk.photos.length > 0) {
-            chk.photos.forEach(photo => {
+
+          // Recupera foto do banco de dados ou cofre dedicado se não estiver no array direto
+          const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
+          const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
+          const effectivePhotos = validPhotos.length > 0 ? validPhotos : (dbPhoto ? [dbPhoto] : []);
+
+          if (effectivePhotos.length > 0) {
+            effectivePhotos.forEach(photo => {
               photoProofItems.push({
                 photoUrl: photo,
                 streetName: chk.streetName,
@@ -1233,14 +1331,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 abordagens: chk.materialsDelivered.abordagens || 0
               });
             });
-          }
-        });
-
-        // If no photo files were uploaded, still generate audit proof cards for each checked-in street
-        if (photoProofItems.length === 0 && bairroCheckIns.length > 0) {
-          bairroCheckIns.forEach(chk => {
-            const mObj = militants.find(m => m.id === chk.militantId);
-            const mat = mObj?.matricula || 'Mil001';
+          } else {
+            // Se não houver foto enviada, gera o comprovante de auditoria georreferenciado via GPS
             photoProofItems.push({
               photoUrl: '',
               streetName: chk.streetName,
@@ -1252,8 +1344,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               santinhos: chk.materialsDelivered.santinhos || 0,
               abordagens: chk.materialsDelivered.abordagens || 0
             });
-          });
-        }
+          }
+        });
 
         // Preload base64 images
         setExportFeedback(`Carregando fotos de comprovação de ${currentSelectedBairro.name}...`);
@@ -2282,6 +2374,16 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             </div>
 
             <button
+              onClick={handleRecoverPhotos}
+              disabled={isRecoveringPhotos}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-xs font-bold text-purple-700 border border-purple-200 transition disabled:opacity-50 cursor-pointer"
+              title="Varre o banco de dados e recupera fotos já lançadas vinculando-as às ruas"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRecoveringPhotos ? 'animate-spin' : ''}`} />
+              {isRecoveringPhotos ? 'Recuperando...' : 'Recuperar Fotos do BD'}
+            </button>
+
+            <button
               onClick={handleExportCSV}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200 transition"
               title="Exportar dados brutos em planilha CSV"
@@ -2317,6 +2419,22 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center gap-2 animate-in fade-in">
             <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
             <span className="font-semibold">{exportFeedback}</span>
+          </div>
+        )}
+
+        {/* Photo Recovery Feedback Alert */}
+        {photoRecoveryFeedback && (
+          <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-950 text-xs flex items-center justify-between gap-2 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+              <span className="font-semibold">{photoRecoveryFeedback}</span>
+            </div>
+            <button
+              onClick={() => setPhotoRecoveryFeedback(null)}
+              className="text-purple-600 hover:text-purple-800 text-xs font-bold px-2 py-0.5"
+            >
+              ✕
+            </button>
           </div>
         )}
 
@@ -2936,7 +3054,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                     </tr>
                   ) : (
                     filteredCheckIns.map(chk => {
-                      const firstPhoto = chk.photos && chk.photos.length > 0 ? chk.photos[0] : null;
+                      const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
+                      const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
+                      const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : dbPhoto;
+
                       return (
                         <tr key={chk.id} className="hover:bg-slate-50">
                           <td className="py-3 px-3 whitespace-nowrap font-mono text-[11px] text-slate-600">
@@ -2994,14 +3115,42 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                             <span className="text-purple-700 font-semibold">{chk.materialsDelivered.adesivo_bola}</span> bola
                           </td>
                           <td className="py-3 px-3 text-center whitespace-nowrap">
-                            <button
-                              onClick={() => setEditingCheckIn(chk)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-[11px] border border-blue-200 transition cursor-pointer"
-                              title="Editar Registro de Rua, Data e Horário"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                              Editar
-                            </button>
+                            {deletingCheckInId === chk.id ? (
+                              <div className="inline-flex items-center gap-1 bg-rose-50 border border-rose-200 p-1 rounded-lg">
+                                <span className="text-[10px] font-bold text-rose-800">Excluir?</span>
+                                <button
+                                  onClick={() => handleDeleteCheckIn(chk.id)}
+                                  className="px-1.5 py-0.5 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px]"
+                                >
+                                  Sim
+                                </button>
+                                <button
+                                  onClick={() => setDeletingCheckInId(null)}
+                                  className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600 text-[10px]"
+                                >
+                                  Não
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5">
+                                <button
+                                  onClick={() => setEditingCheckIn(chk)}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-[11px] border border-blue-200 transition cursor-pointer"
+                                  title="Editar Registro de Rua, Data e Horário"
+                                >
+                                  <Edit3 className="w-3 h-3" />
+                                  Editar
+                                </button>
+                                <button
+                                  onClick={() => setDeletingCheckInId(chk.id)}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-[11px] border border-rose-200 transition cursor-pointer"
+                                  title="Excluir Definitivamente este Registro"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  Excluir
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
@@ -3027,6 +3176,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             setEditingCheckIn(null);
             onCheckInUpdated?.();
           }}
+          onDelete={handleDeleteCheckIn}
         />
       )}
 
