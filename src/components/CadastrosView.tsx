@@ -382,14 +382,21 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
     onRefreshData();
   };
 
-  // Delete Van & Driver
-  const handleConfirmDeleteVan = () => {
+  // Delete Van & Driver Definitively
+  const handleConfirmDeleteVan = async () => {
     if (!deletingVan) return;
-    StorageService.deleteVan(deletingVan.id);
-    setDeletingVan(null);
-    setSaveFeedback(`Motorista / Van removido com sucesso.`);
-    setTimeout(() => setSaveFeedback(''), 4500);
-    onRefreshData();
+    setIsDeletingInProgress(true);
+    try {
+      await StorageService.deleteVan(deletingVan.id);
+      setSaveFeedback(`✓ Motorista / Van removido definitivamente.`);
+      setTimeout(() => setSaveFeedback(''), 4500);
+      setDeletingVan(null);
+      onRefreshData();
+    } catch (e) {
+      console.error('Erro ao excluir van:', e);
+    } finally {
+      setIsDeletingInProgress(false);
+    }
   };
 
   return (

@@ -138,6 +138,15 @@ if ($method === 'GET') {
                 }
             }
 
+            // Carrega ou inicializa a blacklist de IDs excluídos
+            $deletedVault = isset($state['deleted_entities_vault']) && is_array($state['deleted_entities_vault'])
+                ? $state['deleted_entities_vault']
+                : [];
+            $blacklistMap = [];
+            foreach ($deletedVault as $delId) {
+                if ($delId) $blacklistMap[strval($delId)] = true;
+            }
+
             // Consulta também diretamente a tabela relacional checkins_ruas para garantir 100% de integridade
             try {
                 $stmtCheckins = $pdo->query("SELECT * FROM checkins_ruas ORDER BY timestamp_checkin DESC LIMIT 500");
@@ -145,10 +154,22 @@ if ($method === 'GET') {
                 if ($chkRows && count($chkRows) > 0) {
                     $relationalCheckins = [];
                     foreach ($chkRows as $r) {
+                        $cId = strval($r['id']);
+                        $mId = strval($r['militante_id']);
+                        if (isset($blacklistMap[$cId]) || isset($blacklistMap[$mId])) {
+                            continue; // Ignora checkin excluído ou de militante excluído
+                        }
+
                         $photosList = [];
                         if (!empty($r['fotos_json'])) {
                             $decodedPhotos = json_decode($r['fotos_json'], true);
-                            $photosList = is_array($decodedPhotos) ? $decodedPhotos : [];
+                            if (is_array($decodedPhotos)) {
+                                foreach ($decodedPhotos as $p) {
+                                    if ($p && $p !== '[vault_photo]' && strpos(strval($p), 'unsplash.com') === false) {
+                                        $photosList[] = $p;
+                                    }
+                                }
+                            }
                         }
 
                         $relationalCheckins[] = [
@@ -187,7 +208,13 @@ if ($method === 'GET') {
                     
                     $checkinMap = [];
                     foreach ($existingCheckins as $chk) {
-                        if (isset($chk['id'])) $checkinMap[$chk['id']] = $chk;
+                        if (isset($chk['id'])) {
+                            $chkId = strval($chk['id']);
+                            $chkMilId = strval($chk['militantId'] ?? '');
+                            if (!isset($blacklistMap[$chkId]) && !isset($blacklistMap[$chkMilId])) {
+                                $checkinMap[$chk['id']] = $chk;
+                            }
+                        }
                     }
                     foreach ($relationalCheckins as $chk) {
                         if (isset($chk['id'])) {
@@ -201,7 +228,9 @@ if ($method === 'GET') {
                             }
                         }
                     }
-                    $state['militancia_checkins_v1'] = array_values($checkinMap);
+                    $cleanCheckins = array_values($checkinMap);
+                    $state['militancia_checkins_v1'] = $cleanCheckins;
+                    $state['checkins_data'] = $cleanCheckins;
                 }
             } catch (Exception $eRel) {
                 // Silencioso se der erro na consulta relacional
@@ -214,6 +243,10 @@ if ($method === 'GET') {
                 if ($milRows && count($milRows) > 0) {
                     $relationalMilitants = [];
                     foreach ($milRows as $mr) {
+                        $mId = strval($mr['id']);
+                        if (isset($blacklistMap[$mId])) {
+                            continue; // Ignora militante na blacklist de excluídos
+                        }
                         $parsedData = [];
                         if (!empty($mr['dados_json'])) {
                             $decoded = json_decode($mr['dados_json'], true);
@@ -243,16 +276,17 @@ if ($method === 'GET') {
 
                     $milMap = [];
                     foreach ($existingMil as $m) {
-                        if (isset($m['id'])) $milMap[$m['id']] = $m;
+                        if (isset($m['id']) && !isset($blacklistMap[strval($m['id'])])) {
+                            $milMap[$m['id']] = $m;
+                        }
                     }
                     foreach ($relationalMilitants as $m) {
-                        if (isset($m['id'])) {
+                        if (isset($m['id']) && !isset($blacklistMap[strval($m['id'])])) {
                             if (!isset($milMap[$m['id']])) {
                                 $milMap[$m['id']] = $m;
                             } else {
                                 $existingItem = $milMap[$m['id']];
                                 $merged = array_merge($existingItem, $m);
-                                // Preserva a foto do cadastro se a foto relacional estiver vazia ou placeholder
                                 if (!empty($existingItem['avatar']) && (empty($m['avatar']) || strpos($m['avatar'], 'unsplash.com/photo-1535713875002') !== false)) {
                                     $merged['avatar'] = $existingItem['avatar'];
                                 }
@@ -274,6 +308,10 @@ if ($method === 'GET') {
                 if ($vanRows && count($vanRows) > 0) {
                     $relationalVans = [];
                     foreach ($vanRows as $vr) {
+                        $vId = strval($vr['id']);
+                        if (isset($blacklistMap[$vId])) {
+                            continue; // Ignora van na blacklist de excluídos
+                        }
                         $parsedData = [];
                         if (!empty($vr['dados_json'])) {
                             $decoded = json_decode($vr['dados_json'], true);
@@ -295,10 +333,12 @@ if ($method === 'GET') {
                         : (isset($state['militancia_vans_v1']) && is_array($state['militancia_vans_v1']) ? $state['militancia_vans_v1'] : []);
                     $vanMap = [];
                     foreach ($existingVans as $v) {
-                        if (isset($v['id'])) $vanMap[$v['id']] = $v;
+                        if (isset($v['id']) && !isset($blacklistMap[strval($v['id'])])) {
+                            $vanMap[$v['id']] = $v;
+                        }
                     }
                     foreach ($relationalVans as $v) {
-                        if (isset($v['id'])) {
+                        if (isset($v['id']) && !isset($blacklistMap[strval($v['id'])])) {
                             if (!isset($vanMap[$v['id']])) {
                                 $vanMap[$v['id']] = $v;
                             } else {
@@ -311,6 +351,23 @@ if ($method === 'GET') {
                     $state['militancia_vans_v1'] = $finalVans;
                 }
             } catch (Exception $eVans) {}
+
+            // Filtro defensivo final em todas as coleções de $state
+            foreach (['militantes_data', 'militancia_militants_v1', 'militancia_militantes_v1', 'vans_data', 'militancia_vans_v1', 'militancia_teams_v1', 'teams_data'] as $colKey) {
+                if (isset($state[$colKey]) && is_array($state[$colKey])) {
+                    $state[$colKey] = array_values(array_filter($state[$colKey], function($item) use ($blacklistMap) {
+                        return !isset($blacklistMap[strval($item['id'] ?? '')]);
+                    }));
+                }
+            }
+            if (isset($state['militancia_checkins_v1']) && is_array($state['militancia_checkins_v1'])) {
+                $state['militancia_checkins_v1'] = array_values(array_filter($state['militancia_checkins_v1'], function($item) use ($blacklistMap) {
+                    $chkId = strval($item['id'] ?? '');
+                    $mId = strval($item['militantId'] ?? '');
+                    return !isset($blacklistMap[$chkId]) && !isset($blacklistMap[$mId]);
+                }));
+                $state['checkins_data'] = $state['militancia_checkins_v1'];
+            }
 
             // Garantia de 28 Bairros Oficiais (PMSJ 2020) + Área Rural (29 itens)
             $neighKey = 'militancia_neighborhoods_pmsj2020_v3';
@@ -379,6 +436,183 @@ if ($method === 'POST') {
 
     $deviceInfo = isset($_SERVER['HTTP_USER_AGENT']) ? substr($_SERVER['HTTP_USER_AGENT'], 0, 250) : 'Web App';
     $updatedKeys = [];
+
+    // TRATAMENTO EXPLÍCITO DE EXCLUSÕES DEFINITIVAS
+    $action = $payload['action'] ?? null;
+
+    if ($action === 'delete_militant') {
+        $militantId = $payload['militantId'] ?? null;
+        if ($militantId) {
+            try {
+                $pdo->beginTransaction();
+                // 1. Remove do banco relacional
+                $stmtDel = $pdo->prepare("DELETE FROM militantes_cadastrados WHERE id = ?");
+                $stmtDel->execute([$militantId]);
+
+                // 2. Remove check-ins em cascata
+                $stmtDelChk = $pdo->prepare("DELETE FROM checkins_ruas WHERE militante_id = ?");
+                $stmtDelChk->execute([$militantId]);
+
+                // 3. Atualiza blacklist de excluídos em app_sync_state
+                $stmtGetVault = $pdo->prepare("SELECT json_data FROM app_sync_state WHERE key_name = 'deleted_entities_vault'");
+                $stmtGetVault->execute();
+                $existingVaultRow = $stmtGetVault->fetch();
+                $deletedVault = $existingVaultRow ? json_decode($existingVaultRow['json_data'], true) : [];
+                if (!is_array($deletedVault)) $deletedVault = [];
+                if (!in_array($militantId, $deletedVault)) {
+                    $deletedVault[] = $militantId;
+                }
+                $stmtSetVault = $pdo->prepare("INSERT INTO app_sync_state (key_name, json_data, updated_at, device_info) VALUES ('deleted_entities_vault', ?, NOW(), ?) ON DUPLICATE KEY UPDATE json_data = VALUES(json_data), updated_at = NOW()");
+                $stmtSetVault->execute([json_encode($deletedVault), $deviceInfo]);
+
+                // 4. Salva coleções filtradas se enviadas
+                if (isset($payload['collections']) && is_array($payload['collections'])) {
+                    $stmtUpdateState = $pdo->prepare("INSERT INTO app_sync_state (key_name, json_data, updated_at, device_info) VALUES (?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE json_data = VALUES(json_data), updated_at = NOW()");
+                    foreach ($payload['collections'] as $k => $v) {
+                        $jsonStr = is_string($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE);
+                        $stmtUpdateState->execute([$k, $jsonStr, $deviceInfo]);
+                    }
+                }
+
+                $pdo->commit();
+
+                // Atualiza também data_server_vault.json se existir localmente
+                $diskVaultPath = __DIR__ . '/data_server_vault.json';
+                if (file_exists($diskVaultPath)) {
+                    $diskData = json_decode(file_get_contents($diskVaultPath), true);
+                    if (is_array($diskData)) {
+                        $diskData['deleted_entities_vault'] = $deletedVault;
+                        foreach (['militantes_data', 'militancia_militants_v1', 'militancia_militantes_v1'] as $mk) {
+                            if (isset($diskData[$mk]) && is_array($diskData[$mk])) {
+                                $diskData[$mk] = array_values(array_filter($diskData[$mk], function($item) use ($militantId) {
+                                    return ($item['id'] ?? '') !== $militantId;
+                                }));
+                            }
+                        }
+                        if (isset($diskData['militancia_checkins_v1']) && is_array($diskData['militancia_checkins_v1'])) {
+                            $diskData['militancia_checkins_v1'] = array_values(array_filter($diskData['militancia_checkins_v1'], function($item) use ($militantId) {
+                                return ($item['militantId'] ?? '') !== $militantId;
+                            }));
+                        }
+                        file_put_contents($diskVaultPath, json_encode($diskData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                    }
+                }
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => "Militante {$militantId} excluído definitivamente do MySQL e do cofre.",
+                    'deletedMilitantId' => $militantId
+                ]);
+                exit;
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+                exit;
+            }
+        }
+    }
+
+    if ($action === 'delete_van') {
+        $vanId = $payload['vanId'] ?? null;
+        if ($vanId) {
+            try {
+                $pdo->beginTransaction();
+                // 1. Remove do banco relacional
+                $stmtDel = $pdo->prepare("DELETE FROM vans_cadastradas WHERE id = ?");
+                $stmtDel->execute([$vanId]);
+
+                // 2. Atualiza blacklist
+                $stmtGetVault = $pdo->prepare("SELECT json_data FROM app_sync_state WHERE key_name = 'deleted_entities_vault'");
+                $stmtGetVault->execute();
+                $existingVaultRow = $stmtGetVault->fetch();
+                $deletedVault = $existingVaultRow ? json_decode($existingVaultRow['json_data'], true) : [];
+                if (!is_array($deletedVault)) $deletedVault = [];
+                if (!in_array($vanId, $deletedVault)) {
+                    $deletedVault[] = $vanId;
+                }
+                $stmtSetVault = $pdo->prepare("INSERT INTO app_sync_state (key_name, json_data, updated_at, device_info) VALUES ('deleted_entities_vault', ?, NOW(), ?) ON DUPLICATE KEY UPDATE json_data = VALUES(json_data), updated_at = NOW()");
+                $stmtSetVault->execute([json_encode($deletedVault), $deviceInfo]);
+
+                // 3. Salva coleções filtradas se enviadas
+                if (isset($payload['collections']) && is_array($payload['collections'])) {
+                    $stmtUpdateState = $pdo->prepare("INSERT INTO app_sync_state (key_name, json_data, updated_at, device_info) VALUES (?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE json_data = VALUES(json_data), updated_at = NOW()");
+                    foreach ($payload['collections'] as $k => $v) {
+                        $jsonStr = is_string($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE);
+                        $stmtUpdateState->execute([$k, $jsonStr, $deviceInfo]);
+                    }
+                }
+
+                $pdo->commit();
+
+                // Atualiza disco local se existir
+                $diskVaultPath = __DIR__ . '/data_server_vault.json';
+                if (file_exists($diskVaultPath)) {
+                    $diskData = json_decode(file_get_contents($diskVaultPath), true);
+                    if (is_array($diskData)) {
+                        $diskData['deleted_entities_vault'] = $deletedVault;
+                        foreach (['vans_data', 'militancia_vans_v1'] as $vk) {
+                            if (isset($diskData[$vk]) && is_array($diskData[$vk])) {
+                                $diskData[$vk] = array_values(array_filter($diskData[$vk], function($item) use ($vanId) {
+                                    return ($item['id'] ?? '') !== $vanId;
+                                }));
+                            }
+                        }
+                        file_put_contents($diskVaultPath, json_encode($diskData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                    }
+                }
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => "Van/Motorista {$vanId} excluído definitivamente do MySQL e do cofre.",
+                    'deletedVanId' => $vanId
+                ]);
+                exit;
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+                exit;
+            }
+        }
+    }
+
+    if ($action === 'delete_team') {
+        $teamId = $payload['teamId'] ?? null;
+        if ($teamId) {
+            try {
+                $pdo->beginTransaction();
+                $stmtGetVault = $pdo->prepare("SELECT json_data FROM app_sync_state WHERE key_name = 'deleted_entities_vault'");
+                $stmtGetVault->execute();
+                $existingVaultRow = $stmtGetVault->fetch();
+                $deletedVault = $existingVaultRow ? json_decode($existingVaultRow['json_data'], true) : [];
+                if (!is_array($deletedVault)) $deletedVault = [];
+                if (!in_array($teamId, $deletedVault)) {
+                    $deletedVault[] = $teamId;
+                }
+                $stmtSetVault = $pdo->prepare("INSERT INTO app_sync_state (key_name, json_data, updated_at, device_info) VALUES ('deleted_entities_vault', ?, NOW(), ?) ON DUPLICATE KEY UPDATE json_data = VALUES(json_data), updated_at = NOW()");
+                $stmtSetVault->execute([json_encode($deletedVault), $deviceInfo]);
+
+                if (isset($payload['collections']) && is_array($payload['collections'])) {
+                    $stmtUpdateState = $pdo->prepare("INSERT INTO app_sync_state (key_name, json_data, updated_at, device_info) VALUES (?, ?, NOW(), ?) ON DUPLICATE KEY UPDATE json_data = VALUES(json_data), updated_at = NOW()");
+                    foreach ($payload['collections'] as $k => $v) {
+                        $jsonStr = is_string($v) ? $v : json_encode($v, JSON_UNESCAPED_UNICODE);
+                        $stmtUpdateState->execute([$k, $jsonStr, $deviceInfo]);
+                    }
+                }
+                $pdo->commit();
+
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => "Equipe {$teamId} excluída definitivamente do MySQL e do cofre.",
+                    'deletedTeamId' => $teamId
+                ]);
+                exit;
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+                exit;
+            }
+        }
+    }
 
     try {
         $pdo->beginTransaction();

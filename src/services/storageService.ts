@@ -486,6 +486,7 @@ export class StorageService {
               localArr.forEach(item => {
                 if (item && item.id) {
                   const idStr = String(item.id);
+                  if (deletedVaultIds.includes(idStr)) return; // Ignora entidades excluídas
                   const rem = itemMap.get(idStr);
                   if (!rem) {
                     itemMap.set(idStr, item);
@@ -625,7 +626,10 @@ export class StorageService {
   }
 
   static initialize(): void {
-    // 1. Garantir que todas as coleções existam
+    // 1. Carrega blacklist de exclusões definitivas
+    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
+
+    // Garantir que todas as coleções existam
     if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
       this.set(STORAGE_KEYS.USERS, INITIAL_USERS, false);
     }
@@ -638,40 +642,55 @@ export class StorageService {
 
     const currentMilitants = this.get<Militant[]>(STORAGE_KEYS.MILITANTS, []);
     if (!currentMilitants || currentMilitants.length === 0) {
-      this.set(STORAGE_KEYS.MILITANTS, INITIAL_MILITANTS, false);
+      const filteredInit = INITIAL_MILITANTS.filter(m => !deletedIds.has(String(m.id)));
+      this.set(STORAGE_KEYS.MILITANTS, filteredInit, false);
     } else {
       const miltMap = new Map<string, Militant>();
-      currentMilitants.forEach(m => miltMap.set(m.id, m));
+      currentMilitants.forEach(m => {
+        if (!deletedIds.has(String(m.id))) {
+          miltMap.set(String(m.id), m);
+        }
+      });
       INITIAL_MILITANTS.forEach(initM => {
-        if (!miltMap.has(initM.id)) {
-          miltMap.set(initM.id, initM);
+        const idStr = String(initM.id);
+        if (!deletedIds.has(idStr) && !miltMap.has(idStr)) {
+          miltMap.set(idStr, initM);
         }
       });
       const combinedM = Array.from(miltMap.values());
-      if (combinedM.length !== currentMilitants.length) {
-        this.set(STORAGE_KEYS.MILITANTS, combinedM, false);
-      }
+      this.set(STORAGE_KEYS.MILITANTS, combinedM, false);
     }
 
     const currentTeams = this.get<Team[]>(STORAGE_KEYS.TEAMS, []);
     if (!currentTeams || currentTeams.length === 0) {
-      this.set(STORAGE_KEYS.TEAMS, INITIAL_TEAMS, false);
+      const filteredTeams = INITIAL_TEAMS.filter(t => !deletedIds.has(String(t.id)));
+      this.set(STORAGE_KEYS.TEAMS, filteredTeams, false);
     } else {
       const teamMap = new Map<string, Team>();
-      currentTeams.forEach(t => teamMap.set(t.id, t));
+      currentTeams.forEach(t => {
+        if (!deletedIds.has(String(t.id))) {
+          teamMap.set(String(t.id), t);
+        }
+      });
       INITIAL_TEAMS.forEach(initT => {
-        if (!teamMap.has(initT.id)) {
-          teamMap.set(initT.id, initT);
+        const idStr = String(initT.id);
+        if (!deletedIds.has(idStr) && !teamMap.has(idStr)) {
+          teamMap.set(idStr, initT);
         }
       });
       const combinedT = Array.from(teamMap.values());
-      if (combinedT.length !== currentTeams.length) {
-        this.set(STORAGE_KEYS.TEAMS, combinedT, false);
-      }
+      this.set(STORAGE_KEYS.TEAMS, combinedT, false);
     }
 
-    if (!localStorage.getItem(STORAGE_KEYS.VANS)) {
-      this.set(STORAGE_KEYS.VANS, INITIAL_VANS, false);
+    const currentVans = this.get<Van[]>(STORAGE_KEYS.VANS, []);
+    if (!currentVans || currentVans.length === 0) {
+      const filteredVans = INITIAL_VANS.filter(v => !deletedIds.has(String(v.id)));
+      this.set(STORAGE_KEYS.VANS, filteredVans, false);
+    } else {
+      const cleanVans = currentVans.filter(v => !deletedIds.has(String(v.id)));
+      if (cleanVans.length !== currentVans.length) {
+        this.set(STORAGE_KEYS.VANS, cleanVans, false);
+      }
     }
     if (!localStorage.getItem(STORAGE_KEYS.STOCK)) {
       this.set(STORAGE_KEYS.STOCK, INITIAL_STOCK, false);
@@ -681,7 +700,6 @@ export class StorageService {
     }
 
     // 2. Proteção definitiva de Check-ins: se vazio, carrega os checkins reais respeitando exclusões
-    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
     const currentCheckins = this.get<StreetCheckIn[]>(STORAGE_KEYS.CHECKINS, []);
     if (!currentCheckins || currentCheckins.length === 0) {
       const filteredInit = INITIAL_CHECKINS.filter(c => !deletedIds.has(String(c.id)));
@@ -1596,37 +1614,27 @@ export class StorageService {
   }
 
   /**
-   * Helper para buscar foto real de um checkin ou de sua rua correspondente
+   * Helper para buscar foto real de um checkin exato do logradouro
    */
-  static getPhotoForCheckIn(checkInId: string, neighborhoodId?: string, streetName?: string): string {
+  static getPhotoForCheckIn(checkInId: string, _neighborhoodId?: string, _streetName?: string): string {
     const idStr = String(checkInId);
 
-    // 1. Verifica cache dedicado de fotos
+    // 1. Verifica cache dedicado de fotos por ID exato
     const cached = this.photoVaultCache.get(idStr);
-    if (cached && cached.length > 0 && cached[0] !== '[vault_photo]') {
-      return cached[0];
+    if (cached && cached.length > 0) {
+      const validPhoto = cached.find(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
+      if (validPhoto) return validPhoto;
     }
 
-    // 2. Verifica no cache de checkins em memória
+    // 2. Verifica no cache de checkins em memória por ID exato
     if (this.checkinsMemoryCache) {
       const match = this.checkinsMemoryCache.find(c => String(c.id) === idStr);
-      if (match && Array.isArray(match.photos) && match.photos.length > 0 && match.photos[0] !== '[vault_photo]') {
-        this.photoVaultCache.set(idStr, match.photos);
-        return match.photos[0];
-      }
-    }
-
-    // 3. Verifica por rua e bairro correspondentes
-    if (neighborhoodId && streetName && this.checkinsMemoryCache) {
-      const sNorm = streetName.trim().toLowerCase();
-      const nNorm = neighborhoodId.trim().toLowerCase();
-      const matchStreet = this.checkinsMemoryCache.find(c =>
-        (c.neighborhoodId || '').toLowerCase() === nNorm &&
-        (c.streetName || '').toLowerCase() === sNorm &&
-        Array.isArray(c.photos) && c.photos.length > 0 && c.photos[0] !== '[vault_photo]'
-      );
-      if (matchStreet && matchStreet.photos[0]) {
-        return matchStreet.photos[0];
+      if (match && Array.isArray(match.photos) && match.photos.length > 0) {
+        const validPhoto = match.photos.find(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
+        if (validPhoto) {
+          this.photoVaultCache.set(idStr, [validPhoto]);
+          return validPhoto;
+        }
       }
     }
 
@@ -1635,7 +1643,7 @@ export class StorageService {
 
   /**
    * Recupera todas as fotos lançadas no banco de dados e as associa perfeitamente
-   * às ruas correspondentes em memória, IndexedDB e relatórios.
+   * e estritamente ao seu logradouro/check-in correspondente em memória e IndexedDB.
    */
   static async recoverAllDatabasePhotos(): Promise<{
     success: boolean;
@@ -1683,9 +1691,8 @@ export class StorageService {
         } catch {}
       }
 
-      // 2. Extrai fotos válidas para o cache de fotos
+      // 2. Extrai fotos válidas indexadas estritamente pelo ID do check-in
       const photoByCheckinId = new Map<string, string[]>();
-      const photoByStreetKey = new Map<string, string[]>();
 
       dbCheckins.forEach((item: any) => {
         if (!item) return;
@@ -1694,12 +1701,12 @@ export class StorageService {
 
         let photos: string[] = [];
         if (Array.isArray(item.photos)) {
-          photos = item.photos.filter((p: any) => typeof p === 'string' && p && p !== '[vault_photo]');
+          photos = item.photos.filter((p: any) => typeof p === 'string' && p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
         } else if (typeof item.fotos_json === 'string' && item.fotos_json.trim()) {
           try {
             const parsed = JSON.parse(item.fotos_json);
             if (Array.isArray(parsed)) {
-              photos = parsed.filter((p: any) => typeof p === 'string' && p && p !== '[vault_photo]');
+              photos = parsed.filter((p: any) => typeof p === 'string' && p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
             }
           } catch {}
         }
@@ -1707,17 +1714,10 @@ export class StorageService {
         if (photos.length > 0) {
           photoByCheckinId.set(idStr, photos);
           this.photoVaultCache.set(idStr, photos);
-
-          const streetNorm = (item.streetName || item.nome_rua || '').trim().toLowerCase();
-          const neighNorm = (item.neighborhoodId || item.bairro_id || '').trim().toLowerCase();
-          if (streetNorm) {
-            const key = `${neighNorm}:::${streetNorm}`;
-            photoByStreetKey.set(key, photos);
-          }
         }
       });
 
-      // 3. Atualiza os check-ins atuais associando as fotos recuperadas às ruas correspondentes
+      // 3. Atualiza os check-ins atuais associando fotos estritamente pelo ID do logradouro
       const currentCheckins = this.getCheckIns();
       const currentMap = new Map<string, StreetCheckIn>();
       currentCheckins.forEach(c => {
@@ -1741,27 +1741,16 @@ export class StorageService {
         }
       });
 
-      // Para todas as ruas existentes, se não tiver foto ou tiver [vault_photo], preenche com a foto do banco
+      // Para todas as ruas existentes, associa fotos estritamente pelo ID exato do checkin
       const updatedList: StreetCheckIn[] = Array.from(currentMap.values()).map(chk => {
         const idStr = String(chk.id);
-        const hasValidPhoto = Array.isArray(chk.photos) && chk.photos.length > 0 && chk.photos[0] !== '[vault_photo]';
+        const hasValidPhoto = Array.isArray(chk.photos) && chk.photos.length > 0 && chk.photos[0] !== '[vault_photo]' && !chk.photos[0].includes('unsplash.com');
         if (hasValidPhoto) return chk;
 
-        // Tenta por ID
         const byId = photoByCheckinId.get(idStr);
         if (byId && byId.length > 0) {
           recoveredCount++;
           return { ...chk, photos: byId };
-        }
-
-        // Tenta por Nome da Rua + Bairro
-        const streetNorm = (chk.streetName || '').trim().toLowerCase();
-        const neighNorm = (chk.neighborhoodId || '').trim().toLowerCase();
-        const key = `${neighNorm}:::${streetNorm}`;
-        const byKey = photoByStreetKey.get(key);
-        if (byKey && byKey.length > 0) {
-          recoveredCount++;
-          return { ...chk, photos: byKey };
         }
 
         return chk;
@@ -2611,6 +2600,7 @@ export class StorageService {
 
   // Militants
   static getMilitants(): Militant[] {
+    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
     let list = this.get<Militant[]>(STORAGE_KEYS.MILITANTS, []);
     if (!list || list.length === 0) {
       const altList = this.get<Militant[]>('militancia_militantes_v1', []);
@@ -2621,7 +2611,7 @@ export class StorageService {
         list = INITIAL_MILITANTS;
       }
     }
-    return list;
+    return list.filter(m => !deletedIds.has(String(m.id)));
   }
 
   static addOrUpdateMilitant(militant: Militant): void {
@@ -2754,7 +2744,9 @@ export class StorageService {
 
   // Teams
   static getTeams(): Team[] {
-    return this.get(STORAGE_KEYS.TEAMS, INITIAL_TEAMS);
+    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
+    const list = this.get<Team[]>(STORAGE_KEYS.TEAMS, INITIAL_TEAMS);
+    return list.filter(t => !deletedIds.has(String(t.id)));
   }
 
   static addOrUpdateTeam(team: Team): void {
@@ -2841,7 +2833,9 @@ export class StorageService {
 
   // Vans
   static getVans(): Van[] {
-    return this.get(STORAGE_KEYS.VANS, INITIAL_VANS);
+    const deletedIds = new Set(this.get<string[]>('deleted_entities_vault', []));
+    const list = this.get<Van[]>(STORAGE_KEYS.VANS, INITIAL_VANS);
+    return list.filter(v => !deletedIds.has(String(v.id)));
   }
 
   static addOrUpdateVan(van: Van): void {
@@ -2876,18 +2870,28 @@ export class StorageService {
     this.addOrUpdateVan(van);
   }
 
-  static deleteVan(vanId: string): void {
+  static async deleteVan(vanId: string): Promise<void> {
     const list = this.getVans();
     const targetVan = list.find(v => v.id === vanId);
     const updatedList = list.filter(v => v.id !== vanId);
+
+    // Marca van como permanentemente excluída no cofre de exclusões
+    const deletedIds = this.get<string[]>('deleted_entities_vault', []);
+    if (!deletedIds.includes(vanId)) {
+      deletedIds.push(vanId);
+      this.set('deleted_entities_vault', deletedIds, false);
+    }
+    const deletedVans = this.get<string[]>('deleted_vans_ids', []);
+    if (!deletedVans.includes(vanId)) {
+      deletedVans.push(vanId);
+      this.set('deleted_vans_ids', deletedVans, false);
+    }
+
     this.set(STORAGE_KEYS.VANS, updatedList, true);
     this.safeLocalStorageSet('vans_data', updatedList);
     vaultStorage.setItem('vans_data', updatedList).catch(() => {});
 
-    this.pushEntityToRemote(STORAGE_KEYS.VANS, updatedList);
-    this.pushEntityToRemote('vans_data', updatedList);
-
-    // Unassign teams assigned to this van
+    // Desvincula equipes atribuídas a esta van
     const teams = this.getTeams();
     let teamsChanged = false;
     teams.forEach(t => {
@@ -2901,8 +2905,27 @@ export class StorageService {
       this.pushEntityToRemote(STORAGE_KEYS.TEAMS, teams);
     }
 
+    try {
+      await fetch('/api/sync.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_van',
+          vanId,
+          collections: {
+            [STORAGE_KEYS.VANS]: updatedList,
+            vans_data: updatedList,
+            [STORAGE_KEYS.TEAMS]: teams
+          },
+          replace: true
+        })
+      });
+    } catch (e) {
+      console.warn('Erro ao sincronizar exclusão da van com servidor:', e);
+    }
+
     const user = this.getCurrentUser();
-    this.logAudit(user, 'EXCLUSAO_MOTORISTA_VAN', 'CADASTROS', `Van e motorista "${targetVan?.driverName || vanId}" (${targetVan?.plate}) excluído do sistema.`);
+    this.logAudit(user, 'EXCLUSAO_MOTORISTA_VAN', 'CADASTROS', `Van e motorista "${targetVan?.driverName || vanId}" (${targetVan?.plate || 'S/ Placa'}) excluído definitivamente do sistema.`);
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));

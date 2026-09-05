@@ -1313,8 +1313,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           const mat = mObj?.matricula || 'Mil001';
 
           // Recupera foto do banco de dados ou cofre dedicado se não estiver no array direto
-          const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
-          const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
+          const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
+          const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
           const effectivePhotos = validPhotos.length > 0 ? validPhotos : (dbPhoto ? [dbPhoto] : []);
 
           if (effectivePhotos.length > 0) {
@@ -2902,7 +2902,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-slate-700">
                             {milCheckIns.map(chk => {
-                              const firstPhoto = chk.photos && chk.photos.length > 0 ? chk.photos[0] : null;
+                              const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
+                              const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
+                              const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : (dbPhoto || null);
                               return (
                                 <tr key={chk.id} className="hover:bg-slate-50">
                                   <td className="py-2.5 px-3 font-mono text-[11px] whitespace-nowrap text-slate-600">
@@ -3054,9 +3056,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                     </tr>
                   ) : (
                     filteredCheckIns.map(chk => {
-                      const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
-                      const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
-                      const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : dbPhoto;
+                      const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
+                      const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
+                      const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : (dbPhoto || null);
 
                       return (
                         <tr key={chk.id} className="hover:bg-slate-50">

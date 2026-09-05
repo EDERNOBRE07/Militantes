@@ -96,8 +96,8 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   // Recupera todas as fotos (inclusive fotos recuperadas do banco de dados) vinculadas a este bairro
   const allBairroPhotos = useMemo(() => {
     return bairroCheckIns.flatMap((chk) => {
-      const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
-      const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
+      const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
+      const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
       const resolved = validPhotos.length > 0 ? validPhotos : (dbPhoto ? [dbPhoto] : []);
       return resolved.map((photo, pIdx) => ({
         key: `${chk.id}-${pIdx}`,
@@ -526,8 +526,8 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
               ) : (
                 bairroCheckIns.map(chk => {
                   const militantObj = militants.find(m => m.id === chk.militantId);
-                  const dbPhoto = StorageService.getPhotoForCheckIn(chk.id, chk.neighborhoodId, chk.streetName);
-                  const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]');
+                  const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
+                  const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
                   const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : dbPhoto;
 
                   return (
