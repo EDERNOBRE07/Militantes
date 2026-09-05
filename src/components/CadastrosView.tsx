@@ -20,6 +20,7 @@ import {
   Trash2,
   Check,
   AlertCircle,
+  AlertTriangle,
   Truck,
   MapPin,
   Sparkles,
@@ -35,7 +36,8 @@ import {
   Building2,
   Layers,
   Compass,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 
 interface CadastrosViewProps {
@@ -212,12 +214,24 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
   const [vNextPickupLocation, setVNextPickupLocation] = useState('Praça Central / Ponto de Apoio');
   const [vNextPickupTime, setVNextPickupTime] = useState('12:30');
 
-  // Delete Militant
-  const handleConfirmDeleteMilitant = () => {
+  // State for deletion in progress
+  const [isDeletingInProgress, setIsDeletingInProgress] = useState(false);
+
+  // Delete Militant Definitively (with cascading street deletion)
+  const handleConfirmDeleteMilitant = async () => {
     if (!deletingMilitant) return;
-    StorageService.deleteMilitant(deletingMilitant.id);
-    setDeletingMilitant(null);
-    onRefreshData();
+    setIsDeletingInProgress(true);
+    try {
+      const { deletedMilitant, deletedStreetsCount } = await StorageService.deleteMilitant(deletingMilitant.id);
+      setSaveFeedback(`✓ Militante ${deletedMilitant?.name || ''} e todas as suas ${deletedStreetsCount} ruas foram excluídos definitivamente.`);
+      setTimeout(() => setSaveFeedback(''), 5000);
+      setDeletingMilitant(null);
+      onRefreshData();
+    } catch (e) {
+      console.error('Erro ao excluir militante:', e);
+    } finally {
+      setIsDeletingInProgress(false);
+    }
   };
 
   // Open Team Modal (New or Edit)
@@ -281,14 +295,21 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
     onRefreshData();
   };
 
-  // Delete Team
-  const handleConfirmDeleteTeam = () => {
+  // Delete Team Definitively
+  const handleConfirmDeleteTeam = async () => {
     if (!deletingTeam) return;
-    StorageService.deleteTeam(deletingTeam.id);
-    setDeletingTeam(null);
-    setSaveFeedback(`Equipe removida com sucesso.`);
-    setTimeout(() => setSaveFeedback(''), 4500);
-    onRefreshData();
+    setIsDeletingInProgress(true);
+    try {
+      await StorageService.deleteTeam(deletingTeam.id);
+      setSaveFeedback(`✓ Equipe "${deletingTeam.name}" removida definitivamente.`);
+      setTimeout(() => setSaveFeedback(''), 4500);
+      setDeletingTeam(null);
+      onRefreshData();
+    } catch (e) {
+      console.error('Erro ao excluir equipe:', e);
+    } finally {
+      setIsDeletingInProgress(false);
+    }
   };
 
   // Open Van / Driver Modal (New or Edit)
@@ -642,6 +663,13 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
                                 className="p-1 rounded bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 transition"
                               >
                                 <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => setDeletingMilitant(member)}
+                                title="Excluir este militante definitivamente"
+                                className="p-1 rounded bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 transition"
+                              >
+                                <Trash2 className="w-3 h-3" />
                               </button>
                             </div>
                           </div>
@@ -1741,44 +1769,157 @@ export const CadastrosView: React.FC<CadastrosViewProps> = ({
         </div>
       )}
 
-      {/* MODAL: CONFIRMAR EXCLUSÃO DE MILITANTE */}
-      {deletingMilitant && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="p-2 rounded-full bg-rose-50 border border-rose-200">
-                <AlertCircle className="w-6 h-6" />
+      {/* MODAL: CONFIRMAR EXCLUSÃO DE MILITANTE COM AVISO DE RUAS */}
+      {deletingMilitant && (() => {
+        const targetNameLower = deletingMilitant.name ? deletingMilitant.name.toLowerCase().trim() : '';
+        const milCheckIns = StorageService.getCheckIns().filter(
+          c => c.militantId === deletingMilitant.id || 
+          (c.militantName && c.militantName.toLowerCase().trim() === targetNameLower)
+        );
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="w-full max-w-lg bg-white border border-rose-200 rounded-xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center gap-3 text-rose-600 border-b border-rose-100 pb-3">
+                <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 shrink-0">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 leading-tight">
+                    Confirmar Exclusão Definitiva de Registro
+                  </h3>
+                  <p className="text-xs text-rose-600 font-semibold">
+                    Aviso do Sistema: Exclusão do militante e de todas as ruas vinculadas
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">Excluir Militante?</h3>
-                <p className="text-xs text-slate-500">Esta ação removerá o registro do sistema</p>
+
+              <div className="space-y-3 text-xs text-slate-700 leading-relaxed">
+                <p>
+                  Deseja mesmo excluir de maneira definitiva o registro do militante <strong>{deletingMilitant.name}</strong> ({deletingMilitant.matricula})?
+                </p>
+
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-2">
+                  <div className="flex items-center justify-between text-rose-900 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4 text-rose-600" />
+                      Ruas Lançadas na Ficha:
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-800 text-xs font-mono font-black">
+                      {milCheckIns.length} ruas cadastradas
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-rose-800 leading-relaxed">
+                    ⚠️ <strong>Atenção:</strong> Todas as <strong>{milCheckIns.length} ruas</strong> lançadas na ficha deste militante serão <strong>excluídas também definitivamente</strong> do mapa, dos relatórios e do banco de dados, liberando o logradouro e recalculando a cobertura.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Você tem certeza que deseja excluir o militante <strong>{deletingMilitant.name}</strong> ({deletingMilitant.matricula})?
-            </p>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setDeletingMilitant(null)}
-                className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDeleteMilitant}
-                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5"
-              >
-                <Trash2 className="w-4 h-4" />
-                Sim, Excluir Militante
-              </button>
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={isDeletingInProgress}
+                  onClick={() => setDeletingMilitant(null)}
+                  className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeletingInProgress}
+                  onClick={handleConfirmDeleteMilitant}
+                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition disabled:opacity-50"
+                >
+                  {isDeletingInProgress ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Excluindo do Sistema...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Sim, Excluir Registro Definitivamente
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {/* MODAL: CONFIRMAR EXCLUSÃO DE EQUIPE */}
+      {deletingTeam && (() => {
+        const teamMilitants = militants.filter(m => m.teamId === deletingTeam.id);
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="w-full max-w-lg bg-white border border-rose-200 rounded-xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center gap-3 text-rose-600 border-b border-rose-100 pb-3">
+                <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 shrink-0">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 leading-tight">
+                    Confirmar Exclusão Definitiva da Equipe
+                  </h3>
+                  <p className="text-xs text-rose-600 font-semibold">
+                    Aviso do Sistema: Exclusão de registro da equipe
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-700 leading-relaxed">
+                <p>
+                  Deseja mesmo excluir de maneira definitiva o registro da equipe <strong>{deletingTeam.name}</strong>?
+                </p>
+
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
+                  <div className="flex items-center justify-between text-amber-900 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-amber-600" />
+                      Militantes Vinculados:
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-xs font-mono font-black">
+                      {teamMilitants.length} participantes
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    ℹ️ Os {teamMilitants.length} participantes serão mantidos no sistema e realocados para a equipe Geral. A equipe será removida definitivamente.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={isDeletingInProgress}
+                  onClick={() => setDeletingTeam(null)}
+                  className="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeletingInProgress}
+                  onClick={handleConfirmDeleteTeam}
+                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition disabled:opacity-50"
+                >
+                  {isDeletingInProgress ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Excluindo Equipe...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Sim, Excluir Equipe Definitivamente
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

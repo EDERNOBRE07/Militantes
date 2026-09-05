@@ -15,6 +15,9 @@ import {
 } from 'recharts';
 import { Neighborhood, StreetCheckIn, Militant, Team } from '../types';
 import { formatDateTimeBR } from '../utils/formatters';
+import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
+import { StorageService } from '../services/storageService';
+import { compressImageFile } from '../utils/imageCompressor';
 import {
   MapPin,
   Building2,
@@ -29,7 +32,9 @@ import {
   Target,
   BarChart3,
   Calendar,
-  Compass
+  Compass,
+  Camera,
+  Upload
 } from 'lucide-react';
 
 interface NeighborhoodReportSectionProps {
@@ -70,10 +75,20 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     return neighborhoods.find(n => n.id === selectedBairroId) || neighborhoods[0];
   }, [neighborhoods, selectedBairroId]);
 
-  // Filter checkins for this neighborhood
+  // Filter checkins for this neighborhood (by ID and fuzzy neighborhood name match)
   const bairroCheckIns = useMemo(() => {
-    return checkIns.filter(chk => chk.neighborhoodId === currentBairro.id);
-  }, [checkIns, currentBairro.id]);
+    if (!currentBairro) return [];
+    const bId = (currentBairro.id || '').toLowerCase().trim();
+    const bName = (currentBairro.name || '').toLowerCase().trim();
+    return checkIns.filter(chk => {
+      if (chk.neighborhoodId && chk.neighborhoodId.toLowerCase().trim() === bId) return true;
+      if (chk.neighborhoodName) {
+        const cName = chk.neighborhoodName.toLowerCase().trim();
+        if (cName === bName || cName.includes(bName) || bName.includes(cName)) return true;
+      }
+      return false;
+    });
+  }, [checkIns, currentBairro]);
 
   // Aggregate stats for current neighborhood
   const totalSantinhos = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
@@ -138,21 +153,14 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       }
     }
 
-    // Draw all check-in streets in this neighborhood painted in RED
+    // Draw all check-in streets in this neighborhood painted in RED exactly on the street's road bed
     bairroCheckIns.forEach((chk) => {
-      const hash = Array.from(chk.id + chk.streetName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const angle = ((hash % 180) * Math.PI) / 180;
-      const length = 0.0016 + (hash % 8) * 0.00015;
-      const dx = Math.cos(angle) * length;
-      const dy = Math.sin(angle) * (length * 0.82);
-
-      const streetCoords: [number, number][] = [
-        [chk.latitude - dy, chk.longitude - dx],
-        [chk.latitude - dy * 0.35, chk.longitude - dx * 0.35],
-        [chk.latitude, chk.longitude],
-        [chk.latitude + dy * 0.45, chk.longitude + dx * 0.45],
-        [chk.latitude + dy, chk.longitude + dx]
-      ];
+      const streetCoords = getStreetRoadBedCoordinates(
+        chk.id,
+        chk.streetName,
+        chk.latitude,
+        chk.longitude
+      );
 
       // Glow Red Line
       const glowLine = L.polyline(streetCoords, {

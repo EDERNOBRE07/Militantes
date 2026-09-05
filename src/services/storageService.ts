@@ -468,9 +468,15 @@ export class StorageService {
               const remoteArr = remoteData[k] as any[];
               const itemMap = new Map<string, any>();
 
-              // 1. Insere dados remotos
+              // 1. Insere dados remotos (exceto se a entidade tiver sido excluída definitivamente)
+              const deletedVaultIds = this.get<string[]>('deleted_entities_vault', []);
               remoteArr.forEach(item => {
-                if (item && item.id) itemMap.set(String(item.id), item);
+                if (item && item.id) {
+                  const idStr = String(item.id);
+                  if (!deletedVaultIds.includes(idStr)) {
+                    itemMap.set(idStr, item);
+                  }
+                }
               });
 
               // 2. Preserva itens locais não presentes remotamente e mescla com inteligência temporal
@@ -2363,21 +2369,95 @@ export class StorageService {
     }
   }
 
-  static deleteMilitant(militantId: string): void {
-    const list = this.getMilitants().filter(m => m.id !== militantId);
-    this.set(STORAGE_KEYS.MILITANTS, list, true);
-    this.safeLocalStorageSet('militantes_data', list);
-    vaultStorage.setItem('militantes_data', list).catch(() => {});
+  static async deleteMilitant(militantId: string): Promise<{ deletedMilitant: Militant | null; deletedStreetsCount: number }> {
+    const list = this.getMilitants();
+    const targetMilitant = list.find(m => m.id === militantId) || null;
+    const updatedMilitants = list.filter(m => m.id !== militantId);
 
-    this.pushEntityToRemote(STORAGE_KEYS.MILITANTS, list);
-    this.pushEntityToRemote('militantes_data', list);
+    // 1. Remove militant locally from all collections and mark as permanently deleted
+    const deletedIds = this.get<string[]>('deleted_entities_vault', []);
+    if (!deletedIds.includes(militantId)) {
+      deletedIds.push(militantId);
+      this.set('deleted_entities_vault', deletedIds, false);
+    }
+
+    this.set(STORAGE_KEYS.MILITANTS, updatedMilitants, true);
+    this.safeLocalStorageSet('militantes_data', updatedMilitants);
+    this.safeLocalStorageSet('militancia_militantes_v1', updatedMilitants);
+    vaultStorage.setItem('militantes_data', updatedMilitants).catch(() => {});
+    vaultStorage.setItem('militancia_militants_v1', updatedMilitants).catch(() => {});
+
+    // 2. Cascade: remove ALL check-ins (streets) registered in this militant's sheet
+    const allCheckIns = this.getCheckIns();
+    const targetNameLower = targetMilitant?.name ? targetMilitant.name.toLowerCase().trim() : '';
+    const remainingCheckIns = allCheckIns.filter(c => {
+      if (c.militantId === militantId) return false;
+      if (targetNameLower && c.militantName && c.militantName.toLowerCase().trim() === targetNameLower) return false;
+      return true;
+    });
+    const deletedStreetsCount = allCheckIns.length - remainingCheckIns.length;
+
+    this.set(STORAGE_KEYS.CHECKINS, remainingCheckIns, true);
+    this.safeLocalStorageSet('checkins_data', remainingCheckIns);
+    this.safeLocalStorageSet('militancia_checkins_v1', remainingCheckIns);
+    vaultStorage.setItem('militancia_checkins_v1', remainingCheckIns).catch(() => {});
+
+    // 3. Recalculate neighborhood stats
+    const neighborhoods = this.getNeighborhoods().map(n => {
+      const nCheckins = remainingCheckIns.filter(c => c.neighborhoodId === n.id);
+      const uniqueStreets = new Set(nCheckins.map(c => (c.streetName || '').toLowerCase().trim())).size;
+      return {
+        ...n,
+        completedStreets: uniqueStreets,
+        deliveredMaterials: {
+          santinhos: nCheckins.reduce((acc, c) => acc + (c.materialsDelivered?.santinhos || 0), 0),
+          adesivos: nCheckins.reduce((acc, c) => acc + (c.materialsDelivered?.adesivos || 0), 0),
+          adesivo_bola: nCheckins.reduce((acc, c) => acc + (c.materialsDelivered?.adesivo_bola || 0), 0),
+          adesivo_parachoque: nCheckins.reduce((acc, c) => acc + (c.materialsDelivered?.adesivo_parachoque || 0), 0),
+          colinhas: nCheckins.reduce((acc, c) => acc + (c.materialsDelivered?.colinhas || 0), 0),
+          abordagens: nCheckins.reduce((acc, c) => acc + (c.materialsDelivered?.abordagens || 0), 0),
+          comercio: nCheckins.reduce((acc, c) => acc + (c.materialsDelivered?.comercio || 0), 0)
+        }
+      };
+    });
+    this.set(STORAGE_KEYS.NEIGHBORHOODS, neighborhoods, true);
+
+    // 4. Send explicit definitive delete action to server API
+    try {
+      await fetch('/api/sync.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_militant',
+          militantId,
+          militantName: targetMilitant?.name,
+          collections: {
+            [STORAGE_KEYS.MILITANTS]: updatedMilitants,
+            militantes_data: updatedMilitants,
+            militancia_militantes_v1: updatedMilitants,
+            [STORAGE_KEYS.CHECKINS]: remainingCheckIns,
+            [STORAGE_KEYS.NEIGHBORHOODS]: neighborhoods
+          },
+          replace: true
+        })
+      });
+    } catch (e) {
+      console.warn('Erro ao sincronizar exclusão com servidor:', e);
+    }
 
     const user = this.getCurrentUser();
-    this.logAudit(user, 'EXCLUSAO_MILITANTE', 'CADASTROS', `Militante ${militantId} excluído do sistema.`);
+    this.logAudit(
+      user,
+      'EXCLUSAO_MILITANTE',
+      'CADASTROS',
+      `Militante ${targetMilitant?.name || militantId} e todas as suas ${deletedStreetsCount} ruas foram excluídos definitivamente do sistema.`
+    );
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));
     }
+
+    return { deletedMilitant: targetMilitant, deletedStreetsCount };
   }
 
   // Teams
@@ -2413,12 +2493,19 @@ export class StorageService {
     this.addOrUpdateTeam(team);
   }
 
-  static deleteTeam(teamId: string): void {
+  static async deleteTeam(teamId: string): Promise<void> {
     const list = this.getTeams();
     const targetTeam = list.find(t => t.id === teamId);
     const updatedList = list.filter(t => t.id !== teamId);
+    
+    // Mark team as permanently deleted
+    const deletedIds = this.get<string[]>('deleted_entities_vault', []);
+    if (!deletedIds.includes(teamId)) {
+      deletedIds.push(teamId);
+      this.set('deleted_entities_vault', deletedIds, false);
+    }
+
     this.set(STORAGE_KEYS.TEAMS, updatedList, true);
-    this.pushEntityToRemote(STORAGE_KEYS.TEAMS, updatedList);
 
     // Unassign or adjust militants that belonged to this deleted team
     const militants = this.getMilitants();
@@ -2434,8 +2521,26 @@ export class StorageService {
       this.pushEntityToRemote(STORAGE_KEYS.MILITANTS, militants);
     }
 
+    try {
+      await fetch('/api/sync.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete_team',
+          teamId,
+          collections: {
+            [STORAGE_KEYS.TEAMS]: updatedList,
+            [STORAGE_KEYS.MILITANTS]: militants
+          },
+          replace: true
+        })
+      });
+    } catch (e) {
+      console.warn('Erro ao sincronizar exclusão da equipe:', e);
+    }
+
     const user = this.getCurrentUser();
-    this.logAudit(user, 'EXCLUSAO_EQUIPE', 'CADASTROS', `Equipe "${targetTeam?.name || teamId}" foi excluída do sistema.`);
+    this.logAudit(user, 'EXCLUSAO_EQUIPE', 'CADASTROS', `Equipe "${targetTeam?.name || teamId}" foi excluída definitivamente do sistema.`);
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));

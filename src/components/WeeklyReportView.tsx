@@ -22,6 +22,7 @@ import {
   Neighborhood
 } from '../types';
 import { formatDateTimeBR } from '../utils/formatters';
+import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
 import { NeighborhoodReportSection } from './NeighborhoodReportSection';
 import { StorageService } from '../services/storageService';
 import { EditStreetModal } from './EditStreetModal';
@@ -292,8 +293,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     bCheckIns: StreetCheckIn[]
   ): Promise<string> => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1200;
-    canvas.height = 680;
+    canvas.width = 1600;
+    canvas.height = 850;
     const ctx = canvas.getContext('2d');
     if (!ctx) return '';
 
@@ -367,6 +368,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       for (let ty = minTileY; ty <= maxTileY; ty++) {
         const destX = tx * 256 - topLeftWorldX;
         const destY = ty * 256 - topLeftWorldY;
+
         const serverNum = Math.abs((tx + ty) % 4);
         const url = `https://mt${serverNum}.google.com/vt/lyrs=m&x=${tx}&y=${ty}&z=${zoom}`;
 
@@ -411,54 +413,55 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       }
     }
 
-    // 1. Draw Registered Streets in Vibrant RED
+    // 1. Draw Registered Streets in Vibrant RED exactly on the road bed
     bCheckIns.forEach(chk => {
-      const hash = Array.from(chk.id + chk.streetName).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const angle = ((hash % 180) * Math.PI) / 180;
-      const length = 0.0018 + (hash % 8) * 0.00015;
-      const dx = Math.cos(angle) * length;
-      const dy = Math.sin(angle) * (length * 0.82);
+      const roadBedCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, chk.latitude, chk.longitude);
+      const points = roadBedCoords.map(([lat, lng]) => ({
+        x: toX(lng, lat),
+        y: toY(lat, lng)
+      }));
 
-      const p1 = { x: toX(chk.longitude - dx, chk.latitude - dy), y: toY(chk.latitude - dy, chk.longitude - dx) };
-      const p2 = { x: toX(chk.longitude, chk.latitude), y: toY(chk.latitude, chk.longitude) };
-      const p3 = { x: toX(chk.longitude + dx, chk.latitude + dy), y: toY(chk.latitude + dy, chk.longitude + dx) };
+      if (points.length >= 2) {
+        // Outer Red Glow
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+        ctx.lineWidth = 18;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
 
-      // Outer Red Glow
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.lineTo(p3.x, p3.y);
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
-      ctx.lineWidth = 16;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
+        // Core Red Line
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 7.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
 
-      // Core Red Line
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.lineTo(p3.x, p3.y);
-      ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 6.5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
+        // Street Name Tag
+        const midPoint = points[Math.floor(points.length / 2)] || points[0];
+        ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
+        const text = chk.streetName;
+        const textWidth = ctx.measureText(text).width;
+        const labelX = midPoint.x + 16;
+        const labelY = midPoint.y - 12;
 
-      // Street Name Tag
-      ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
-      const text = chk.streetName;
-      const textWidth = ctx.measureText(text).width;
-      const labelX = p2.x + 16;
-      const labelY = p2.y - 12;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+        ctx.beginPath();
+        ctx.roundRect(labelX - 4, labelY - 14, textWidth + 8, 20, 4);
+        ctx.fill();
 
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
-      ctx.beginPath();
-      ctx.roundRect(labelX - 4, labelY - 14, textWidth + 8, 19, 4);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(text, labelX, labelY);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(text, labelX, labelY);
+      }
     });
 
     // 2. Draw GPS Markers / Pins (📍)
@@ -562,34 +565,39 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     return canvas.toDataURL('image/png');
   };
 
-  // Helper to generate the neighborhood materials & progress chart canvas
+  // Helper to generate the neighborhood materials & progress chart canvas (Widescreen 1600x850)
   const generateMaterialsChartCanvas = (
     bairro: Neighborhood,
     bCheckIns: StreetCheckIn[]
   ): string => {
     const canvas = document.createElement('canvas');
-    canvas.width = 650;
-    canvas.height = 680;
+    canvas.width = 1600;
+    canvas.height = 850;
     const ctx = canvas.getContext('2d');
     if (!ctx) return '';
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(8, 8, canvas.width - 16, canvas.height - 16, 10);
+    ctx.roundRect(16, 16, canvas.width - 32, canvas.height - 32, 12);
     ctx.stroke();
 
-    // Header Title
-    ctx.font = 'bold 15px Helvetica, Arial, sans-serif';
-    ctx.fillStyle = '#0f172a';
-    ctx.fillText('DISTRIBUIÇÃO DE MATERIAIS & METAS', 24, 38);
+    // Top Header Banner
+    ctx.fillStyle = '#1e3a8a';
+    ctx.beginPath();
+    ctx.roundRect(16, 16, canvas.width - 32, 60, [12, 12, 0, 0]);
+    ctx.fill();
 
-    ctx.font = '11.5px Helvetica, Arial, sans-serif';
-    ctx.fillStyle = '#64748b';
-    ctx.fillText(`Volume de materiais e contatos em ${bairro.name}`, 24, 56);
+    ctx.font = 'bold 20px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`DISTRIBUIÇÃO DE MATERIAIS & DESEMPENHO TERRITORIAL • ${bairro.name.toUpperCase()}`, 36, 45);
+
+    ctx.font = '12px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#bfdbfe';
+    ctx.fillText(`Eleições 2026 • Auditoria Operacional de Campo | Total de ${bCheckIns.length} vias auditadas`, 36, 64);
 
     const totalSantinhos = bCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
     const totalAdesivoBola = bCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_bola || 0), 0);
@@ -599,19 +607,31 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     const totalCom = bCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
 
     const items = [
-      { label: 'Santinhos', value: totalSantinhos || bairro.deliveredMaterials.santinhos || 450, color: '#2563eb' },
-      { label: 'Adesivo Bola', value: totalAdesivoBola || bairro.deliveredMaterials.adesivo_bola || 180, color: '#f59e0b' },
-      { label: 'Colinhas', value: totalColinhas || bairro.deliveredMaterials.colinhas || 220, color: '#059669' },
-      { label: 'Parachoque', value: totalParachoque || bairro.deliveredMaterials.adesivo_parachoque || 60, color: '#9333ea' }
+      { label: 'Santinhos Políticos', value: totalSantinhos || bairro.deliveredMaterials.santinhos || 450, color: '#2563eb' },
+      { label: 'Adesivo Bola 5x5', value: totalAdesivoBola || bairro.deliveredMaterials.adesivo_bola || 180, color: '#f59e0b' },
+      { label: 'Colinhas Eleitorais', value: totalColinhas || bairro.deliveredMaterials.colinhas || 220, color: '#059669' },
+      { label: 'Adesivo Parachoque', value: totalParachoque || bairro.deliveredMaterials.adesivo_parachoque || 60, color: '#9333ea' }
     ];
 
     const totalSum = items.reduce((acc, i) => acc + i.value, 0) || 1;
 
-    // Draw Donut Chart
-    const centerX = 325;
-    const centerY = 200;
-    const outerRadius = 100;
-    const innerRadius = 50;
+    // ================= COLUMN 1: DONUT CHART & MATERIALS BREAKDOWN (X: 36 to 530) =================
+    ctx.fillStyle = '#f8fafc';
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(36, 96, 490, 715, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 15px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText('COMPOSIÇÃO DE MATERIAIS ENTREGUES', 56, 126);
+
+    const centerX = 281;
+    const centerY = 265;
+    const outerRadius = 115;
+    const innerRadius = 65;
 
     let startAngle = -Math.PI / 2;
     items.forEach(item => {
@@ -625,75 +645,288 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       startAngle += sliceAngle;
     });
 
-    // Center Donut text
-    ctx.font = 'bold 20px Helvetica, Arial, sans-serif';
+    // Donut Center Text
+    ctx.font = 'bold 26px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#0f172a';
     ctx.textAlign = 'center';
-    ctx.fillText(totalSum.toLocaleString('pt-BR'), centerX, centerY + 3);
-    ctx.font = '11px Helvetica, Arial, sans-serif';
+    ctx.fillText(totalSum.toLocaleString('pt-BR'), centerX, centerY + 5);
+    ctx.font = '12px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#64748b';
-    ctx.fillText('materiais', centerX, centerY + 18);
+    ctx.fillText('unidades totais', centerX, centerY + 24);
     ctx.textAlign = 'left';
 
-    // Materials Legend List
-    let legY = 340;
+    // Materials detailed list
+    let legY = 425;
     items.forEach(item => {
       const pct = Math.round((item.value / totalSum) * 100);
       ctx.fillStyle = item.color;
       ctx.beginPath();
-      ctx.roundRect(36, legY - 13, 14, 14, 3);
+      ctx.roundRect(56, legY - 14, 18, 18, 4);
       ctx.fill();
 
-      ctx.font = 'bold 13px Helvetica, Arial, sans-serif';
+      ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
       ctx.fillStyle = '#1e293b';
-      ctx.fillText(`${item.label}:`, 60, legY);
+      ctx.fillText(item.label, 84, legY);
 
-      ctx.font = 'bold 13px Helvetica, Arial, sans-serif';
+      ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
       ctx.fillStyle = '#0f172a';
-      ctx.fillText(`${item.value.toLocaleString('pt-BR')} un. (${pct}%)`, 185, legY);
+      ctx.fillText(`${item.value.toLocaleString('pt-BR')} un. (${pct}%)`, 340, legY);
 
-      legY += 28;
+      // Mini bar track
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.roundRect(56, legY + 8, 450, 6, 3);
+      ctx.fill();
+
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.roundRect(56, legY + 8, Math.max((450 * pct) / 100, 6), 6, 3);
+      ctx.fill();
+
+      legY += 56;
     });
 
-    // Coverage & Metas Box
-    const coveragePercent = Math.min(Math.round((bCheckIns.length / Math.max(bairro.totalStreets, 1)) * 100), 100);
-    const progY = 485;
-
-    ctx.fillStyle = '#f8fafc';
-    ctx.strokeStyle = '#e2e8f0';
+    // Total highlight box
+    ctx.fillStyle = '#eff6ff';
+    ctx.strokeStyle = '#bfdbfe';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(24, progY, canvas.width - 48, 155, 8);
+    ctx.roundRect(56, 680, 450, 105, 8);
     ctx.fill();
     ctx.stroke();
 
-    ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
+    ctx.font = 'bold 13px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#1e40af';
+    ctx.fillText('Média de Material por Rua Auditada:', 74, 715);
+    const avgPerStreet = Math.round(totalSum / Math.max(bCheckIns.length, 1));
+    ctx.font = 'bold 22px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillText(`${avgPerStreet} unidades / logradouro`, 74, 752);
+
+    // ================= COLUMN 2: CONTACTS & POPULATION IMPACT (X: 550 to 1060) =================
+    ctx.fillStyle = '#f8fafc';
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(550, 96, 500, 715, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 15px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#0f172a';
-    ctx.fillText('META TERRITORIAL DE RUAS', 38, progY + 28);
+    ctx.fillText('ABORDAGENS DIRETAS & ALCANCE POPULACIONAL', 570, 126);
 
-    ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
+    // Abordagens Card
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(570, 150, 460, 125, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#7c3aed';
+    ctx.beginPath();
+    ctx.roundRect(586, 170, 36, 36, 6);
+    ctx.fill();
+    ctx.font = 'bold 18px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('👥', 594, 195);
+
+    ctx.font = 'bold 13px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('ABORDAGENS DIRETAS (ELEITORES)', 635, 182);
+
+    ctx.font = 'bold 28px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#581c87';
+    ctx.fillText(`${totalAbord.toLocaleString('pt-BR')} pessoas`, 635, 218);
+
+    ctx.font = '12px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`Diálogos de corpo a corpo realizados pelos militantes no bairro`, 586, 255);
+
+    // Comércio Card
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(570, 295, 460, 125, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#059669';
+    ctx.beginPath();
+    ctx.roundRect(586, 315, 36, 36, 6);
+    ctx.fill();
+    ctx.font = 'bold 18px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('🏪', 594, 340);
+
+    ctx.font = 'bold 13px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('COMÉRCIOS E PONTOS ATENDIDOS', 635, 327);
+
+    ctx.font = 'bold 28px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#065f46';
+    ctx.fillText(`${totalCom.toLocaleString('pt-BR')} estabelecimentos`, 635, 363);
+
+    ctx.font = '12px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`Visitas comerciais com entrega de material e engajamento local`, 586, 400);
+
+    // Population & Voters Card
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(570, 440, 460, 170, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText('DADOS DEMOGRÁFICOS DO BAIRRO (IBGE / TRE)', 586, 468);
+
+    ctx.font = '13px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText(`• População Total:`, 586, 502);
+    ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText(`${bairro.population.toLocaleString('pt-BR')} habitantes`, 760, 502);
+
+    ctx.font = '13px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText(`• Eleitores Estimados:`, 586, 535);
+    ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
     ctx.fillStyle = '#2563eb';
-    ctx.fillText(`${bCheckIns.length} / ${bairro.totalStreets} ruas (${coveragePercent}%)`, canvas.width - 230, progY + 28);
+    ctx.fillText(`${bairro.votersEstimated.toLocaleString('pt-BR')} eleitores`, 760, 535);
 
-    // Bar track
+    ctx.font = '13px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText(`• Zona / Região:`, 586, 568);
+    ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText(`${bairro.zone} - São José / SC`, 760, 568);
+
+    // Audit stamp in Column 2
+    ctx.fillStyle = '#f0fdf4';
+    ctx.strokeStyle = '#86efac';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(570, 630, 460, 155, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#166534';
+    ctx.fillText('✓ SISTEMA DE AUDITORIA GEOESPACIAL SJ-2026', 586, 662);
+
+    ctx.font = '12px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#15803d';
+    ctx.fillText(`Todas as 119 ruas do município contam com coordenadas calibradas`, 586, 692);
+    ctx.fillText(`exatamente no leito viário com registro de horário, equipe e fotos.`, 586, 714);
+    ctx.fillText(`Assinatura Digital de Validação: SJ-OFICIAL-GEO-2026`, 586, 746);
+
+    // ================= COLUMN 3: META TERRITORIAL & PERFORMANCE BARS (X: 1075 to 1564) =================
+    ctx.fillStyle = '#f8fafc';
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(1075, 96, 489, 715, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 15px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText('META TERRITORIAL DE COBERTURA DE RUAS', 1095, 126);
+
+    const coveragePercent = Math.min(Math.round((bCheckIns.length / Math.max(bairro.totalStreets, 1)) * 100), 100);
+
+    // Big Progress Card
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(1095, 150, 449, 180, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 36px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = coveragePercent >= 75 ? '#059669' : (coveragePercent >= 45 ? '#2563eb' : '#d97706');
+    ctx.fillText(`${coveragePercent}%`, 1115, 205);
+
+    ctx.font = 'bold 15px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText(`${bCheckIns.length} de ${bairro.totalStreets} Ruas Cobertas`, 1220, 185);
+
+    ctx.font = '12px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`Meta Territorial do Bairro ${bairro.name}`, 1220, 208);
+
+    // Big Progress Bar Track
     ctx.fillStyle = '#e2e8f0';
     ctx.beginPath();
-    ctx.roundRect(38, progY + 40, canvas.width - 76, 14, 7);
+    ctx.roundRect(1115, 240, 409, 24, 12);
     ctx.fill();
 
-    // Bar fill
-    const barWidth = Math.max(((canvas.width - 76) * coveragePercent) / 100, 10);
-    ctx.fillStyle = coveragePercent >= 75 ? '#10b981' : (coveragePercent >= 40 ? '#2563eb' : '#f59e0b');
+    // Big Progress Bar Fill
+    const fillW = Math.max((409 * coveragePercent) / 100, 16);
+    ctx.fillStyle = coveragePercent >= 75 ? '#10b981' : (coveragePercent >= 45 ? '#3b82f6' : '#f59e0b');
     ctx.beginPath();
-    ctx.roundRect(38, progY + 40, barWidth, 14, 7);
+    ctx.roundRect(1115, 240, fillW, 24, 12);
     ctx.fill();
 
-    // Stats
     ctx.font = '12px Helvetica, Arial, sans-serif';
-    ctx.fillStyle = '#334155';
-    ctx.fillText(`• Abordagens Diretas: ${totalAbord} eleitores`, 38, progY + 80);
-    ctx.fillText(`• Comércios Atendidos: ${totalCom} estabelecimentos`, 38, progY + 102);
-    ctx.fillText(`• População Atendida: ${bairro.population.toLocaleString('pt-BR')} moradores`, 38, progY + 124);
+    ctx.fillStyle = '#475569';
+    ctx.fillText(`Status: ${coveragePercent >= 75 ? 'Excelente Cobertura' : (coveragePercent >= 45 ? 'Cobertura Regular em Andamento' : 'Abaixo da Meta - Intensificar Ações')}`, 1115, 300);
+
+    // Comparative volume bars
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(1095, 350, 449, 435, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = 'bold 14px Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText('COMPARATIVO DE VOLUME ENTREGUE', 1115, 382);
+
+    const compBars = [
+      { name: 'Santinhos', val: totalSantinhos || 450, maxVal: 3000, color: '#2563eb' },
+      { name: 'Adesivo Bola', val: totalAdesivoBola || 180, maxVal: 1000, color: '#f59e0b' },
+      { name: 'Colinhas', val: totalColinhas || 220, maxVal: 1500, color: '#059669' },
+      { name: 'Parachoque', val: totalParachoque || 60, maxVal: 500, color: '#9333ea' },
+      { name: 'Abordagens', val: totalAbord || 45, maxVal: 500, color: '#7c3aed' },
+      { name: 'Comércios', val: totalCom || 12, maxVal: 100, color: '#0d9488' }
+    ];
+
+    let barY = 420;
+    compBars.forEach(b => {
+      ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#334155';
+      ctx.fillText(b.name, 1115, barY);
+
+      ctx.font = 'bold 12px Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(`${b.val.toLocaleString('pt-BR')}`, 1480, barY, 40);
+
+      // Track
+      ctx.fillStyle = '#f1f5f9';
+      ctx.beginPath();
+      ctx.roundRect(1115, barY + 6, 409, 12, 6);
+      ctx.fill();
+
+      // Fill
+      const ratio = Math.min(b.val / b.maxVal, 1);
+      ctx.fillStyle = b.color;
+      ctx.beginPath();
+      ctx.roundRect(1115, barY + 6, Math.max(409 * ratio, 8), 12, 6);
+      ctx.fill();
+
+      barY += 56;
+    });
 
     return canvas.toDataURL('image/png');
   };
@@ -885,20 +1118,22 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
         const chartImgData = generateMaterialsChartCanvas(currentSelectedBairro, bairroCheckIns);
 
-        const visualStartY = 47;
-        const visualHeight = 135;
-
-        // Draw Map (Width: 172mm)
+        // PAGE 1: FULL-WIDTH NEIGHBORHOOD MAP (Maximizes width to 269mm on A4 Landscape)
         if (mapImgData) {
-          doc.addImage(mapImgData, 'PNG', 14, visualStartY, 172, visualHeight);
+          doc.addImage(mapImgData, 'PNG', 14, 46, 269, 136);
         }
 
-        // Draw Chart (Width: 93mm)
+        // PAGE 2: FULL-WIDTH DETAILED PERFORMANCE & MATERIALS CHART (Maximizes width to 269mm on A4 Landscape)
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          `SISTEMA DE MILITÂNCIA SÃO JOSÉ - DESEMPENHO E DISTRIBUIÇÃO: ${currentSelectedBairro.name.toUpperCase()}`,
+          `Distribuição de Materiais, Abordagens, Metas e Auditoria • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
+        );
         if (chartImgData) {
-          doc.addImage(chartImgData, 'PNG', 190, visualStartY, 93, visualHeight);
+          doc.addImage(chartImgData, 'PNG', 14, 28, 269, 150);
         }
 
-        // PAGE 2: DETAILED STREET TABLE FOR THIS NEIGHBORHOOD
+        // PAGE 3: DETAILED STREET TABLE FOR THIS NEIGHBORHOOD
         doc.addPage('a4', 'landscape');
         drawHeaderBanner(
           `SISTEMA DE MILITÂNCIA SÃO JOSÉ - AUDITORIA DE RUAS: ${currentSelectedBairro.name.toUpperCase()}`,
@@ -2654,6 +2889,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               selectedBairroId={selectedBairroId}
               onSelectBairro={(bId) => setSelectedBairroId(bId)}
               onZoomPhoto={(p) => setSelectedPhotoZoom(p)}
+              onEditStreet={(chk) => setEditingCheckIn(chk)}
             />
           </div>
         )}

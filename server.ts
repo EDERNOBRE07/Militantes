@@ -115,10 +115,15 @@ async function startServer() {
     return result;
   };
 
-  const writeServerVault = (data: Record<string, any>): Record<string, any> => {
+  const writeServerVault = (data: Record<string, any>, options?: { replace?: boolean }): Record<string, any> => {
     try {
       const current = readServerVault();
-      const updated = mergeVaultData(current, data);
+      let updated: Record<string, any>;
+      if (options?.replace) {
+        updated = { ...current, ...data, _lastServerSavedAt: new Date().toISOString() };
+      } else {
+        updated = mergeVaultData(current, data);
+      }
       fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updated, null, 2), 'utf-8');
       
       // Also write to public copy for static availability
@@ -431,13 +436,84 @@ async function startServer() {
     const syncData = req.body;
     const targetUrl = 'https://militancia.mastervisionmarketing.com/api/sync.php';
 
+    // 0. Handle explicit definitive deletion of militant (with cascading removal of all check-ins)
+    if (syncData.action === 'delete_militant') {
+      try {
+        const { militantId, militantName } = syncData;
+        const current = readServerVault();
+        const mList = (current['militancia_militants_v1'] || []).filter((m: any) => m.id !== militantId);
+        const nameLower = militantName ? militantName.toLowerCase().trim() : '';
+        const chkList = (current['militancia_checkins_v1'] || []).filter((c: any) => 
+          c.militantId !== militantId && 
+          (!nameLower || !c.militantName || c.militantName.toLowerCase().trim() !== nameLower)
+        );
+        const deletedStreetsCount = (current['militancia_checkins_v1']?.length || 0) - chkList.length;
+
+        const updatedVault = {
+          ...current,
+          militancia_militants_v1: mList,
+          militantes_data: mList,
+          militancia_militantes_v1: mList,
+          militancia_checkins_v1: chkList,
+          _lastServerSavedAt: new Date().toISOString()
+        };
+        fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updatedVault, null, 2), 'utf-8');
+        try {
+          const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+          if (fs.existsSync(path.dirname(publicVaultPath))) {
+            fs.writeFileSync(publicVaultPath, JSON.stringify(updatedVault, null, 2), 'utf-8');
+          }
+        } catch {}
+
+        broadcastRealTimeUpdate('militant_deleted', { militantId, deletedStreetsCount });
+        return res.json({ status: 'success', deletedMilitantId: militantId, deletedStreetsCount });
+      } catch (e) {
+        console.error('Error in delete_militant:', e);
+        return res.status(500).json({ status: 'error', message: 'Erro ao excluir militante definitivamente.' });
+      }
+    }
+
+    // Handle explicit definitive deletion of team
+    if (syncData.action === 'delete_team') {
+      try {
+        const { teamId } = syncData;
+        const current = readServerVault();
+        const tList = (current['militancia_teams_v1'] || []).filter((t: any) => t.id !== teamId);
+        const mList = (current['militancia_militants_v1'] || []).map((m: any) => 
+          m.teamId === teamId ? { ...m, teamId: tList[0]?.id || 'sem_equipe' } : m
+        );
+        const updatedVault = {
+          ...current,
+          militancia_teams_v1: tList,
+          militancia_militants_v1: mList,
+          militantes_data: mList,
+          militancia_militantes_v1: mList,
+          _lastServerSavedAt: new Date().toISOString()
+        };
+        fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updatedVault, null, 2), 'utf-8');
+        try {
+          const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+          if (fs.existsSync(path.dirname(publicVaultPath))) {
+            fs.writeFileSync(publicVaultPath, JSON.stringify(updatedVault, null, 2), 'utf-8');
+          }
+        } catch {}
+
+        broadcastRealTimeUpdate('team_deleted', { teamId });
+        return res.json({ status: 'success', deletedTeamId: teamId });
+      } catch (e) {
+        console.error('Error in delete_team:', e);
+        return res.status(500).json({ status: 'error', message: 'Erro ao excluir equipe.' });
+      }
+    }
+
     // 1. Save and merge immediately to disk vault on Node server
     try {
+      const isReplace = Boolean(syncData.replace);
       if (syncData.key && syncData.data !== undefined) {
-        writeServerVault({ [syncData.key]: syncData.data });
+        writeServerVault({ [syncData.key]: syncData.data }, { replace: isReplace });
         broadcastRealTimeUpdate('collection_updated', { key: syncData.key });
       } else if (syncData.collections && typeof syncData.collections === 'object') {
-        writeServerVault(syncData.collections);
+        writeServerVault(syncData.collections, { replace: isReplace });
         broadcastRealTimeUpdate('all_collections_updated', { count: Object.keys(syncData.collections).length });
       }
     } catch (err) {
