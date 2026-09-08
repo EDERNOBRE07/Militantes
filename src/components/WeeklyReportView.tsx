@@ -27,6 +27,7 @@ import { NeighborhoodReportSection } from './NeighborhoodReportSection';
 import { StorageService } from '../services/storageService';
 import { EditStreetModal } from './EditStreetModal';
 import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
+import { getQualifyingNeighborhoods, doesNeighborhoodQualify, isCheckInInNeighborhood } from '../utils/neighborhoodHelpers';
 import {
   FileText,
   Printer,
@@ -134,6 +135,38 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
   // Current selected neighborhood for territorial report
   const currentSelectedBairro: Neighborhood = useMemo(() => {
+    if (selectedBairroId === 'todos') {
+      const qualifying = getQualifyingNeighborhoods(neighborhoods, checkIns);
+      const firstQ = qualifying[0] || neighborhoods[0];
+      return {
+        id: 'todos',
+        name: `Todos os Bairros (${qualifying.length} com ruas e fotos)`,
+        zone: 'Consolidado Geral',
+        population: qualifying.reduce((acc, b) => acc + (b.population || 0), 0) || 280000,
+        households: qualifying.reduce((acc, b) => acc + (b.households || 0), 0) || 85000,
+        votersEstimated: qualifying.reduce((acc, b) => acc + (b.votersEstimated || 0), 0) || 195000,
+        totalStreets: qualifying.reduce((acc, b) => acc + (b.totalStreets || 0), 0) || 120,
+        completedStreets: qualifying.reduce((acc, b) => acc + (b.completedStreets || 0), 0) || 35,
+        lat: -27.5962,
+        lng: -48.6190,
+        polygon: firstQ?.polygon || [],
+        priority: 'Alta',
+        targetMaterials: {
+          santinhos: qualifying.reduce((acc, b) => acc + (b.targetMaterials?.santinhos || 0), 0) || 20000,
+          adesivos: qualifying.reduce((acc, b) => acc + (b.targetMaterials?.adesivos || 0), 0) || 5000,
+          adesivo_bola: qualifying.reduce((acc, b) => acc + (b.targetMaterials?.adesivo_bola || 0), 0) || 3000,
+          adesivo_parachoque: qualifying.reduce((acc, b) => acc + (b.targetMaterials?.adesivo_parachoque || 0), 0) || 1500,
+          colinhas: qualifying.reduce((acc, b) => acc + (b.targetMaterials?.colinhas || 0), 0) || 4000
+        },
+        deliveredMaterials: {
+          santinhos: qualifying.reduce((acc, b) => acc + (b.deliveredMaterials?.santinhos || 0), 0) || 6000,
+          adesivos: qualifying.reduce((acc, b) => acc + (b.deliveredMaterials?.adesivos || 0), 0) || 1200,
+          adesivo_bola: qualifying.reduce((acc, b) => acc + (b.deliveredMaterials?.adesivo_bola || 0), 0) || 800,
+          adesivo_parachoque: qualifying.reduce((acc, b) => acc + (b.deliveredMaterials?.adesivo_parachoque || 0), 0) || 400,
+          colinhas: qualifying.reduce((acc, b) => acc + (b.deliveredMaterials?.colinhas || 0), 0) || 1500
+        }
+      };
+    }
     return neighborhoods.find(n => n.id === selectedBairroId) || neighborhoods[0] || {
       id: 'kobrasol',
       name: 'Kobrasol',
@@ -295,6 +328,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const getReportSubtitle = () => {
     switch (viewGrouping) {
       case 'por_bairro':
+        if (selectedBairroId === 'todos') {
+          return `Visão territorial consolidada de todos os bairros qualificados (apenas com lançamentos de ruas e fotos anexadas), mapas com ruas em vermelho, galeria de fotos e estatísticas completas.`;
+        }
         return `Visão territorial do bairro ${currentSelectedBairro.name}, mapa com ruas pintadas em vermelho e pins, galeria de fotos de comprovação e gráficos de distribuição.`;
       case 'por_militante':
         return `Fichas individuais de cada militante com ruas percorridas, comprovantes fotográficos, coordenadas GPS e validação oficial.`;
@@ -310,6 +346,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const getExportButtonLabel = () => {
     switch (viewGrouping) {
       case 'por_bairro':
+        if (selectedBairroId === 'todos') {
+          return `Exportar PDF (Consolidado: Todos os Bairros com Ruas & Fotos)`;
+        }
         return `Exportar PDF (Relatório do Bairro ${currentSelectedBairro.name} & Mapa)`;
       case 'por_militante':
         return `Exportar PDF (Relatório por Militante)`;
@@ -1137,22 +1176,39 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
       // ================= 1. RELATÓRIO TERRITORIAL & AUDITORIA POR BAIRROS & MAPAS =================
       if (viewGrouping === 'por_bairro') {
-        setExportFeedback(`Gerando relatório completo do Bairro ${currentSelectedBairro.name} com mapa, gráficos, tabela e galeria fotográfica...`);
+        const isAllBairrosMode = selectedBairroId === 'todos';
+        const qualifyingBairros = getQualifyingNeighborhoods(neighborhoods, filteredCheckIns);
+        const targetBairros = isAllBairrosMode ? qualifyingBairros : [currentSelectedBairro];
 
-        // Filter check-ins for the current selected neighborhood
-        const bairroCheckIns = filteredCheckIns.filter(chk => 
-          chk.neighborhoodId === currentSelectedBairro.id || 
-          chk.neighborhoodName.toLowerCase().includes(currentSelectedBairro.name.toLowerCase())
+        setExportFeedback(isAllBairrosMode
+          ? `Gerando relatório consolidado de todos os bairros qualificados (${qualifyingBairros.length} bairros com ruas e fotos)...`
+          : `Gerando relatório completo do Bairro ${currentSelectedBairro.name} com mapa, gráficos, tabela e galeria fotográfica...`
         );
+
+        // Filter check-ins: only qualifying neighborhoods when in 'todos' mode
+        const bairroCheckIns = isAllBairrosMode
+          ? filteredCheckIns.filter(chk => qualifyingBairros.some(b => isCheckInInNeighborhood(chk, b)))
+          : filteredCheckIns.filter(chk => 
+              chk.neighborhoodId === currentSelectedBairro.id || 
+              chk.neighborhoodName.toLowerCase().includes(currentSelectedBairro.name.toLowerCase())
+            );
+
+        const totalPop = targetBairros.reduce((acc, b) => acc + (b.population || 0), 0);
+        const totalVot = targetBairros.reduce((acc, b) => acc + (b.votersEstimated || 0), 0);
+        const totalStreetsTarget = targetBairros.reduce((acc, b) => acc + (b.totalStreets || 0), 0);
         const totalAbordBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
         const totalComBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
         const totalMatBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos + c.materialsDelivered.adesivo_bola + c.materialsDelivered.adesivo_parachoque + c.materialsDelivered.colinhas), 0);
-        const coveragePercent = Math.min(Math.round((bairroCheckIns.length / Math.max(currentSelectedBairro.totalStreets, 1)) * 100), 100);
+        const coveragePercent = Math.min(Math.round((bairroCheckIns.length / Math.max(totalStreetsTarget, 1)) * 100), 100);
 
         // PAGE 1: HEADER, CARDS, CRISP MAP WITH PAINTED STREETS AND CHARTS
         drawHeaderBanner(
-          'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO TERRITORIAL & AUDITORIA GEOGRÁFICA',
-          `Bairro: ${currentSelectedBairro.name.toUpperCase()} (${currentSelectedBairro.zone}) • Eleições 2026 | Período: ${selectedWeekLabel}`
+          isAllBairrosMode
+            ? 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO TERRITORIAL CONSOLIDADO'
+            : 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO TERRITORIAL & AUDITORIA GEOGRÁFICA',
+          isAllBairrosMode
+            ? `Todos os Bairros Qualificados (${targetBairros.length} com ruas e fotos comprovadas) • Eleições 2026 | Período: ${selectedWeekLabel}`
+            : `Bairro: ${currentSelectedBairro.name.toUpperCase()} (${currentSelectedBairro.zone}) • Eleições 2026 | Período: ${selectedWeekLabel}`
         );
 
         // Demographic & Activity KPI Cards for this Neighborhood
@@ -1162,12 +1218,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         doc.roundedRect(14, 27, 269, 17, 2, 2, 'D');
 
         const bairroKpiItems = [
-          { label: 'POPULAÇÃO (IBGE)', val: `${currentSelectedBairro.population.toLocaleString('pt-BR')} hab.` },
-          { label: 'ELEITORES ESTIMADOS', val: `${currentSelectedBairro.votersEstimated.toLocaleString('pt-BR')}` },
-          { label: 'RUAS REGISTRADAS', val: `${bairroCheckIns.length} / ${currentSelectedBairro.totalStreets} (${coveragePercent}%)` },
+          { label: isAllBairrosMode ? 'POPULAÇÃO AUDITADA' : 'POPULAÇÃO (IBGE)', val: `${totalPop.toLocaleString('pt-BR')} hab.` },
+          { label: 'ELEITORES ESTIMADOS', val: `${totalVot.toLocaleString('pt-BR')}` },
+          { label: isAllBairrosMode ? 'BAIRROS & RUAS' : 'RUAS REGISTRADAS', val: `${bairroCheckIns.length} ruas (${isAllBairrosMode ? `${targetBairros.length} bairros` : `${coveragePercent}%`})` },
           { label: 'ABORDAGENS DIRETAS', val: `${totalAbordBairro} eleitores` },
           { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComBairro}` },
-          { label: 'MATERIAIS NO BAIRRO', val: `${totalMatBairro.toLocaleString('pt-BR')}` },
+          { label: 'MATERIAIS NO TOTAL', val: `${totalMatBairro.toLocaleString('pt-BR')}` },
         ];
 
         const bKpiWidth = 269 / bairroKpiItems.length;
@@ -1185,7 +1241,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         });
 
         // High-Definition Google Map & Chart Generation for Page 1
-        setExportFeedback(`Renderizando mapa do Google com ruas pintadas e pins de ${currentSelectedBairro.name}...`);
+        setExportFeedback(isAllBairrosMode
+          ? `Renderizando mapa territorial consolidado de todos os bairros qualificados...`
+          : `Renderizando mapa do Google com ruas pintadas e pins de ${currentSelectedBairro.name}...`
+        );
         
         let mapImgData = '';
         const mapDomElement = document.getElementById('neighborhood-report-map-wrapper');
@@ -1218,8 +1277,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         // PAGE 2: FULL-WIDTH DETAILED PERFORMANCE & MATERIALS CHART (Maximizes width to 269mm on A4 Landscape)
         doc.addPage('a4', 'landscape');
         drawHeaderBanner(
-          `SISTEMA DE MILITÂNCIA SÃO JOSÉ - DESEMPENHO E DISTRIBUIÇÃO: ${currentSelectedBairro.name.toUpperCase()}`,
-          `Distribuição de Materiais, Abordagens, Metas e Auditoria • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
+          isAllBairrosMode
+            ? `SISTEMA DE MILITÂNCIA SÃO JOSÉ - DESEMPENHO E DISTRIBUIÇÃO CONSOLIDADA`
+            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - DESEMPENHO E DISTRIBUIÇÃO: ${currentSelectedBairro.name.toUpperCase()}`,
+          isAllBairrosMode
+            ? `Distribuição de Materiais, Abordagens, Metas e Auditoria dos Bairros Qualificados (${targetBairros.length} bairros) | Período: ${selectedWeekLabel}`
+            : `Distribuição de Materiais, Abordagens, Metas e Auditoria • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
         );
         if (chartImgData) {
           doc.addImage(chartImgData, 'PNG', 14, 28, 269, 150);
@@ -1228,8 +1291,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         // PAGE 3: DETAILED STREET TABLE FOR THIS NEIGHBORHOOD
         doc.addPage('a4', 'landscape');
         drawHeaderBanner(
-          `SISTEMA DE MILITÂNCIA SÃO JOSÉ - AUDITORIA DE RUAS: ${currentSelectedBairro.name.toUpperCase()}`,
-          `Logradouros, Coordenadas GPS, Abordagens e Validação no Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
+          isAllBairrosMode
+            ? `SISTEMA DE MILITÂNCIA SÃO JOSÉ - AUDITORIA CONSOLIDADA DE RUAS AUDITADAS`
+            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - AUDITORIA DE RUAS: ${currentSelectedBairro.name.toUpperCase()}`,
+          isAllBairrosMode
+            ? `Logradouros, Bairros, GPS, Abordagens e Validação (${bairroCheckIns.length} ruas em ${targetBairros.length} bairros) | Período: ${selectedWeekLabel}`
+            : `Logradouros, Coordenadas GPS, Abordagens e Validação no Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
         );
 
         const bairroStreetRows = bairroCheckIns.map(chk => {
@@ -1237,6 +1304,24 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           const mat = militant?.matricula ? `(${militant.matricula})` : '';
           const photoCount = chk.photos ? chk.photos.length : 0;
           const photoText = photoCount > 0 ? `${photoCount} foto(s) [ANEXO]` : 'Sem foto';
+          const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
+          const bName = bMatch?.name || chk.neighborhoodName || 'São José';
+
+          if (isAllBairrosMode) {
+            return [
+              chk.timestamp,
+              bName,
+              chk.streetName,
+              `${chk.militantName} ${mat}`,
+              `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
+              `${chk.materialsDelivered.abordagens || 0}`,
+              `${chk.materialsDelivered.comercio || 0}`,
+              `${chk.materialsDelivered.santinhos}`,
+              photoText,
+              chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
+            ];
+          }
+
           return [
             chk.timestamp,
             chk.streetName,
@@ -1250,19 +1335,55 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           ];
         });
 
+        const tableHead = isAllBairrosMode ? [[
+          'Data / Hora',
+          'Bairro',
+          'Logradouro / Trecho Percorrido',
+          'Militante Responsável',
+          'GPS (Latitude, Longitude)',
+          'Abord.',
+          'Com.',
+          'Sant.',
+          'Comprovante',
+          'Auditoria'
+        ]] : [[
+          'Data / Hora',
+          'Logradouro / Trecho Percorrido',
+          'Militante Responsável',
+          'GPS (Latitude, Longitude)',
+          'Abordagens',
+          'Comércio',
+          'Santinhos',
+          'Comprovante',
+          'Status Auditoria'
+        ]];
+
+        const tableColStyles: any = isAllBairrosMode ? {
+          0: { cellWidth: 26 },
+          1: { cellWidth: 32, fontStyle: 'bold' },
+          2: { cellWidth: 50, fontStyle: 'bold' },
+          3: { cellWidth: 36 },
+          4: { cellWidth: 36, font: 'courier' },
+          5: { cellWidth: 16, halign: 'center' },
+          6: { cellWidth: 16, halign: 'center' },
+          7: { cellWidth: 16, halign: 'center' },
+          8: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
+          9: { cellWidth: 19, halign: 'center', fontStyle: 'bold' }
+        } : {
+          0: { cellWidth: 28 },
+          1: { cellWidth: 62, fontStyle: 'bold' },
+          2: { cellWidth: 42 },
+          3: { cellWidth: 38, font: 'courier' },
+          4: { cellWidth: 20, halign: 'center' },
+          5: { cellWidth: 18, halign: 'center' },
+          6: { cellWidth: 18, halign: 'center' },
+          7: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
+          8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+        };
+
         autoTable(doc, {
-          head: [[
-            'Data / Hora',
-            'Logradouro / Trecho Percorrido',
-            'Militante Responsável',
-            'GPS (Latitude, Longitude)',
-            'Abordagens',
-            'Comércio',
-            'Santinhos',
-            'Comprovante',
-            'Status Auditoria'
-          ]],
-          body: bairroStreetRows.length > 0 ? bairroStreetRows : [['-', `Nenhuma rua cadastrada para o bairro ${currentSelectedBairro.name} no período`, '-', '-', '-', '-', '-', '-', '-']],
+          head: tableHead,
+          body: bairroStreetRows.length > 0 ? bairroStreetRows : [['-', isAllBairrosMode ? 'Nenhum bairro com ruas registradas e fotos anexadas' : `Nenhuma rua cadastrada para o bairro ${currentSelectedBairro.name} no período`, '-', '-', '-', '-', '-', '-', '-']],
           startY: 28,
           margin: { left: 14, right: 14, bottom: 28 },
           styles: {
@@ -1281,17 +1402,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           alternateRowStyles: {
             fillColor: [248, 250, 252]
           },
-          columnStyles: {
-            0: { cellWidth: 28 },
-            1: { cellWidth: 62, fontStyle: 'bold' },
-            2: { cellWidth: 42 },
-            3: { cellWidth: 38, font: 'courier' },
-            4: { cellWidth: 20, halign: 'center' },
-            5: { cellWidth: 18, halign: 'center' },
-            6: { cellWidth: 18, halign: 'center' },
-            7: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
-            8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
-          }
+          columnStyles: tableColStyles
         });
 
         // PAGE 3+: GALERIA DE COMPROVAÇÃO FOTOGRÁFICA DAS RUAS DO BAIRRO
@@ -1311,6 +1422,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         bairroCheckIns.forEach(chk => {
           const mObj = militants.find(m => m.id === chk.militantId);
           const mat = mObj?.matricula || 'Mil001';
+          const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
+          const bName = bMatch?.name || chk.neighborhoodName || '';
+          const streetDisplayName = isAllBairrosMode && bName ? `[${bName}] ${chk.streetName}` : chk.streetName;
 
           // Recupera foto do banco de dados ou cofre dedicado se não estiver no array direto
           const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
@@ -1321,7 +1435,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             effectivePhotos.forEach(photo => {
               photoProofItems.push({
                 photoUrl: photo,
-                streetName: chk.streetName,
+                streetName: streetDisplayName,
                 militantName: chk.militantName,
                 matricula: mat,
                 timestamp: chk.timestamp,
@@ -1335,7 +1449,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             // Se não houver foto enviada, gera o comprovante de auditoria georreferenciado via GPS
             photoProofItems.push({
               photoUrl: '',
-              streetName: chk.streetName,
+              streetName: streetDisplayName,
               militantName: chk.militantName,
               matricula: mat,
               timestamp: chk.timestamp,
@@ -1348,7 +1462,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         });
 
         // Preload base64 images
-        setExportFeedback(`Carregando fotos de comprovação de ${currentSelectedBairro.name}...`);
+        setExportFeedback(isAllBairrosMode
+          ? `Carregando fotos de comprovação de todos os bairros qualificados...`
+          : `Carregando fotos de comprovação de ${currentSelectedBairro.name}...`
+        );
         const preloadedImages = await Promise.all(
           photoProofItems.map(item => (item.photoUrl ? loadBase64Image(item.photoUrl) : Promise.resolve('')))
         );
@@ -1360,7 +1477,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           doc.addPage('a4', 'landscape');
           drawHeaderBanner(
             `SISTEMA DE MILITÂNCIA SÃO JOSÉ - GALERIA DE COMPROVAÇÃO FOTOGRÁFICA DAS RUAS`,
-            `Auditoria Visual das Ruas e Comprovantes em Campo • Bairro ${currentSelectedBairro.name} (Pág. ${pageIdx + 1}/${totalPhotoPages}) | Período: ${selectedWeekLabel}`
+            isAllBairrosMode
+              ? `Auditoria Visual das Ruas e Comprovantes em Campo • Todos os Bairros Qualificados (Pág. ${pageIdx + 1}/${totalPhotoPages}) | Período: ${selectedWeekLabel}`
+              : `Auditoria Visual das Ruas e Comprovantes em Campo • Bairro ${currentSelectedBairro.name} (Pág. ${pageIdx + 1}/${totalPhotoPages}) | Período: ${selectedWeekLabel}`
           );
 
           // Sub-header title bar
@@ -1369,7 +1488,13 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(7.5);
           doc.setTextColor(30, 41, 59);
-          doc.text(`REGISTROS FOTOGRÁFICOS DE CAMPO COM VALIDAÇÃO GPS • BAIRRO ${currentSelectedBairro.name.toUpperCase()}`, 18, 32);
+          doc.text(
+            isAllBairrosMode
+              ? `REGISTROS FOTOGRÁFICOS DE CAMPO COM VALIDAÇÃO GPS • TODOS OS BAIRROS AUDITADOS`
+              : `REGISTROS FOTOGRÁFICOS DE CAMPO COM VALIDAÇÃO GPS • BAIRRO ${currentSelectedBairro.name.toUpperCase()}`,
+            18,
+            32
+          );
           
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(7);
@@ -2215,31 +2340,41 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
   const handleExportCSV = () => {
     if (viewGrouping === 'por_bairro') {
-      const bairroCheckIns = filteredCheckIns.filter(chk => 
-        chk.neighborhoodId === currentSelectedBairro.id || 
-        chk.neighborhoodName.toLowerCase().includes(currentSelectedBairro.name.toLowerCase())
-      );
+      const isAllBairrosMode = selectedBairroId === 'todos';
+      const qualifyingBairros = getQualifyingNeighborhoods(neighborhoods, filteredCheckIns);
+      const targetCheckIns = isAllBairrosMode
+        ? filteredCheckIns.filter(chk => qualifyingBairros.some(b => isCheckInInNeighborhood(chk, b)))
+        : filteredCheckIns.filter(chk => 
+            chk.neighborhoodId === currentSelectedBairro.id || 
+            chk.neighborhoodName.toLowerCase().includes(currentSelectedBairro.name.toLowerCase())
+          );
+
       const headers = ['Bairro', 'Zona', 'Logradouro', 'Data/Hora', 'Militante', 'Matrícula', 'Latitude', 'Longitude', 'Santinhos', 'Adesivo Bola', 'Abordagens', 'Comércio', 'Status'];
-      const rows = bairroCheckIns.map(c => [
-        `"${currentSelectedBairro.name}"`,
-        `"${currentSelectedBairro.zone}"`,
-        `"${c.streetName}"`,
-        c.timestamp,
-        `"${c.militantName}"`,
-        `"${militants.find(m => m.id === c.militantId)?.matricula || ''}"`,
-        c.latitude,
-        c.longitude,
-        c.materialsDelivered.santinhos,
-        c.materialsDelivered.adesivo_bola,
-        c.materialsDelivered.abordagens || 0,
-        c.materialsDelivered.comercio || 0,
-        c.status
-      ]);
+      const rows = targetCheckIns.map(c => {
+        const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(c, n));
+        const bName = bMatch?.name || c.neighborhoodName || currentSelectedBairro.name;
+        const bZone = bMatch?.zone || currentSelectedBairro.zone;
+        return [
+          `"${bName}"`,
+          `"${bZone}"`,
+          `"${c.streetName}"`,
+          c.timestamp,
+          `"${c.militantName}"`,
+          `"${militants.find(m => m.id === c.militantId)?.matricula || ''}"`,
+          c.latitude,
+          c.longitude,
+          c.materialsDelivered.santinhos,
+          c.materialsDelivered.adesivo_bola,
+          c.materialsDelivered.abordagens || 0,
+          c.materialsDelivered.comercio || 0,
+          c.status
+        ];
+      });
       const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
       link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `relatorio_bairro_${currentSelectedBairro.name.toLowerCase()}_${selectedWeek}.csv`);
+      link.setAttribute('download', isAllBairrosMode ? `relatorio_todos_bairros_qualificados_${selectedWeek}.csv` : `relatorio_bairro_${currentSelectedBairro.name.toLowerCase()}_${selectedWeek}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2369,7 +2504,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                   viewGrouping === 'por_bairro' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <span>🗺️</span> Por Bairro & Mapas
+                <span>🗺️</span> Por Região & Mapas
               </button>
             </div>
 

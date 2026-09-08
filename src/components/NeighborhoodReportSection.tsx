@@ -20,6 +20,13 @@ import { StorageService } from '../services/storageService';
 import { compressImageFile } from '../utils/imageCompressor';
 import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
 import {
+  getQualifyingNeighborhoods,
+  doesNeighborhoodQualify,
+  isCheckInInNeighborhood,
+  getCheckInsForNeighborhood,
+  getValidPhotosForCheckIn
+} from '../utils/neighborhoodHelpers';
+import {
   MapPin,
   Building2,
   CheckCircle2,
@@ -69,47 +76,73 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     }
   };
 
+  const isAllBairros = selectedBairroId === 'todos';
+
+  // Obter apenas bairros que possuem lançamentos de ruas E fotos anexadas
+  const qualifyingNeighborhoods = useMemo(() => {
+    return getQualifyingNeighborhoods(neighborhoods, checkIns);
+  }, [neighborhoods, checkIns]);
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const prevBairroIdRef = useRef<string>('');
 
   const currentBairro = useMemo(() => {
+    if (isAllBairros) {
+      const totalPop = qualifyingNeighborhoods.reduce((acc, n) => acc + (n.population || 0), 0);
+      const totalVoters = qualifyingNeighborhoods.reduce((acc, n) => acc + (n.votersEstimated || 0), 0);
+      const totalStreets = qualifyingNeighborhoods.reduce((acc, n) => acc + (n.totalStreets || 0), 0);
+      return {
+        id: 'todos',
+        name: 'Todos os Bairros (Consolidado)',
+        zone: `São José • ${qualifyingNeighborhoods.length} Bairros Auditados`,
+        population: totalPop,
+        households: 0,
+        votersEstimated: totalVoters,
+        totalStreets: totalStreets,
+        completedStreets: 0,
+        lat: -27.5962,
+        lng: -48.6190,
+        polygon: [],
+        priority: 'Alta' as const,
+        targetMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
+        deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 }
+      } as Neighborhood;
+    }
     return neighborhoods.find(n => n.id === selectedBairroId) || neighborhoods[0];
-  }, [neighborhoods, selectedBairroId]);
+  }, [neighborhoods, selectedBairroId, isAllBairros, qualifyingNeighborhoods]);
 
-  // Filter checkins for this neighborhood (by ID and fuzzy neighborhood name match)
+  // Filter checkins: se for "todos", inclui APENAS os check-ins dos bairros que se qualificam (com ruas E fotos anexadas)
   const bairroCheckIns = useMemo(() => {
+    if (isAllBairros) {
+      return checkIns.filter(chk => 
+        qualifyingNeighborhoods.some(n => isCheckInInNeighborhood(chk, n))
+      );
+    }
     if (!currentBairro) return [];
-    const bId = (currentBairro.id || '').toLowerCase().trim();
-    const bName = (currentBairro.name || '').toLowerCase().trim();
-    return checkIns.filter(chk => {
-      if (chk.neighborhoodId && chk.neighborhoodId.toLowerCase().trim() === bId) return true;
-      if (chk.neighborhoodName) {
-        const cName = chk.neighborhoodName.toLowerCase().trim();
-        if (cName === bName || cName.includes(bName) || bName.includes(cName)) return true;
-      }
-      return false;
-    });
-  }, [checkIns, currentBairro]);
+    return getCheckInsForNeighborhood(currentBairro, checkIns);
+  }, [isAllBairros, qualifyingNeighborhoods, currentBairro, checkIns]);
 
-  // Recupera todas as fotos (inclusive fotos recuperadas do banco de dados) vinculadas a este bairro
+  // Recupera todas as fotos válidas vinculadas aos bairros filtrados
   const allBairroPhotos = useMemo(() => {
     return bairroCheckIns.flatMap((chk) => {
-      const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
-      const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
-      const resolved = validPhotos.length > 0 ? validPhotos : (dbPhoto ? [dbPhoto] : []);
-      return resolved.map((photo, pIdx) => ({
+      const validPhotos = getValidPhotosForCheckIn(chk);
+      const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
+      const bName = bMatch?.name || chk.neighborhoodName || 'Bairro';
+
+      return validPhotos.map((photo, pIdx) => ({
         key: `${chk.id}-${pIdx}`,
         photo,
         streetName: chk.streetName,
+        neighborhoodName: bName,
         timestamp: chk.timestamp,
         militantName: chk.militantName
       }));
     });
-  }, [bairroCheckIns]);
+  }, [bairroCheckIns, neighborhoods]);
 
-  // Aggregate stats for current neighborhood
+  // Aggregate stats for current neighborhood or all qualified neighborhoods
   const totalSantinhos = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
   const totalAdesivoBola = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_bola || 0), 0);
   const totalParachoque = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_parachoque || 0), 0);
@@ -126,21 +159,21 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   // Materials chart data
   const materialsPieData = useMemo(() => {
     return [
-      { name: 'Santinhos', value: totalSantinhos || currentBairro.deliveredMaterials.santinhos || 450, color: '#2563eb' },
-      { name: 'Adesivo Bola', value: totalAdesivoBola || currentBairro.deliveredMaterials.adesivo_bola || 180, color: '#f59e0b' },
-      { name: 'Colinhas', value: totalColinhas || currentBairro.deliveredMaterials.colinhas || 220, color: '#059669' },
-      { name: 'Parachoque', value: totalParachoque || currentBairro.deliveredMaterials.adesivo_parachoque || 60, color: '#9333ea' }
+      { name: 'Santinhos', value: totalSantinhos || currentBairro.deliveredMaterials?.santinhos || 450, color: '#2563eb' },
+      { name: 'Adesivo Bola', value: totalAdesivoBola || currentBairro.deliveredMaterials?.adesivo_bola || 180, color: '#f59e0b' },
+      { name: 'Colinhas', value: totalColinhas || currentBairro.deliveredMaterials?.colinhas || 220, color: '#059669' },
+      { name: 'Parachoque', value: totalParachoque || currentBairro.deliveredMaterials?.adesivo_parachoque || 60, color: '#9333ea' }
     ].filter(item => item.value > 0);
   }, [totalSantinhos, totalAdesivoBola, totalColinhas, totalParachoque, currentBairro]);
 
-  // Initialize and update the Leaflet map for this neighborhood
+  // Initialize and update the Leaflet map for this neighborhood or all qualified neighborhoods
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
       const map = L.map(mapContainerRef.current, {
         center: [currentBairro.lat, currentBairro.lng],
-        zoom: 15,
+        zoom: 13,
         zoomControl: true,
         attributionControl: false
       });
@@ -160,41 +193,76 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
     layerGroup.clearLayers();
 
-    // 0. Locate official polygon for this neighborhood
-    const officialBairro = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
-      o => o.id === currentBairro.id || o.name.toLowerCase() === currentBairro.name.toLowerCase()
-    );
-    const bairroPolygon: [number, number][] = (officialBairro?.polygon || (currentBairro as any).polygon || []) as [number, number][];
-
-    // Desenha o polígono da área delimitada oficial do bairro
-    if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
-      const polygonColor = officialBairro?.officialColor || '#2563eb';
-      const poly = L.polygon(bairroPolygon, {
-        color: polygonColor,
-        weight: 3.5,
-        dashArray: '8, 6',
-        fillColor: polygonColor,
-        fillOpacity: 0.12
+    if (isAllBairros) {
+      // 0. Desenha os polígonos de TODOS os bairros qualificados
+      qualifyingNeighborhoods.forEach(bairro => {
+        const officialBairro = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
+          o => o.id === bairro.id || o.name.toLowerCase() === bairro.name.toLowerCase()
+        );
+        const polyCoords = (officialBairro?.polygon || (bairro as any).polygon || []) as [number, number][];
+        if (polyCoords && Array.isArray(polyCoords) && polyCoords.length > 2) {
+          const polygonColor = officialBairro?.officialColor || '#2563eb';
+          const poly = L.polygon(polyCoords, {
+            color: polygonColor,
+            weight: 2.5,
+            dashArray: '6, 5',
+            fillColor: polygonColor,
+            fillOpacity: 0.08
+          });
+          poly.bindTooltip(`<strong>${bairro.name}</strong><br/>${bairro.zone}`, {
+            sticky: true,
+            className: 'text-xs'
+          });
+          layerGroup.addLayer(poly);
+        }
       });
-      poly.bindTooltip(`<strong>Área Delimitada Oficial</strong><br/>${currentBairro.name}`, {
-        sticky: true,
-        className: 'text-xs'
-      });
-      layerGroup.addLayer(poly);
-    }
 
-    // Auto-fit and center map on the EXACT delimited polygon of the neighborhood
-    if (prevBairroIdRef.current !== currentBairro.id) {
-      prevBairroIdRef.current = currentBairro.id;
+      // Centralizar e ajustar bounds para cobrir todos os registros dos bairros qualificados
+      if (prevBairroIdRef.current !== selectedBairroId) {
+        prevBairroIdRef.current = selectedBairroId;
+        if (bairroCheckIns.length > 0) {
+          const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
+          map.fitBounds(L.latLngBounds(latLngs), { padding: [35, 35], maxZoom: 15 });
+        } else {
+          map.setView([-27.5962, -48.6190], 13);
+        }
+      }
+    } else {
+      // 0. Locate official polygon for this single neighborhood
+      const officialBairro = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
+        o => o.id === currentBairro.id || o.name.toLowerCase() === currentBairro.name.toLowerCase()
+      );
+      const bairroPolygon: [number, number][] = (officialBairro?.polygon || (currentBairro as any).polygon || []) as [number, number][];
+
       if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
-        const bounds = L.latLngBounds(bairroPolygon);
-        map.fitBounds(bounds, { padding: [35, 35] });
-      } else if (bairroCheckIns.length > 0) {
-        const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
-        const bounds = L.latLngBounds(latLngs);
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
-      } else {
-        map.setView([currentBairro.lat, currentBairro.lng], 15);
+        const polygonColor = officialBairro?.officialColor || '#2563eb';
+        const poly = L.polygon(bairroPolygon, {
+          color: polygonColor,
+          weight: 3.5,
+          dashArray: '8, 6',
+          fillColor: polygonColor,
+          fillOpacity: 0.12
+        });
+        poly.bindTooltip(`<strong>Área Delimitada Oficial</strong><br/>${currentBairro.name}`, {
+          sticky: true,
+          className: 'text-xs'
+        });
+        layerGroup.addLayer(poly);
+      }
+
+      // Auto-fit and center map on the EXACT delimited polygon of the neighborhood
+      if (prevBairroIdRef.current !== currentBairro.id) {
+        prevBairroIdRef.current = currentBairro.id;
+        if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
+          const bounds = L.latLngBounds(bairroPolygon);
+          map.fitBounds(bounds, { padding: [35, 35] });
+        } else if (bairroCheckIns.length > 0) {
+          const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
+          const bounds = L.latLngBounds(latLngs);
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+        } else {
+          map.setView([currentBairro.lat, currentBairro.lng], 15);
+        }
       }
     }
 
@@ -226,12 +294,15 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       });
 
       const formattedDate = formatDateTimeBR(chk.timestamp);
-      const photoUrl = chk.photos && chk.photos.length > 0 ? chk.photos[0] : null;
+      const chkPhotos = getValidPhotosForCheckIn(chk);
+      const photoUrl = chkPhotos.length > 0 ? chkPhotos[0] : null;
+      const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
+      const bName = bMatch?.name || chk.neighborhoodName || 'São José';
 
       const popupContent = `
         <div class="p-2.5 text-slate-800 space-y-2 max-w-[260px] font-sans">
           <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
-            <span class="text-[10px] font-bold uppercase text-red-700">Rua Coberta (Vermelho)</span>
+            <span class="text-[10px] font-bold uppercase text-red-700">📍 ${bName}</span>
             <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Validado</span>
           </div>
           <h4 class="font-black text-sm text-slate-900 leading-tight">🛣️ ${chk.streetName}</h4>
@@ -271,7 +342,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       layerGroup.addLayer(pinMarker);
     });
 
-  }, [currentBairro, bairroCheckIns]);
+  }, [currentBairro, bairroCheckIns, isAllBairros, qualifyingNeighborhoods, selectedBairroId]);
 
   // Destroy map on unmount
   useEffect(() => {
@@ -307,15 +378,22 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
         <div className="flex items-center gap-2">
           <label className="text-xs font-semibold text-slate-700 whitespace-nowrap">Bairro:</label>
           <select
+            id="neighborhood-select-dropdown"
             value={selectedBairroId}
             onChange={(e) => handleSelectBairro(e.target.value)}
             className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer shadow-2xs"
           >
-            {neighborhoods.map(n => (
-              <option key={n.id} value={n.id}>
-                {n.name} ({n.zone}) - {n.population.toLocaleString('pt-BR')} hab.
-              </option>
-            ))}
+            <option value="todos" className="font-bold text-blue-700 bg-blue-50/50">
+              🌟 Todos os Bairros (Apenas com Ruas e Fotos: {qualifyingNeighborhoods.length} Bairros)
+            </option>
+            {neighborhoods.map(n => {
+              const qualifies = doesNeighborhoodQualify(n, checkIns);
+              return (
+                <option key={n.id} value={n.id}>
+                  {n.name} ({n.zone}) {qualifies ? '✓ Ruas & Fotos' : ''} - {n.population.toLocaleString('pt-BR')} hab.
+                </option>
+              );
+            })}
           </select>
         </div>
       </div>
@@ -336,7 +414,9 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
         <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-[10px] uppercase font-semibold text-slate-500 block">Ruas Registradas</span>
-          <strong className="text-base font-bold text-rose-700 font-mono">{bairroCheckIns.length} / {currentBairro.totalStreets}</strong>
+          <strong className="text-base font-bold text-rose-700 font-mono">
+            {bairroCheckIns.length} {isAllBairros ? `(${qualifyingNeighborhoods.length} bairros)` : `/ ${currentBairro.totalStreets}`}
+          </strong>
           <span className="text-[10px] text-rose-600 font-bold block mt-0.5">{coveragePercent}% Coberto</span>
         </div>
 
@@ -507,6 +587,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px]">
               <tr>
                 <th className="py-2.5 px-3">Data / Hora</th>
+                {isAllBairros && <th className="py-2.5 px-3">Bairro</th>}
                 <th className="py-2.5 px-3">Foto da Rua & Localização (GPS)</th>
                 <th className="py-2.5 px-3">Logradouro / Trecho</th>
                 <th className="py-2.5 px-3">Militante Responsável</th>
@@ -519,8 +600,10 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {bairroCheckIns.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-6 text-center text-slate-400">
-                    Nenhuma rua cadastrada neste bairro no período selecionado.
+                  <td colSpan={isAllBairros ? 9 : 8} className="py-6 text-center text-slate-400">
+                    {isAllBairros 
+                      ? 'Nenhum bairro com ruas registradas e fotos anexadas encontrado.' 
+                      : `Nenhuma rua cadastrada no bairro ${currentBairro.name} no período selecionado.`}
                   </td>
                 </tr>
               ) : (
@@ -529,12 +612,22 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                   const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
                   const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
                   const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : dbPhoto;
+                  const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
+                  const bName = bMatch?.name || chk.neighborhoodName || 'São José';
 
                   return (
                     <tr key={chk.id} className="hover:bg-slate-50/80 transition">
                       <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
                         {formatDateTimeBR(chk.timestamp)}
                       </td>
+                      
+                      {isAllBairros && (
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                            {bName}
+                          </span>
+                        </td>
+                      )}
                       
                       {/* Photo alongside location & GPS */}
                       <td className="py-2.5 px-3">
