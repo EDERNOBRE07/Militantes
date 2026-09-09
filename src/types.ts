@@ -68,6 +68,7 @@ export interface Militant {
   };
   totalKmWalked: number;
   totalStreetsCovered: number;
+  completedStreets?: number;
   deliveredMaterials: MaterialCount;
   weeklyGoalPercentage: number;
   batteryLevel?: number;
@@ -121,12 +122,13 @@ export interface StreetCheckIn {
   timestamp: string; // ISO date string
   latitude: number;
   longitude: number;
-  accuracyMeters: number;
+  accuracyMeters?: number;
+  gpsAccuracy?: number;
   photos: string[];
   materialsDelivered: MaterialCount;
   observations?: string;
-  status: 'validado' | 'pendente_auditoria' | 'rejeitado';
-  synced: boolean;
+  status?: 'validado' | 'pendente_auditoria' | 'rejeitado';
+  synced?: boolean;
 }
 
 export interface CampaignCalendarDay {

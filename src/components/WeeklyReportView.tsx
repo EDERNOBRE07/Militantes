@@ -388,26 +388,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     );
     const bairroPolygon: [number, number][] = (officialBairro?.polygon || (bairro as any).polygon || []) as [number, number][];
 
-    // Determine Geo Bounds delimitados exatamente pelo polígono do bairro
+    // 1. Zoom in no mapa para visualizar na janela do mapa apenas a região do bairro selecionado
     let minLat = 90;
     let maxLat = -90;
     let minLng = 180;
     let maxLng = -180;
 
-    if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 0) {
-      bairroPolygon.forEach(pt => {
-        const lat = Number(pt[0]);
-        const lng = Number(pt[1]);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          if (lat < minLat) minLat = lat;
-          if (lat > maxLat) maxLat = lat;
-          if (lng < minLng) minLng = lng;
-          if (lng > maxLng) maxLng = lng;
-        }
-      });
-    }
-
-    // Se houver check-ins, inclui no envelope caso algum ponto esteja ligeiramente na borda
     if (bCheckIns && bCheckIns.length > 0) {
       bCheckIns.forEach(chk => {
         if (chk.latitude && chk.longitude) {
@@ -416,33 +402,48 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           if (chk.longitude < minLng) minLng = chk.longitude;
           if (chk.longitude > maxLng) maxLng = chk.longitude;
         }
+        const roadBedCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, chk.latitude, chk.longitude);
+        roadBedCoords.forEach(([lat, lng]) => {
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+        });
       });
-    }
 
-    // Fallback de segurança se coordenadas estiverem inválidas
-    if (minLat >= maxLat || minLng >= maxLng) {
-      minLat = (bairro.lat || -27.5962) - 0.012;
-      maxLat = (bairro.lat || -27.5962) + 0.012;
-      minLng = (bairro.lng || -48.6190) - 0.015;
-      maxLng = (bairro.lng || -48.6190) + 0.015;
+      // Margem proporcional de 22% ao redor das ruas auditadas do bairro
+      const padLat = Math.max((maxLat - minLat) * 0.22, 0.0016);
+      const padLng = Math.max((maxLng - minLng) * 0.22, 0.0020);
+      minLat -= padLat;
+      maxLat += padLat;
+      minLng -= padLng;
+      maxLng += padLng;
+    } else {
+      const bLat = bairro.lat || -27.5962;
+      const bLng = bairro.lng || -48.6190;
+      minLat = bLat - 0.0040;
+      maxLat = bLat + 0.0040;
+      minLng = bLng - 0.0050;
+      maxLng = bLng + 0.0050;
     }
 
     const centerLat = (minLat + maxLat) / 2;
     const centerLng = (minLng + maxLng) / 2;
-    const rawLatSpan = Math.max(maxLat - minLat, 0.003);
-    const rawLngSpan = Math.max(maxLng - minLng, 0.004);
+    const rawLatSpan = Math.max(maxLat - minLat, 0.002);
+    const rawLngSpan = Math.max(maxLng - minLng, 0.003);
 
-    // Determina o nível exato de zoom mercator para enquadrar perfeitamente o polígono no canvas
-    const zoomLng = Math.log2((canvas.width * 0.82) / ((rawLngSpan / 360) * 256));
+    // Determina o nível exato de zoom mercator com Zoom-in no bairro selecionado
+    const zoomLng = Math.log2((canvas.width * 0.85) / ((rawLngSpan / 360) * 256));
     const latRadMin = (minLat * Math.PI) / 180;
     const latRadMax = (maxLat * Math.PI) / 180;
     const yMin = (1 - Math.log(Math.tan(latRadMax) + 1 / Math.cos(latRadMax)) / Math.PI) / 2;
     const yMax = (1 - Math.log(Math.tan(latRadMin) + 1 / Math.cos(latRadMin)) / Math.PI) / 2;
     const ySpan = Math.abs(yMax - yMin);
-    const zoomLat = Math.log2((canvas.height * 0.78) / (ySpan * 256));
+    const zoomLat = Math.log2((canvas.height * 0.80) / (ySpan * 256));
 
     let zoom = Math.floor(Math.min(zoomLng, zoomLat));
-    zoom = Math.min(Math.max(zoom, 13), 16);
+    // Zoom in estrito para visualizar apenas o bairro selecionado em todos os relatórios
+    zoom = Math.min(Math.max(zoom, 16), 17);
 
     // Web Mercator conversions (EPSG:3857)
     const latLngToWorldPixel = (lat: number, lng: number, z: number) => {

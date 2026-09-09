@@ -125,7 +125,7 @@ async function startServer() {
       if (!m) return true;
       const idStr = String(m.id || '');
       if (allDeletedIds.has(idStr)) return true;
-      const nameLower = String(m.name || '').trim().lower();
+      const nameLower = String(m.name || '').trim().toLowerCase();
       if (DELETED_NAMES_SET.has(nameLower)) return true;
       if (nameLower === 'douglas' || nameLower === 'douglas ') return true;
       const phoneClean = String(m.phone || '').replace(/\D/g, '');

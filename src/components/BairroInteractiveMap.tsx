@@ -112,20 +112,20 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
         chk.longitude
       );
 
-      // Linha de brilho vermelho (glow)
+      // Linha de brilho vermelho (glow) sobre o leito viário
       const glowLine = L.polyline(streetCoords, {
         color: '#ef4444',
-        weight: 9,
-        opacity: 0.45,
+        weight: 12,
+        opacity: 0.5,
         lineCap: 'round',
         lineJoin: 'round'
       });
 
-      // Linha central nítida em vermelho escarlate
+      // Linha central nítida em vermelho escarlate exatamente no leito da via
       const coreLine = L.polyline(streetCoords, {
         color: '#dc2626',
-        weight: 4.5,
-        opacity: 0.98,
+        weight: 5.5,
+        opacity: 1.0,
         lineCap: 'round',
         lineJoin: 'round'
       });
@@ -207,17 +207,30 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
         map.setView([-27.5962, -48.6190], 13);
       }
     } else {
-      const official = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
-        o => o.id === bairro.id || o.name.toLowerCase() === bairro.name.toLowerCase()
-      );
-      const polyCoords = (official?.polygon || (bairro as any).polygon || []) as [number, number][];
-      if (polyCoords && Array.isArray(polyCoords) && polyCoords.length > 2) {
-        map.fitBounds(L.latLngBounds(polyCoords), { padding: [30, 30] });
-      } else if (checkIns.length > 0) {
-        const latLngs = checkIns.map(c => [c.latitude, c.longitude] as [number, number]);
-        map.fitBounds(L.latLngBounds(latLngs), { padding: [35, 35], maxZoom: 16 });
+      // 1. Zoom in estrito para visualizar na janela do mapa apenas a região do bairro selecionado
+      const targetBounds: [number, number][] = [];
+      if (checkIns.length > 0) {
+        checkIns.forEach(c => {
+          if (c.latitude && c.longitude) {
+            targetBounds.push([c.latitude, c.longitude]);
+          }
+          const streetCoords = getStreetRoadBedCoordinates(c.id, c.streetName, c.latitude, c.longitude);
+          streetCoords.forEach(pt => targetBounds.push(pt));
+        });
+      }
+
+      if (targetBounds.length > 0) {
+        map.fitBounds(L.latLngBounds(targetBounds), {
+          padding: [30, 30],
+          maxZoom: 17
+        });
+        if (map.getZoom() < 16) {
+          map.setZoom(16);
+        }
       } else {
-        map.setView([initialLat, initialLng], 15);
+        const centerLat = bairro.lat || initialLat;
+        const centerLng = bairro.lng || initialLng;
+        map.setView([centerLat, centerLng], 16);
       }
     }
 
