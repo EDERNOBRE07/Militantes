@@ -45,7 +45,6 @@ async function startServer() {
     'mil-douglas-005',
     'mil-1787842651982',
     'mil-1787842613621',
-    'mil-1787842380824',
     'mil-1787842613623',
     'user-militante-01',
     'user-militante-02',

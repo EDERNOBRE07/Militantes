@@ -4,6 +4,7 @@ import { Neighborhood, Militant, Van, StreetCheckIn } from '../types';
 import { SAO_JOSE_CENTER } from '../data/saoJoseData';
 import { formatDateTimeBR } from '../utils/formatters';
 import { getCalibratedCheckInPosition, resolveExactStreetCoordinates } from '../utils/saoJoseStreetsGeo';
+import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
 import { EditStreetModal } from './EditStreetModal';
 import { StorageService } from '../services/storageService';
 import {
@@ -809,6 +810,29 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
 
           </div>
         `;
+
+        // Pintar o leito viário em vermelho sobre o mapa
+        const roadCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, pinLat, pinLng);
+        if (roadCoords && roadCoords.length >= 2) {
+          const glowLine = L.polyline(roadCoords, {
+            color: '#ef4444',
+            weight: 9,
+            opacity: 0.45,
+            lineCap: 'round',
+            lineJoin: 'round'
+          });
+          const coreLine = L.polyline(roadCoords, {
+            color: '#dc2626',
+            weight: 4.5,
+            opacity: 0.95,
+            lineCap: 'round',
+            lineJoin: 'round'
+          });
+          glowLine.bindPopup(popupHtml, { maxWidth: 290 });
+          coreLine.bindPopup(popupHtml, { maxWidth: 290 });
+          layerGroup.addLayer(glowLine);
+          layerGroup.addLayer(coreLine);
+        }
 
         const marker = L.marker([pinLat, pinLng], { icon: streetPinIcon });
         marker.bindPopup(popupHtml, { maxWidth: 290 });

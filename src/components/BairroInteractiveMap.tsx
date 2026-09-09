@@ -222,11 +222,8 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       if (targetBounds.length > 0) {
         map.fitBounds(L.latLngBounds(targetBounds), {
           padding: [30, 30],
-          maxZoom: 17
+          maxZoom: 16
         });
-        if (map.getZoom() < 16) {
-          map.setZoom(16);
-        }
       } else {
         const centerLat = bairro.lat || initialLat;
         const centerLng = bairro.lng || initialLng;

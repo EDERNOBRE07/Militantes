@@ -1,5 +1,8 @@
 // Calibrated Real Road Bed Geometries for Streets in São José - SC
 // OpenStreetMap Ways & Linestrings aligned precisely with pins
+import osmRoadsData from '../data/saoJoseOsmRoads.json';
+
+const OSM_ROADS = osmRoadsData as unknown as Record<string, [number, number][][]>;
 
 export const CHECKIN_STREET_GEOMETRIES: Record<string, [number, number][]> = {
   "chk-1788547583458-v4p8v-mil1787843294191": [
@@ -6683,8 +6686,41 @@ export const KNOWN_STREET_ROADBED_GEOMETRIES: Record<string, [number, number][]>
   ]
 };
 
+const STREET_ALIASES: Record<string, string> = {
+  "joao adalgisio filipi": "joao adalgisio philippi",
+  "joao adalgisio philippi": "joao adalgisio philippi",
+  "eliane gerlack": "eliane gerlach martins",
+  "eliane gerlach": "eliane gerlach martins",
+  "viviana guanabara": "viviane guanabara",
+  "domingos jalmeno costa": "domingos jalmeno da costa",
+  "aristides da silva": "aristides ernesto da silva",
+  "alice santo da rosa": "alice santos da rosa",
+  "profa evanilda maria koerich": "professora evanilda maria koerich",
+  "prof evanilda maria koerich": "professora evanilda maria koerich",
+  "estevao de andrade": "estevao de andrade"
+};
+
+function normalizeRoadKey(str: string): string {
+  return (str || "")
+    .replace(/\(.*?\)/g, "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^(r\.|rua|rod\.|rodovia|av\.|avenida|serv\.|servidao|servidão|travessa|tv\.|alameda|al\.|estrada|estr\.)\s+/i, "")
+    .replace(/[^a-z0-9]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function distCoord(p1: [number, number], p2: [number, number]): number {
+  const dx = p1[0] - p2[0];
+  const dy = (p1[1] - p2[1]) * Math.cos(p1[0] * Math.PI / 180);
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
 /**
  * Retorna as coordenadas do leito da rua exatamente onde consta o pin
+ * Utiliza o banco vetorial completo OpenStreetMap de São José (2.104 vias cartografadas)
  */
 export function getStreetRoadBedCoordinates(
   checkInId: string,
@@ -6698,62 +6734,76 @@ export function getStreetRoadBedCoordinates(
   }
 
   // 2. Normalização fonética e estrutural do nome da rua
-  const rawClean = (streetName || "")
-    .replace(/\(.*?\)/g, "")
-    .trim()
-    .toLowerCase();
-
-  // Remove acentuação
-  const clean = rawClean
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-  // Tenta pelo nome direto
-  if (KNOWN_STREET_ROADBED_GEOMETRIES[rawClean]) {
-    return KNOWN_STREET_ROADBED_GEOMETRIES[rawClean];
-  }
-  if (KNOWN_STREET_ROADBED_GEOMETRIES[clean]) {
-    return KNOWN_STREET_ROADBED_GEOMETRIES[clean];
+  let norm = normalizeRoadKey(streetName);
+  if (STREET_ALIASES[norm]) {
+    norm = STREET_ALIASES[norm];
   }
 
-  // Variações com e sem prefixo (r. / rua / servidão / av.)
-  const prefixes = ["r. ", "rua ", "av. ", "avenida ", "serv. ", "servidão ", "servidao ", "travessa ", "tv. "];
-  for (const pref of prefixes) {
-    if (rawClean.startsWith(pref)) {
-      const baseRaw = rawClean.substring(pref.length).trim();
-      const baseClean = clean.replace(new RegExp("^" + pref.trim()), "").trim();
-      
-      // Procura com "rua ", "r. ", etc
-      const candidates = [
-        baseRaw,
-        baseClean,
-        "rua " + baseRaw,
-        "rua " + baseClean,
-        "r. " + baseRaw,
-        "r. " + baseClean,
-        "av. " + baseRaw,
-        "avenida " + baseRaw
-      ];
-      for (const cand of candidates) {
-        if (KNOWN_STREET_ROADBED_GEOMETRIES[cand]) {
-          return KNOWN_STREET_ROADBED_GEOMETRIES[cand];
+  // 3. Busca nas vias OpenStreetMap de São José
+  let candidates: [number, number][][] | undefined = OSM_ROADS[norm];
+  if (!candidates) {
+    // Busca difusa / substring no índice OSM
+    for (const [k, v] of Object.entries(OSM_ROADS)) {
+      if (norm.length > 4 && (k === norm || k.includes(norm) || norm.includes(k))) {
+        candidates = v;
+        break;
+      }
+    }
+  }
+
+  if (candidates && candidates.length > 0) {
+    if (candidates.length === 1 || !pinLat || !pinLng) {
+      return candidates[0];
+    }
+    // Seleciona o trecho que passa mais próximo do ponto de check-in (pinLat, pinLng)
+    let best = candidates[0];
+    let minD = Infinity;
+    candidates.forEach(comp => {
+      comp.forEach(p => {
+        const d = distCoord(p, [pinLat, pinLng]);
+        if (d < minD) {
+          minD = d;
+          best = comp;
+        }
+      });
+    });
+    return best;
+  }
+
+  // 4. Busca nas geometrias conhecidas pré-calibradas
+  const rawClean = (streetName || "").replace(/\(.*?\)/g, "").trim().toLowerCase();
+  const clean = rawClean.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (KNOWN_STREET_ROADBED_GEOMETRIES[rawClean]) return KNOWN_STREET_ROADBED_GEOMETRIES[rawClean];
+  if (KNOWN_STREET_ROADBED_GEOMETRIES[clean]) return KNOWN_STREET_ROADBED_GEOMETRIES[clean];
+
+  for (const key of Object.keys(KNOWN_STREET_ROADBED_GEOMETRIES)) {
+    const normKey = normalizeRoadKey(key);
+    if (normKey === norm || (norm.length > 4 && (normKey.includes(norm) || norm.includes(normKey)))) {
+      return KNOWN_STREET_ROADBED_GEOMETRIES[key];
+    }
+  }
+
+  // 5. Fallback espacial: busca a via real mais próxima no município de São José dentro de 150 metros
+  if (pinLat && pinLng) {
+    let nearestComp: [number, number][] | null = null;
+    let minD = 0.0015; // ~150 metros
+    for (const comps of Object.values(OSM_ROADS)) {
+      for (const comp of comps) {
+        for (const p of comp) {
+          const d = distCoord(p, [pinLat, pinLng]);
+          if (d < minD) {
+            minD = d;
+            nearestComp = comp;
+          }
         }
       }
     }
-  }
-
-  // Busca por correspondência difusa nas chaves conhecidas
-  const strippedClean = clean.replace(/^(r\.|rua|av\.|avenida|serv\.|servidao|servidão)\s+/, "").trim();
-  if (strippedClean.length >= 4) {
-    for (const key of Object.keys(KNOWN_STREET_ROADBED_GEOMETRIES)) {
-      const normKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/^(r\.|rua|av\.|avenida|serv\.|servidao|servidão)\s+/, "").trim();
-      if (normKey === strippedClean || normKey.includes(strippedClean) || strippedClean.includes(normKey)) {
-        return KNOWN_STREET_ROADBED_GEOMETRIES[key];
-      }
+    if (nearestComp) {
+      return nearestComp;
     }
   }
 
-  // 3. Fallback inteligente: Leito viário perfeitamente horizontal/alinhado com a malha da via
+  // 6. Fallback final: Alinhamento vetorial baseado na coordenada do pin
   return [
     [pinLat, pinLng - 0.00085],
     [pinLat, pinLng - 0.00045],

@@ -442,8 +442,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     const zoomLat = Math.log2((canvas.height * 0.80) / (ySpan * 256));
 
     let zoom = Math.floor(Math.min(zoomLng, zoomLat));
-    // Zoom in estrito para visualizar apenas o bairro selecionado em todos os relatórios
-    zoom = Math.min(Math.max(zoom, 16), 17);
+    // Zoom calibrado para enquadrar todas as vias do bairro perfeitamente
+    zoom = Math.min(Math.max(zoom, 14), 16);
 
     // Web Mercator conversions (EPSG:3857)
     const latLngToWorldPixel = (lat: number, lng: number, z: number) => {
