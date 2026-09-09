@@ -1,48 +1,30 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import L from 'leaflet';
+import React, { useState, useMemo } from 'react';
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Tooltip as RechartsTooltip
 } from 'recharts';
 import { Neighborhood, StreetCheckIn, Militant, Team } from '../types';
-import { formatDateTimeBR } from '../utils/formatters';
-import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
-import { StorageService } from '../services/storageService';
-import { compressImageFile } from '../utils/imageCompressor';
-import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
 import {
   getQualifyingNeighborhoods,
   doesNeighborhoodQualify,
   isCheckInInNeighborhood,
   getCheckInsForNeighborhood,
-  getValidPhotosForCheckIn
+  getAllPhotosForCheckIn
 } from '../utils/neighborhoodHelpers';
+import { BairroInteractiveMap } from './BairroInteractiveMap';
+import { StreetAuditRowWithGallery } from './StreetAuditRowWithGallery';
 import {
-  MapPin,
   Building2,
-  CheckCircle2,
-  TrendingUp,
-  Image as ImageIcon,
-  Users,
-  Award,
-  Layers,
-  Sparkles,
-  ExternalLink,
-  Target,
-  BarChart3,
-  Calendar,
   Compass,
+  BarChart3,
+  CheckCircle2,
   Camera,
-  Upload
+  MapPin,
+  TrendingUp,
+  Award
 } from 'lucide-react';
 
 interface NeighborhoodReportSectionProps {
@@ -83,11 +65,6 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     return getQualifyingNeighborhoods(neighborhoods, checkIns);
   }, [neighborhoods, checkIns]);
 
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
-  const layerGroupRef = useRef<L.LayerGroup | null>(null);
-  const prevBairroIdRef = useRef<string>('');
-
   const currentBairro = useMemo(() => {
     if (isAllBairros) {
       const totalPop = qualifyingNeighborhoods.reduce((acc, n) => acc + (n.population || 0), 0);
@@ -124,25 +101,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     return getCheckInsForNeighborhood(currentBairro, checkIns);
   }, [isAllBairros, qualifyingNeighborhoods, currentBairro, checkIns]);
 
-  // Recupera todas as fotos válidas vinculadas aos bairros filtrados
-  const allBairroPhotos = useMemo(() => {
-    return bairroCheckIns.flatMap((chk) => {
-      const validPhotos = getValidPhotosForCheckIn(chk);
-      const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
-      const bName = bMatch?.name || chk.neighborhoodName || 'Bairro';
-
-      return validPhotos.map((photo, pIdx) => ({
-        key: `${chk.id}-${pIdx}`,
-        photo,
-        streetName: chk.streetName,
-        neighborhoodName: bName,
-        timestamp: chk.timestamp,
-        militantName: chk.militantName
-      }));
-    });
-  }, [bairroCheckIns, neighborhoods]);
-
-  // Aggregate stats for current neighborhood or all qualified neighborhoods
+  // Estatísticas agregadas
   const totalSantinhos = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
   const totalAdesivoBola = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_bola || 0), 0);
   const totalParachoque = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_parachoque || 0), 0);
@@ -156,206 +115,18 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     100
   );
 
-  // Materials chart data
+  // Dados para o gráfico de pizza de materiais
   const materialsPieData = useMemo(() => {
     return [
-      { name: 'Santinhos', value: totalSantinhos || currentBairro.deliveredMaterials?.santinhos || 450, color: '#2563eb' },
-      { name: 'Adesivo Bola', value: totalAdesivoBola || currentBairro.deliveredMaterials?.adesivo_bola || 180, color: '#f59e0b' },
-      { name: 'Colinhas', value: totalColinhas || currentBairro.deliveredMaterials?.colinhas || 220, color: '#059669' },
-      { name: 'Parachoque', value: totalParachoque || currentBairro.deliveredMaterials?.adesivo_parachoque || 60, color: '#9333ea' }
+      { name: 'Santinhos', value: totalSantinhos, color: '#2563eb' },
+      { name: 'Adesivos Bola', value: totalAdesivoBola, color: '#f59e0b' },
+      { name: 'Adesivo Para-choque', value: totalParachoque, color: '#8b5cf6' },
+      { name: 'Colinhas', value: totalColinhas, color: '#10b981' }
     ].filter(item => item.value > 0);
-  }, [totalSantinhos, totalAdesivoBola, totalColinhas, totalParachoque, currentBairro]);
-
-  // Initialize and update the Leaflet map for this neighborhood or all qualified neighborhoods
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [currentBairro.lat, currentBairro.lng],
-        zoom: 13,
-        zoomControl: true,
-        attributionControl: false
-      });
-
-      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        crossOrigin: true
-      }).addTo(map);
-
-      layerGroupRef.current = L.layerGroup().addTo(map);
-      mapInstanceRef.current = map;
-    }
-
-    const map = mapInstanceRef.current;
-    const layerGroup = layerGroupRef.current;
-    if (!map || !layerGroup) return;
-
-    layerGroup.clearLayers();
-
-    if (isAllBairros) {
-      // 0. Desenha os polígonos de TODOS os bairros qualificados
-      qualifyingNeighborhoods.forEach(bairro => {
-        const officialBairro = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
-          o => o.id === bairro.id || o.name.toLowerCase() === bairro.name.toLowerCase()
-        );
-        const polyCoords = (officialBairro?.polygon || (bairro as any).polygon || []) as [number, number][];
-        if (polyCoords && Array.isArray(polyCoords) && polyCoords.length > 2) {
-          const polygonColor = officialBairro?.officialColor || '#2563eb';
-          const poly = L.polygon(polyCoords, {
-            color: polygonColor,
-            weight: 2.5,
-            dashArray: '6, 5',
-            fillColor: polygonColor,
-            fillOpacity: 0.08
-          });
-          poly.bindTooltip(`<strong>${bairro.name}</strong><br/>${bairro.zone}`, {
-            sticky: true,
-            className: 'text-xs'
-          });
-          layerGroup.addLayer(poly);
-        }
-      });
-
-      // Centralizar e ajustar bounds para cobrir todos os registros dos bairros qualificados
-      if (prevBairroIdRef.current !== selectedBairroId) {
-        prevBairroIdRef.current = selectedBairroId;
-        if (bairroCheckIns.length > 0) {
-          const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
-          map.fitBounds(L.latLngBounds(latLngs), { padding: [35, 35], maxZoom: 15 });
-        } else {
-          map.setView([-27.5962, -48.6190], 13);
-        }
-      }
-    } else {
-      // 0. Locate official polygon for this single neighborhood
-      const officialBairro = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
-        o => o.id === currentBairro.id || o.name.toLowerCase() === currentBairro.name.toLowerCase()
-      );
-      const bairroPolygon: [number, number][] = (officialBairro?.polygon || (currentBairro as any).polygon || []) as [number, number][];
-
-      if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
-        const polygonColor = officialBairro?.officialColor || '#2563eb';
-        const poly = L.polygon(bairroPolygon, {
-          color: polygonColor,
-          weight: 3.5,
-          dashArray: '8, 6',
-          fillColor: polygonColor,
-          fillOpacity: 0.12
-        });
-        poly.bindTooltip(`<strong>Área Delimitada Oficial</strong><br/>${currentBairro.name}`, {
-          sticky: true,
-          className: 'text-xs'
-        });
-        layerGroup.addLayer(poly);
-      }
-
-      // Auto-fit and center map on the EXACT delimited polygon of the neighborhood
-      if (prevBairroIdRef.current !== currentBairro.id) {
-        prevBairroIdRef.current = currentBairro.id;
-        if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
-          const bounds = L.latLngBounds(bairroPolygon);
-          map.fitBounds(bounds, { padding: [35, 35] });
-        } else if (bairroCheckIns.length > 0) {
-          const latLngs = bairroCheckIns.map(c => [c.latitude, c.longitude] as [number, number]);
-          const bounds = L.latLngBounds(latLngs);
-          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
-        } else {
-          map.setView([currentBairro.lat, currentBairro.lng], 15);
-        }
-      }
-    }
-
-    // Draw all check-in streets in this neighborhood painted in RED exactly on the street's road bed
-    bairroCheckIns.forEach((chk) => {
-      const streetCoords = getStreetRoadBedCoordinates(
-        chk.id,
-        chk.streetName,
-        chk.latitude,
-        chk.longitude
-      );
-
-      // Glow Red Line
-      const glowLine = L.polyline(streetCoords, {
-        color: '#ef4444',
-        weight: 9,
-        opacity: 0.45,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-
-      // Core Red Line
-      const coreLine = L.polyline(streetCoords, {
-        color: '#dc2626',
-        weight: 4.5,
-        opacity: 0.98,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
-
-      const formattedDate = formatDateTimeBR(chk.timestamp);
-      const chkPhotos = getValidPhotosForCheckIn(chk);
-      const photoUrl = chkPhotos.length > 0 ? chkPhotos[0] : null;
-      const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
-      const bName = bMatch?.name || chk.neighborhoodName || 'São José';
-
-      const popupContent = `
-        <div class="p-2.5 text-slate-800 space-y-2 max-w-[260px] font-sans">
-          <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
-            <span class="text-[10px] font-bold uppercase text-red-700">📍 ${bName}</span>
-            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Validado</span>
-          </div>
-          <h4 class="font-black text-sm text-slate-900 leading-tight">🛣️ ${chk.streetName}</h4>
-          ${photoUrl ? `<img src="${photoUrl}" class="w-full h-24 object-cover rounded-lg border border-slate-200 mt-1 shadow-2xs" />` : ''}
-          <div class="p-1.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-0.5">
-            <p><strong>Militante:</strong> ${chk.militantName}</p>
-            <p><strong>Data:</strong> ${formattedDate}</p>
-            <p><strong>Materiais:</strong> ${chk.materialsDelivered.santinhos} santinhos | ${chk.materialsDelivered.abordagens || 0} abordagens</p>
-          </div>
-        </div>
-      `;
-
-      glowLine.bindPopup(popupContent, { maxWidth: 280 });
-      coreLine.bindPopup(popupContent, { maxWidth: 280 });
-      layerGroup.addLayer(glowLine);
-      layerGroup.addLayer(coreLine);
-
-      // Red PIN with Checkmark
-      const pinIcon = L.divIcon({
-        className: 'custom-red-pin-icon',
-        html: `
-          <div class="relative group cursor-pointer" style="transform: translate(-50%, -100%);">
-            <div class="absolute -inset-1 rounded-full bg-rose-500/50 animate-ping"></div>
-            <div class="relative w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-red-800 border-2 border-white shadow-xl flex items-center justify-center text-white text-xs font-bold ring-2 ring-red-400 hover:scale-125 transition-transform">
-              📍
-            </div>
-            <div class="w-1.5 h-1.5 bg-red-700 mx-auto -mt-0.5 rounded-b-full"></div>
-            <div class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-[7px] text-white font-black shadow-xs">✓</div>
-          </div>
-        `,
-        iconSize: [28, 32],
-        iconAnchor: [14, 30]
-      });
-
-      const pinMarker = L.marker([chk.latitude, chk.longitude], { icon: pinIcon });
-      pinMarker.bindPopup(popupContent, { maxWidth: 280 });
-      layerGroup.addLayer(pinMarker);
-    });
-
-  }, [currentBairro, bairroCheckIns, isAllBairros, qualifyingNeighborhoods, selectedBairroId]);
-
-  // Destroy map on unmount
-  useEffect(() => {
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
+  }, [totalSantinhos, totalAdesivoBola, totalParachoque, totalColinhas]);
 
   return (
-    <div className="space-y-6 pt-2">
+    <div className="space-y-8 pt-2">
       
       {/* Header & Neighborhood Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
@@ -371,7 +142,9 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             Relatório Territorial por Bairros & Mapas de Ruas
           </h3>
           <p className="text-xs text-slate-500">
-            Selecione o bairro para auditar o mapa de ruas percorridas (em vermelho), galeria de fotos de comprovação, gráficos e tabela.
+            {isAllBairros
+              ? `Exibindo visão consolidada: Mapa Geral, KPIs e Dashboards detalhados de cada um dos ${qualifyingNeighborhoods.length} bairros qualificados (com ruas e fotos anexadas).`
+              : `Auditoria detalhada do bairro ${currentBairro.name}: mapa com ruas pintadas em vermelho, KPIs e sequência completa de ruas com fotos.`}
           </p>
         </div>
 
@@ -398,324 +171,452 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
         </div>
       </div>
 
-      {/* Neighborhood Overview Summary Banner */}
-      <div id="neighborhood-report-cards" className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
-          <span className="text-[10px] uppercase font-semibold text-slate-500 block">População (IBGE)</span>
-          <strong className="text-base font-bold text-slate-900 font-mono">{currentBairro.population.toLocaleString('pt-BR')} hab.</strong>
-          <span className="text-[10px] text-slate-400 block mt-0.5">{currentBairro.zone}</span>
-        </div>
+      {/* =========================================================================
+          ESTRUTURA SOLICITADA PARA "TODOS OS BAIRROS":
+          1 - Mapa Geral dos Bairros
+          2 - KPIs e Dados
+          3 - Dashboard do 1º Bairro (Começando pelo Mapa do Bairro com ruas pintadas)
+              3a Dados da Rua 1
+              3b Galeria de fotos da Rua 1
+              3c Dados da Rua 2
+              3d Galeria de fotos da Rua 2...
+          4 - Dashboard do 2º Bairro (Começando pelo Mapa do Bairro com ruas pintadas)
+              4a Dados da Rua 1
+              4b Galeria de fotos da Rua 1...
+          ... Segue nessa ordem até o último Bairro!
+         ========================================================================= */}
 
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
-          <span className="text-[10px] uppercase font-semibold text-slate-500 block">Eleitores Estimados</span>
-          <strong className="text-base font-bold text-blue-700 font-mono">{currentBairro.votersEstimated.toLocaleString('pt-BR')}</strong>
-          <span className="text-[10px] text-blue-600 block mt-0.5">Aptos a Votar</span>
-        </div>
+      {isAllBairros ? (
+        <div className="space-y-10">
 
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
-          <span className="text-[10px] uppercase font-semibold text-slate-500 block">Ruas Registradas</span>
-          <strong className="text-base font-bold text-rose-700 font-mono">
-            {bairroCheckIns.length} {isAllBairros ? `(${qualifyingNeighborhoods.length} bairros)` : `/ ${currentBairro.totalStreets}`}
-          </strong>
-          <span className="text-[10px] text-rose-600 font-bold block mt-0.5">{coveragePercent}% Coberto</span>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
-          <span className="text-[10px] uppercase font-semibold text-slate-500 block">Abordagens Diretas</span>
-          <strong className="text-base font-bold text-purple-700 font-mono">{totalAbordagens} eleitores</strong>
-          <span className="text-[10px] text-purple-600 block mt-0.5">{totalComercios} comércios</span>
-        </div>
-
-        <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
-          <span className="text-[10px] uppercase font-semibold text-slate-500 block">Materiais Entregues</span>
-          <strong className="text-base font-bold text-emerald-700 font-mono">{totalMateriais.toLocaleString('pt-BR')}</strong>
-          <span className="text-[10px] text-emerald-600 block mt-0.5">{totalSantinhos} santinhos</span>
-        </div>
-      </div>
-
-      {/* SECTION 1: MAP WITH STREETS PAINTED RED & CHARTS */}
-      <div id="neighborhood-report-visuals" className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* Interactive Map Component */}
-        <div id="neighborhood-report-map-wrapper" className="lg:col-span-7 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-600 animate-pulse"></span>
-              <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">
-                Mapa Territorial de {currentBairro.name} • Ruas Pintadas em Vermelho
-              </h4>
-            </div>
-            <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
-              {bairroCheckIns.length} ruas sinalizadas
-            </span>
-          </div>
-
-          <div className="relative w-full h-[360px] rounded-lg overflow-hidden border border-slate-200">
-            <div ref={mapContainerRef} className="w-full h-full z-0" />
-            
-            {/* Overlay Map Badge */}
-            <div className="absolute bottom-2.5 left-2.5 z-[1000] bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] shadow-sm text-slate-700 space-y-0.5">
-              <div className="flex items-center gap-1.5 font-bold text-rose-700">
-                <span className="w-3 h-1 bg-red-600 rounded-sm"></span> Ruas Auditadas (Linha Vermelha)
+          {/* 1. MAPA GERAL DOS BAIRROS */}
+          <div className="space-y-3" id="neighborhood-report-visuals">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                  1
+                </span>
+                <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-blue-600" />
+                  Mapa Geral dos Bairros Auditados de São José
+                </h4>
               </div>
-              <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-                <span className="text-xs">📍</span> Pins Georreferenciados (GPS)
-              </div>
+              <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold">
+                {qualifyingNeighborhoods.length} Bairros Qualificados • {bairroCheckIns.length} Ruas Sinalizadas
+              </span>
             </div>
-          </div>
-        </div>
 
-        {/* Charts Panel for this Neighborhood */}
-        <div id="neighborhood-report-charts-card" className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs flex flex-col justify-between space-y-3">
-          <div className="border-b border-slate-100 pb-2">
-            <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-              <BarChart3 className="w-4 h-4 text-blue-600" />
-              Distribuição de Materiais & Abordagens em {currentBairro.name}
-            </h4>
-            <p className="text-[11px] text-slate-500">Volume de santinhos, adesivos e contatos diretos no bairro</p>
-          </div>
-
-          <div className="h-44 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={materialsPieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={35}
-                  outerRadius={58}
-                  paddingAngle={3}
-                >
-                  {materialsPieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <RechartsTooltip
-                  formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unidades`, name]}
-                  contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100 text-[11px]">
-            {materialsPieData.map(item => (
-              <div key={item.name} className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-slate-600 truncate">{item.name}:</span>
-                <strong className="text-slate-900 font-mono">{item.value.toLocaleString('pt-BR')}</strong>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-slate-600 font-medium">Atingimento da Meta Territorial:</span>
-              <strong className="text-slate-900 font-bold">{coveragePercent}%</strong>
-            </div>
-            <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-              <div
-                className={`h-full rounded-full ${
-                  coveragePercent >= 75 ? 'bg-emerald-500' : (coveragePercent >= 45 ? 'bg-blue-500' : 'bg-amber-500')
-                }`}
-                style={{ width: `${coveragePercent}%` }}
+            <div id="neighborhood-report-map-wrapper">
+              <BairroInteractiveMap
+                mapId="map-geral-todos-bairros"
+                bairro={currentBairro}
+                checkIns={bairroCheckIns}
+                isGeneralMap={true}
+                qualifyingNeighborhoods={qualifyingNeighborhoods}
+                height="440px"
+                title="Visão Geral Integrada • Delimitações Oficiais e Ruas Pintadas em Vermelho"
               />
             </div>
           </div>
-        </div>
 
-      </div>
+          {/* 2. KPIS E DADOS CONSOLIDADOS */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                  2
+                </span>
+                <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  KPIs e Dados Consolidados da Campanha
+                </h4>
+              </div>
+              <span className="text-xs text-slate-500 font-medium">
+                Consolidação dos {qualifyingNeighborhoods.length} Bairros Auditados
+              </span>
+            </div>
 
-      {/* SECTION 2: PHOTO PROOF GALLERY FOR THIS NEIGHBORHOOD */}
-      <div id="neighborhood-report-photos-card" className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 shadow-2xs">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <div className="flex items-center gap-2">
-            <ImageIcon className="w-4 h-4 text-blue-600" />
-            <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">
-              Galeria de Comprovação Fotográfica das Ruas • {currentBairro.name}
-            </h4>
-          </div>
-          <span className="text-xs text-slate-500 font-medium">
-            {allBairroPhotos.length} fotos registradas
-          </span>
-        </div>
+            {/* Cards de Métricas */}
+            <div id="neighborhood-report-cards" className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                <span className="text-[10px] uppercase font-semibold text-slate-500 block">População Auditada (IBGE)</span>
+                <strong className="text-lg font-bold text-slate-900 font-mono">{currentBairro.population.toLocaleString('pt-BR')} hab.</strong>
+                <span className="text-[10px] text-slate-400 block mt-0.5">{qualifyingNeighborhoods.length} bairros qualificados</span>
+              </div>
 
-        {allBairroPhotos.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {allBairroPhotos.map((item) => (
-              <div
-                key={item.key}
-                onClick={() => onZoomPhoto(item.photo)}
-                className="group relative rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shadow-2xs hover:shadow-md cursor-pointer transition-all hover:scale-102"
-              >
-                <img
-                  src={item.photo}
-                  alt={item.streetName}
-                  className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-90 p-2 flex flex-col justify-end text-white">
-                  <span className="text-[10px] font-bold line-clamp-1 leading-tight">{item.streetName}</span>
-                  <span className="text-[9px] text-slate-300 font-mono">{formatDateTimeBR(item.timestamp)}</span>
-                  <span className="text-[8px] text-blue-300 font-medium">{item.militantName}</span>
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                <span className="text-[10px] uppercase font-semibold text-slate-500 block">Eleitores Estimados</span>
+                <strong className="text-lg font-bold text-blue-700 font-mono">{currentBairro.votersEstimated.toLocaleString('pt-BR')}</strong>
+                <span className="text-[10px] text-blue-600 block mt-0.5">Aptos a Votar</span>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                <span className="text-[10px] uppercase font-semibold text-slate-500 block">Ruas Registradas</span>
+                <strong className="text-lg font-bold text-rose-700 font-mono">{bairroCheckIns.length} ruas</strong>
+                <span className="text-[10px] text-rose-600 font-bold block mt-0.5">Com fotos e GPS comprovados</span>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                <span className="text-[10px] uppercase font-semibold text-slate-500 block">Abordagens Diretas</span>
+                <strong className="text-lg font-bold text-purple-700 font-mono">{totalAbordagens} eleitores</strong>
+                <span className="text-[10px] text-purple-600 block mt-0.5">{totalComercios} comércios visitados</span>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
+                <span className="text-[10px] uppercase font-semibold text-slate-500 block">Materiais Entregues</span>
+                <strong className="text-lg font-bold text-emerald-700 font-mono">{totalMateriais.toLocaleString('pt-BR')}</strong>
+                <span className="text-[10px] text-emerald-600 block mt-0.5">{totalSantinhos} santinhos</span>
+              </div>
+            </div>
+
+            {/* Painel de Gráficos e Distribuição */}
+            <div id="neighborhood-report-charts-card" className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+              <div className="md:col-span-4 space-y-2">
+                <h5 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  Distribuição de Materiais Consolidados
+                </h5>
+                <p className="text-[11px] text-slate-500">
+                  Volume de santinhos, adesivos e colinhas distribuídos nos {qualifyingNeighborhoods.length} bairros.
+                </p>
+                <div className="space-y-1.5 pt-2">
+                  {materialsPieData.map(item => (
+                    <div key={item.name} className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-slate-600">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        {item.name}:
+                      </span>
+                      <strong className="font-mono text-slate-900">{item.value.toLocaleString('pt-BR')}</strong>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+
+              <div className="md:col-span-4 h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={materialsPieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={36}
+                      outerRadius={62}
+                      paddingAngle={3}
+                    >
+                      {materialsPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unidades`, name]}
+                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="md:col-span-4 p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-600 font-medium">Bairros Qualificados:</span>
+                  <strong className="text-blue-700 font-bold">{qualifyingNeighborhoods.length} de {neighborhoods.length}</strong>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-blue-600"
+                    style={{ width: `${Math.min(Math.round((qualifyingNeighborhoods.length / Math.max(neighborhoods.length, 1)) * 100), 100)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500 italic mt-1">
+                  Regra estrita: Apenas bairros com lançamentos de ruas e fotos anexadas são apresentados nos dashboards a seguir.
+                </p>
+              </div>
+            </div>
           </div>
-        ) : (
-          <p className="text-xs text-slate-400 italic py-4 text-center">
-            Nenhuma foto de rua enviada para o bairro {currentBairro.name} no período.
-          </p>
-        )}
-      </div>
 
-      {/* SECTION 3: DETAILED STREETS TABLE FOR THIS NEIGHBORHOOD */}
-      <div id="neighborhood-report-streets-table" className="p-4 rounded-xl border border-slate-200 bg-white space-y-3 shadow-2xs">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Tabela Detalhada de Ruas Atendidas em {currentBairro.name}
-          </h4>
-          <span className="text-xs text-slate-500 font-medium">
-            Total: <strong>{bairroCheckIns.length} ruas</strong>
-          </span>
+          {/* =====================================================================
+              3, 4, 5... DASHBOARDS INDIVIDUAIS DE CADA BAIRRO QUALIFICADO
+              Começando pelo mapa do bairro com as ruas pintadas em vermelho,
+              seguido por cada rua (3a/4a) e sua respectiva galeria de fotos (3b/4b).
+             ===================================================================== */}
+          {qualifyingNeighborhoods.length === 0 ? (
+            <div className="p-8 rounded-xl bg-amber-50 border border-amber-200 text-center text-amber-800 space-y-2">
+              <p className="font-bold text-sm">Nenhum bairro com lançamentos de ruas e fotos anexadas foi encontrado.</p>
+              <p className="text-xs text-amber-600">
+                Para que um bairro apareça nesta visualização consolidada, ele precisa possuir check-ins de ruas cadastrados e com fotos de comprovação válidas anexadas.
+              </p>
+            </div>
+          ) : (
+            qualifyingNeighborhoods.map((bairro, bIdx) => {
+              const bairroNumber = bIdx + 3; // 3 para o 1º bairro, 4 para o 2º bairro, etc.
+              const nCheckIns = getCheckInsForNeighborhood(bairro, bairroCheckIns);
+
+              const bAbordagens = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+              const bComercios = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
+              const bSantinhos = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
+              const bMateriais = nCheckIns.reduce((acc, c) => {
+                const m = c.materialsDelivered;
+                return acc + (m.santinhos || 0) + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
+              }, 0);
+
+              return (
+                <div
+                  key={bairro.id}
+                  id={`dashboard-bairro-${bairro.id}`}
+                  className="p-5 rounded-2xl border-2 border-slate-200 bg-white shadow-xs space-y-5"
+                >
+                  {/* Cabeçalho do Dashboard do Bairro */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <span className="w-10 h-10 rounded-xl bg-blue-600 text-white font-black text-base flex items-center justify-center shadow-xs">
+                        {bairroNumber}
+                      </span>
+                      <div>
+                        <h4 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                          Dashboard do {bIdx + 1}º Bairro: <span className="text-blue-700">{bairro.name}</span>
+                          <span className="text-xs font-normal text-slate-500">({bairro.zone})</span>
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          {nCheckIns.length} ruas auditadas com comprovação fotográfica • {bairro.population.toLocaleString('pt-BR')} habitantes (IBGE)
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 font-semibold text-slate-700">
+                        👥 <strong>{bAbordagens}</strong> abordagens
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 font-semibold text-slate-700">
+                        🏪 <strong>{bComercios}</strong> comércios
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 font-bold text-emerald-800">
+                        📦 <strong>{bMateriais.toLocaleString('pt-BR')}</strong> materiais
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* MAPA DO BAIRRO COM RUAS PINTADAS (MELHOR VISUALIZAÇÃO POSSÍVEL) */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-rose-600" />
+                        Mapa Territorial de {bairro.name} • Ruas Pintadas em Vermelho
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Área delimitada oficial e {nCheckIns.length} logradouros geolocalizados
+                      </span>
+                    </div>
+
+                    <BairroInteractiveMap
+                      mapId={`map-bairro-individual-${bairro.id}`}
+                      bairro={bairro}
+                      checkIns={nCheckIns}
+                      isGeneralMap={false}
+                      height="380px"
+                    />
+                  </div>
+
+                  {/* SEQUÊNCIA DE RUAS E RESPECTIVAS GALERIAS: 3a, 3b, 3c, 3d... */}
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        Auditoria Detalhada de Cada Rua & Galerias de Fotos ({nCheckIns.length} ruas)
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Exibição sequencial com todas as fotos anexadas de cada logradouro
+                      </span>
+                    </div>
+
+                    {nCheckIns.map((chk, rIdx) => (
+                      <StreetAuditRowWithGallery
+                        key={chk.id}
+                        chk={chk}
+                        militants={militants}
+                        bairroNumber={bairroNumber}
+                        streetIndex={rIdx}
+                        onZoomPhoto={onZoomPhoto}
+                        onEditStreet={onEditStreet}
+                      />
+                    ))}
+                  </div>
+
+                </div>
+              );
+            })
+          )}
+
         </div>
+      ) : (
+        /* =======================================================================
+           VISUALIZAÇÃO DE UM ÚNICO BAIRRO SELECIONADO (ex: Kobrasol)
+           Mantém o mesmo padrão de excelência estruturado:
+           1 - Mapa do Bairro & Gráficos
+           2 - KPIs e Dados
+           3 - Dashboard das Ruas com Galeria de fotos de cada rua
+           ======================================================================= */
+        <div className="space-y-8">
+          
+          {/* 1. MAPA DO BAIRRO COM AS RUAS PINTADAS & GRÁFICOS */}
+          <div id="neighborhood-report-visuals" className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div id="neighborhood-report-map-wrapper" className="lg:col-span-7 space-y-2">
+              <div className="flex items-center justify-between pb-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
+                    1
+                  </span>
+                  <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider">
+                    Mapa de {currentBairro.name} • Ruas Pintadas em Vermelho
+                  </h4>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
+                  {bairroCheckIns.length} ruas sinalizadas
+                </span>
+              </div>
 
-        <div className="overflow-x-auto border border-slate-200 rounded-lg">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px]">
-              <tr>
-                <th className="py-2.5 px-3">Data / Hora</th>
-                {isAllBairros && <th className="py-2.5 px-3">Bairro</th>}
-                <th className="py-2.5 px-3">Foto da Rua & Localização (GPS)</th>
-                <th className="py-2.5 px-3">Logradouro / Trecho</th>
-                <th className="py-2.5 px-3">Militante Responsável</th>
-                <th className="py-2.5 px-3 text-center">Abordagens</th>
-                <th className="py-2.5 px-3 text-center">Comércio</th>
-                <th className="py-2.5 px-3 text-center">Santinhos</th>
-                <th className="py-2.5 px-3 text-center">Auditoria</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
-              {bairroCheckIns.length === 0 ? (
-                <tr>
-                  <td colSpan={isAllBairros ? 9 : 8} className="py-6 text-center text-slate-400">
-                    {isAllBairros 
-                      ? 'Nenhum bairro com ruas registradas e fotos anexadas encontrado.' 
-                      : `Nenhuma rua cadastrada no bairro ${currentBairro.name} no período selecionado.`}
-                  </td>
-                </tr>
-              ) : (
-                bairroCheckIns.map(chk => {
-                  const militantObj = militants.find(m => m.id === chk.militantId);
-                  const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
-                  const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
-                  const firstPhoto = validPhotos.length > 0 ? validPhotos[0] : dbPhoto;
-                  const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
-                  const bName = bMatch?.name || chk.neighborhoodName || 'São José';
+              <BairroInteractiveMap
+                mapId={`map-single-${currentBairro.id}`}
+                bairro={currentBairro}
+                checkIns={bairroCheckIns}
+                isGeneralMap={false}
+                height="380px"
+              />
+            </div>
 
-                  return (
-                    <tr key={chk.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600 whitespace-nowrap">
-                        {formatDateTimeBR(chk.timestamp)}
-                      </td>
-                      
-                      {isAllBairros && (
-                        <td className="py-2.5 px-3 whitespace-nowrap">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
-                            {bName}
-                          </span>
-                        </td>
-                      )}
-                      
-                      {/* Photo alongside location & GPS */}
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-2.5">
-                          {firstPhoto ? (
-                            <div className="relative group shrink-0">
-                              <img
-                                src={firstPhoto}
-                                alt={chk.streetName}
-                                onClick={() => onZoomPhoto(firstPhoto)}
-                                className="w-10 h-10 rounded-lg object-cover cursor-pointer ring-1 ring-slate-200 shadow-2xs hover:scale-105 transition-transform"
-                              />
-                              <span className="absolute bottom-0 right-0 p-0.5 bg-black/60 rounded text-[7px] text-white">📷</span>
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-[10px]">
-                              Sem foto
-                            </div>
-                          )}
-                          <div className="text-left space-y-0.5">
-                            <a
-                              href={`https://www.google.com/maps?q=${chk.latitude},${chk.longitude}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-700 font-semibold text-[10px] border border-slate-200 transition"
-                            >
-                              <MapPin className="w-3 h-3 text-red-600" />
-                              {chk.latitude.toFixed(4)}, {chk.longitude.toFixed(4)}
-                            </a>
-                            <span className="block text-[9px] text-slate-400 font-mono">Precisão: {chk.accuracyMeters || 3.5}m</span>
-                          </div>
-                        </div>
-                      </td>
+            {/* Painel de Gráficos de Materiais */}
+            <div id="neighborhood-report-charts-card" className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between space-y-3">
+              <div className="border-b border-slate-100 pb-2">
+                <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  Distribuição de Materiais em {currentBairro.name}
+                </h4>
+                <p className="text-[11px] text-slate-500">Volume de santinhos e adesivos entregues</p>
+              </div>
 
-                      <td className="py-2.5 px-3 font-medium text-slate-900 max-w-[220px]">
-                        {chk.streetName}
-                      </td>
+              <div className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={materialsPieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={35}
+                      outerRadius={58}
+                      paddingAngle={3}
+                    >
+                      {materialsPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unidades`, name]}
+                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-2">
-                          <img
-                            src={militantObj?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'}
-                            alt={chk.militantName}
-                            className="w-6 h-6 rounded-full object-cover ring-1 ring-slate-200"
-                          />
-                          <div>
-                            <span className="font-bold text-slate-900 block leading-tight">{chk.militantName}</span>
-                            <span className="text-[10px] text-slate-500 font-mono">{militantObj?.matricula || 'Militante'}</span>
-                          </div>
-                        </div>
-                      </td>
+              <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100 text-[11px]">
+                {materialsPieData.map(item => (
+                  <div key={item.name} className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-slate-600 truncate">{item.name}:</span>
+                    <strong className="text-slate-900 font-mono">{item.value.toLocaleString('pt-BR')}</strong>
+                  </div>
+                ))}
+              </div>
 
-                      <td className="py-2.5 px-3 text-center font-bold text-purple-700 whitespace-nowrap">
-                        {chk.materialsDelivered.abordagens || 0}
-                      </td>
+              <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-slate-600 font-medium">Meta Territorial Coberta:</span>
+                  <strong className="text-slate-900 font-bold">{coveragePercent}%</strong>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-emerald-500"
+                    style={{ width: `${coveragePercent}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
-                      <td className="py-2.5 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
-                        {chk.materialsDelivered.comercio || 0}
-                      </td>
+          {/* 2. KPIS E DADOS DO BAIRRO */}
+          <div id="neighborhood-report-cards" className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase font-semibold text-slate-500 block">População (IBGE)</span>
+              <strong className="text-base font-bold text-slate-900 font-mono">{currentBairro.population.toLocaleString('pt-BR')} hab.</strong>
+              <span className="text-[10px] text-slate-400 block mt-0.5">{currentBairro.zone}</span>
+            </div>
 
-                      <td className="py-2.5 px-3 text-center font-bold text-slate-900 whitespace-nowrap">
-                        {chk.materialsDelivered.santinhos}
-                      </td>
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase font-semibold text-slate-500 block">Eleitores Estimados</span>
+              <strong className="text-base font-bold text-blue-700 font-mono">{currentBairro.votersEstimated.toLocaleString('pt-BR')}</strong>
+              <span className="text-[10px] text-blue-600 block mt-0.5">Aptos a Votar</span>
+            </div>
 
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1.5 justify-center">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            ✓ Validado
-                          </span>
-                          {onEditStreet && (
-                            <button
-                              onClick={() => onEditStreet(chk)}
-                              className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-[10px] border border-blue-200 cursor-pointer"
-                              title="Editar ou Excluir Definitivamente este Registro"
-                            >
-                              Editar
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase font-semibold text-slate-500 block">Ruas Registradas</span>
+              <strong className="text-base font-bold text-rose-700 font-mono">
+                {bairroCheckIns.length} / {currentBairro.totalStreets}
+              </strong>
+              <span className="text-[10px] text-rose-600 font-bold block mt-0.5">{coveragePercent}% Coberto</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase font-semibold text-slate-500 block">Abordagens Diretas</span>
+              <strong className="text-base font-bold text-purple-700 font-mono">{totalAbordagens} eleitores</strong>
+              <span className="text-[10px] text-purple-600 block mt-0.5">{totalComercios} comércios</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
+              <span className="text-[10px] uppercase font-semibold text-slate-500 block">Materiais Entregues</span>
+              <strong className="text-base font-bold text-emerald-700 font-mono">{totalMateriais.toLocaleString('pt-BR')}</strong>
+              <span className="text-[10px] text-emerald-600 block mt-0.5">{totalSantinhos} santinhos</span>
+            </div>
+          </div>
+
+          {/* 3. DASHBOARD DAS RUAS DO BAIRRO COM AS GALERIAS DE CADA RUA */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
+                  3
+                </span>
+                <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Dashboard das Ruas Atendidas em {currentBairro.name} ({bairroCheckIns.length} ruas)
+                </h4>
+              </div>
+              <span className="text-xs text-slate-500">
+                Sequência de dados da rua e todas as fotos anexadas
+              </span>
+            </div>
+
+            {bairroCheckIns.length === 0 ? (
+              <div className="p-8 rounded-xl bg-slate-50 border border-slate-200 text-center text-slate-400 italic">
+                Nenhuma rua cadastrada no bairro {currentBairro.name} no período selecionado.
+              </div>
+            ) : (
+              bairroCheckIns.map((chk, rIdx) => (
+                <StreetAuditRowWithGallery
+                  key={chk.id}
+                  chk={chk}
+                  militants={militants}
+                  bairroNumber={3}
+                  streetIndex={rIdx}
+                  onZoomPhoto={onZoomPhoto}
+                  onEditStreet={onEditStreet}
+                />
+              ))
+            )}
+          </div>
+
         </div>
-      </div>
+      )}
 
     </div>
   );
