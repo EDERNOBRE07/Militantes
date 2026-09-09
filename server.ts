@@ -40,12 +40,58 @@ async function startServer() {
     return {};
   };
 
+  // Definitive permanent blacklists for requested deleted militants and teams
+  const DEFAULT_DELETED_BLACKLIST = [
+    'mil-douglas-005',
+    'mil-1787842651982',
+    'mil-1787842613621',
+    'mil-1787842380824',
+    'mil-1787842613623',
+    'user-militante-01',
+    'user-militante-02',
+    'mil-304',
+    'mil-305',
+    'team-alpha',
+    'team-bravo',
+    'team-charlie',
+    'team-delta',
+    'team-eco',
+    'team-fox'
+  ];
+
+  const DELETED_NAMES_SET = new Set([
+    'gabriel costa nogueira',
+    'beatriz fontes vieira',
+    'mariana becker',
+    'carlos eduardo ramos',
+    'luciano'
+  ]);
+
+  const SINGLE_OFFICIAL_TEAM = {
+    id: 'team-1787840837258',
+    name: 'Equipe Daniel Freitas - São José',
+    color: '#10b981',
+    leaderId: 'user-coord-geral',
+    leaderName: 'Pedro da Silva Rosa',
+    memberIds: ['mil-1787842613622'],
+    assignedVanId: 'van-01',
+    targetNeighborhoodIds: [
+      'forquilhinhas', 'forquilhas', 'bela_vista', 'ipiranga', 'campinas', 'kobrasol',
+      'barreiros', 'areias', 'serraria', 'potecas', 'praia_comprida', 'rocado',
+      'fazenda_santo_antonio', 'centro', 'picadas_do_sul', 'sertao_do_maruim', 'colonia_santana'
+    ],
+    dailyProgressPct: 95,
+    totalMaterialsDelivered: 4500,
+    status: 'em_campo'
+  };
+
   // Deep non-destructive merge for multi-user and multi-device concurrency
   const mergeVaultData = (current: Record<string, any>, incoming: Record<string, any>): Record<string, any> => {
     const result: Record<string, any> = { ...current };
 
     // Build unified blacklist of deleted IDs from both current vault and incoming data
     const allDeletedIds = new Set<string>([
+      ...DEFAULT_DELETED_BLACKLIST,
       ...(Array.isArray(result['deleted_entities_vault']) ? result['deleted_entities_vault'] : []),
       ...(Array.isArray(result['deleted_militants_ids']) ? result['deleted_militants_ids'] : []),
       ...(Array.isArray(result['deleted_teams_ids']) ? result['deleted_teams_ids'] : []),
@@ -59,26 +105,69 @@ async function startServer() {
     ].map(String));
 
     // Keep deleted blacklist persistent in result
-    if (allDeletedIds.size > 0) {
-      result['deleted_entities_vault'] = Array.from(allDeletedIds);
-    }
+    result['deleted_entities_vault'] = Array.from(allDeletedIds);
+    result['deleted_militants_ids'] = Array.from(new Set([
+      'mil-douglas-005', 'mil-1787842651982', 'mil-1787842613621', 'mil-1787842380824', 'mil-1787842613623', 'user-militante-01', 'user-militante-02', 'mil-304', 'mil-305',
+      ...(Array.isArray(result['deleted_militants_ids']) ? result['deleted_militants_ids'] : []),
+      ...(Array.isArray(incoming['deleted_militants_ids']) ? incoming['deleted_militants_ids'] : [])
+    ]));
+    result['deleted_teams_ids'] = Array.from(new Set([
+      'team-alpha', 'team-bravo', 'team-charlie', 'team-delta', 'team-eco', 'team-fox',
+      ...(Array.isArray(result['deleted_teams_ids']) ? result['deleted_teams_ids'] : []),
+      ...(Array.isArray(incoming['deleted_teams_ids']) ? incoming['deleted_teams_ids'] : [])
+    ]));
+
+    // Hard enforcement: Only ONE team must exist
+    result['militancia_teams_v1'] = [SINGLE_OFFICIAL_TEAM];
+    result['teams_data'] = [SINGLE_OFFICIAL_TEAM];
+
+    const isDeletedMilitant = (m: any) => {
+      if (!m) return true;
+      const idStr = String(m.id || '');
+      if (allDeletedIds.has(idStr)) return true;
+      const nameLower = String(m.name || '').trim().lower();
+      if (DELETED_NAMES_SET.has(nameLower)) return true;
+      if (nameLower === 'douglas' || nameLower === 'douglas ') return true;
+      const phoneClean = String(m.phone || '').replace(/\D/g, '');
+      if (phoneClean.includes('993239173') || phoneClean.includes('996554321') || phoneClean.includes('988449912') ||
+          phoneClean.includes('999127845') || phoneClean.includes('996551234') || phoneClean.includes('988332190') || phoneClean.includes('991198765')) {
+        return true;
+      }
+      return false;
+    };
+
+    const isDeletedCheckin = (c: any) => {
+      if (!c) return true;
+      const idStr = String(c.id || '');
+      if (allDeletedIds.has(idStr)) return true;
+      const mId = String(c.militantId || c.militante_id || '');
+      if (allDeletedIds.has(mId)) return true;
+      const mNameLower = String(c.militantName || c.militante_nome || '').trim().toLowerCase();
+      if (DELETED_NAMES_SET.has(mNameLower)) return true;
+      if (mNameLower === 'douglas' || mNameLower === 'douglas ') return true;
+      return false;
+    };
 
     for (const [key, incomingValue] of Object.entries(incoming)) {
       if (key.startsWith('_')) continue;
+      if (key === 'militancia_teams_v1' || key === 'teams_data') continue;
 
       if (Array.isArray(incomingValue)) {
         const currentArray = Array.isArray(result[key]) ? result[key] : [];
         const itemMap = new Map<string, any>();
+        const isMilitantKey = key === 'militantes_data' || key === 'militancia_militants_v1' || key === 'militancia_militantes_v1';
+        const isCheckinKey = key === 'militancia_checkins_v1' || key === 'checkins_data';
 
         // 1. Index all existing server items, respecting global deleted blacklist
         currentArray.forEach((item: any) => {
           if (item && item.id) {
             const idStr = String(item.id);
-            if (allDeletedIds.has(idStr)) {
-              return; // Skip permanently deleted entity
-            }
-            if (key === 'militancia_checkins_v1' && (allDeletedIds.has(String(item.militantId)) || allDeletedIds.has(String(item.militante_id)))) {
-              return; // Skip checkin associated with deleted militant
+            if (allDeletedIds.has(idStr)) return;
+            if (isMilitantKey && isDeletedMilitant(item)) return;
+            if (isCheckinKey && isDeletedCheckin(item)) return;
+
+            if (isMilitantKey || isCheckinKey) {
+              item.teamId = 'team-1787840837258';
             }
             itemMap.set(idStr, item);
           }
@@ -88,11 +177,12 @@ async function startServer() {
         incomingValue.forEach((incomingItem: any) => {
           if (incomingItem && incomingItem.id) {
             const idStr = String(incomingItem.id);
-            if (allDeletedIds.has(idStr)) {
-              return; // Skip permanently deleted entity
-            }
-            if (key === 'militancia_checkins_v1' && (allDeletedIds.has(String(incomingItem.militantId)) || allDeletedIds.has(String(incomingItem.militante_id)))) {
-              return; // Skip checkin associated with deleted militant
+            if (allDeletedIds.has(idStr)) return;
+            if (isMilitantKey && isDeletedMilitant(incomingItem)) return;
+            if (isCheckinKey && isDeletedCheckin(incomingItem)) return;
+
+            if (isMilitantKey || isCheckinKey) {
+              incomingItem.teamId = 'team-1787840837258';
             }
             const existingItem = itemMap.get(idStr);
 
@@ -685,7 +775,7 @@ async function startServer() {
 
     // Collect all deleted entity IDs
     const buildBlacklist = (sourceA: Record<string, any>, sourceB?: Record<string, any>) => {
-      const set = new Set<string>();
+      const set = new Set<string>(DEFAULT_DELETED_BLACKLIST);
       const addFrom = (src: Record<string, any> | undefined) => {
         if (!src) return;
         ['deleted_entities_vault', 'deleted_militants_ids', 'deleted_teams_ids', 'deleted_vans_ids', 'deleted_checkins_ids'].forEach(k => {
@@ -705,11 +795,23 @@ async function startServer() {
         if (!item || !item.id) return false;
         const idStr = String(item.id);
         if (blacklist.has(idStr)) return false;
-        if (isCheckin && (blacklist.has(String(item.militantId)) || blacklist.has(String(item.militante_id)))) {
-          return false;
+        if (isCheckin) {
+          const mId = String(item.militantId || item.militante_id || '');
+          if (blacklist.has(mId)) return false;
+          const mNameLower = String(item.militantName || item.militante_nome || '').trim().toLowerCase();
+          if (DELETED_NAMES_SET.has(mNameLower) || mNameLower === 'douglas' || mNameLower === 'douglas ') return false;
+        } else {
+          // Militant check
+          const nameLower = String(item.name || '').trim().toLowerCase();
+          if (DELETED_NAMES_SET.has(nameLower) || nameLower === 'douglas' || nameLower === 'douglas ') return false;
+          const phoneClean = String(item.phone || '').replace(/\D/g, '');
+          if (phoneClean.includes('993239173') || phoneClean.includes('996554321') || phoneClean.includes('988449912') ||
+              phoneClean.includes('999127845') || phoneClean.includes('996551234') || phoneClean.includes('988332190') || phoneClean.includes('991198765')) {
+            return false;
+          }
         }
         return true;
-      });
+      }).map(item => ({ ...item, teamId: 'team-1787840837258' }));
     };
 
     try {
@@ -732,6 +834,8 @@ async function startServer() {
 
           for (const key of Object.keys(serverVault)) {
             if (key.startsWith('_')) continue;
+            if (key === 'militancia_teams_v1' || key === 'teams_data') continue;
+
             if (Array.isArray(serverVault[key]) && Array.isArray(combinedData[key])) {
               const map = new Map();
               combinedData[key].forEach((item: any) => {
@@ -750,6 +854,10 @@ async function startServer() {
               combinedData[key] = serverVault[key];
             }
           }
+
+          // Strict team enforcement: ONLY Equipe Daniel Freitas - São José
+          combinedData['militancia_teams_v1'] = [SINGLE_OFFICIAL_TEAM];
+          combinedData['teams_data'] = [SINGLE_OFFICIAL_TEAM];
 
           // Ensure militant collections are mirrored and filtered
           const rawMilitants = combinedData['militantes_data'] || combinedData['militancia_militantes_v1'] || combinedData['militancia_militants_v1'] || [];
@@ -783,17 +891,25 @@ async function startServer() {
       const localBlacklist = buildBlacklist(serverVault);
       const cleanVault = { ...serverVault };
       cleanVault['deleted_entities_vault'] = Array.from(localBlacklist);
+      cleanVault['militancia_teams_v1'] = [SINGLE_OFFICIAL_TEAM];
+      cleanVault['teams_data'] = [SINGLE_OFFICIAL_TEAM];
+
+      const rawMils = cleanVault['militantes_data'] || cleanVault['militancia_militants_v1'] || [];
+      const cleanMils = filterCollectionByBlacklist(rawMils, localBlacklist);
       ['militantes_data', 'militancia_militants_v1', 'militancia_militantes_v1'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist);
+        cleanVault[k] = cleanMils;
       });
+
+      const rawVans = cleanVault['vans_data'] || cleanVault['militancia_vans_v1'] || [];
+      const cleanVans = filterCollectionByBlacklist(rawVans, localBlacklist);
       ['vans_data', 'militancia_vans_v1'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist);
+        cleanVault[k] = cleanVans;
       });
-      ['militancia_teams_v1', 'teams_data'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist);
-      });
+
+      const rawCheckins = cleanVault['militancia_checkins_v1'] || cleanVault['checkins_data'] || [];
+      const cleanCheckins = filterCollectionByBlacklist(rawCheckins, localBlacklist, true);
       ['militancia_checkins_v1', 'checkins_data'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist, true);
+        cleanVault[k] = cleanCheckins;
       });
 
       return res.json({ status: 'success', data: cleanVault, source: 'server_vault' });
@@ -801,18 +917,27 @@ async function startServer() {
       const localBlacklist = buildBlacklist(serverVault);
       const cleanVault = { ...serverVault };
       cleanVault['deleted_entities_vault'] = Array.from(localBlacklist);
+      cleanVault['militancia_teams_v1'] = [SINGLE_OFFICIAL_TEAM];
+      cleanVault['teams_data'] = [SINGLE_OFFICIAL_TEAM];
+
+      const rawMils = cleanVault['militantes_data'] || cleanVault['militancia_militants_v1'] || [];
+      const cleanMils = filterCollectionByBlacklist(rawMils, localBlacklist);
       ['militantes_data', 'militancia_militants_v1', 'militancia_militantes_v1'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist);
+        cleanVault[k] = cleanMils;
       });
+
+      const rawVans = cleanVault['vans_data'] || cleanVault['militancia_vans_v1'] || [];
+      const cleanVans = filterCollectionByBlacklist(rawVans, localBlacklist);
       ['vans_data', 'militancia_vans_v1'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist);
+        cleanVault[k] = cleanVans;
       });
-      ['militancia_teams_v1', 'teams_data'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist);
-      });
+
+      const rawCheckins = cleanVault['militancia_checkins_v1'] || cleanVault['checkins_data'] || [];
+      const cleanCheckins = filterCollectionByBlacklist(rawCheckins, localBlacklist, true);
       ['militancia_checkins_v1', 'checkins_data'].forEach(k => {
-        if (cleanVault[k]) cleanVault[k] = filterCollectionByBlacklist(cleanVault[k], localBlacklist, true);
+        cleanVault[k] = cleanCheckins;
       });
+
       return res.json({ status: 'success', data: cleanVault, source: 'server_vault_fallback' });
     }
   };
