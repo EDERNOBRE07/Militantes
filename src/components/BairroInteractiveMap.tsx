@@ -177,11 +177,32 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       layerGroup.addLayer(pinMarker);
     });
 
-    // Auto-ajuste de limites (fitBounds)
+    // Auto-ajuste de limites (fitBounds) territorial dos bairros qualificados
     if (isGeneralMap) {
-      if (checkIns.length > 0) {
-        const latLngs = checkIns.map(c => [c.latitude, c.longitude] as [number, number]);
-        map.fitBounds(L.latLngBounds(latLngs), { padding: [35, 35], maxZoom: 15 });
+      const allBoundsPoints: [number, number][] = [];
+      // Inclui coordenadas dos polígonos oficiais dos bairros qualificados
+      qualifyingNeighborhoods.forEach(n => {
+        const official = OFFICIAL_SAO_JOSE_NEIGHBORHOODS.find(
+          o => o.id === n.id || o.name.toLowerCase() === n.name.toLowerCase()
+        );
+        const polyCoords = (official?.polygon || (n as any).polygon || []) as [number, number][];
+        if (polyCoords && Array.isArray(polyCoords) && polyCoords.length > 0) {
+          polyCoords.forEach(pt => {
+            if (pt && !isNaN(Number(pt[0])) && !isNaN(Number(pt[1]))) {
+              allBoundsPoints.push([Number(pt[0]), Number(pt[1])]);
+            }
+          });
+        }
+      });
+      // Inclui coordenadas GPS dos check-ins com ruas auditadas
+      checkIns.forEach(c => {
+        if (c.latitude && c.longitude) {
+          allBoundsPoints.push([c.latitude, c.longitude]);
+        }
+      });
+
+      if (allBoundsPoints.length > 0) {
+        map.fitBounds(L.latLngBounds(allBoundsPoints), { padding: [35, 35], maxZoom: 15 });
       } else {
         map.setView([-27.5962, -48.6190], 13);
       }

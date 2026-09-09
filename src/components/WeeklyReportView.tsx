@@ -27,7 +27,13 @@ import { NeighborhoodReportSection } from './NeighborhoodReportSection';
 import { StorageService } from '../services/storageService';
 import { EditStreetModal } from './EditStreetModal';
 import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
-import { getQualifyingNeighborhoods, doesNeighborhoodQualify, isCheckInInNeighborhood } from '../utils/neighborhoodHelpers';
+import {
+  getQualifyingNeighborhoods,
+  doesNeighborhoodQualify,
+  isCheckInInNeighborhood,
+  getAllPhotosForCheckIn,
+  getCheckInsForNeighborhood
+} from '../utils/neighborhoodHelpers';
 import {
   FileText,
   Printer,
@@ -1181,49 +1187,99 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         const targetBairros = isAllBairrosMode ? qualifyingBairros : [currentSelectedBairro];
 
         setExportFeedback(isAllBairrosMode
-          ? `Gerando relatório consolidado de todos os bairros qualificados (${qualifyingBairros.length} bairros com ruas e fotos)...`
-          : `Gerando relatório completo do Bairro ${currentSelectedBairro.name} com mapa, gráficos, tabela e galeria fotográfica...`
+          ? `Gerando relatório estruturado dos bairros qualificados (${qualifyingBairros.length} bairros com ruas e fotos)...`
+          : `Gerando relatório completo do Bairro ${currentSelectedBairro.name} com mapas, tabelas e fotos...`
         );
 
-        // Filter check-ins: only qualifying neighborhoods when in 'todos' mode
+        // Filtro estrito: apenas check-ins com bairros qualificados
         const bairroCheckIns = isAllBairrosMode
           ? filteredCheckIns.filter(chk => qualifyingBairros.some(b => isCheckInInNeighborhood(chk, b)))
-          : filteredCheckIns.filter(chk => 
-              chk.neighborhoodId === currentSelectedBairro.id || 
-              chk.neighborhoodName.toLowerCase().includes(currentSelectedBairro.name.toLowerCase())
-            );
+          : filteredCheckIns.filter(chk => isCheckInInNeighborhood(chk, currentSelectedBairro));
 
         const totalPop = targetBairros.reduce((acc, b) => acc + (b.population || 0), 0);
         const totalVot = targetBairros.reduce((acc, b) => acc + (b.votersEstimated || 0), 0);
-        const totalStreetsTarget = targetBairros.reduce((acc, b) => acc + (b.totalStreets || 0), 0);
         const totalAbordBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
         const totalComBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-        const totalMatBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos + c.materialsDelivered.adesivo_bola + c.materialsDelivered.adesivo_parachoque + c.materialsDelivered.colinhas), 0);
-        const coveragePercent = Math.min(Math.round((bairroCheckIns.length / Math.max(totalStreetsTarget, 1)) * 100), 100);
+        const totalMatBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos + (c.materialsDelivered.adesivo_bola || 0) + (c.materialsDelivered.adesivo_parachoque || 0) + (c.materialsDelivered.colinhas || 0)), 0);
 
-        // PAGE 1: HEADER, CARDS, CRISP MAP WITH PAINTED STREETS AND CHARTS
+        // -------------------------------------------------------------
+        // SEÇÃO 1: 1 - MAPA GERAL DOS BAIRROS
+        // -------------------------------------------------------------
+        setExportFeedback(`Renderizando 1. Mapa Geral dos Bairros com delimitações oficiais e ruas pintadas em vermelho...`);
         drawHeaderBanner(
           isAllBairrosMode
-            ? 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO TERRITORIAL CONSOLIDADO'
-            : 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO TERRITORIAL & AUDITORIA GEOGRÁFICA',
+            ? 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - 1. MAPA GERAL DOS BAIRROS'
+            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - 1. MAPA TERRITORIAL: ${currentSelectedBairro.name.toUpperCase()}`,
           isAllBairrosMode
-            ? `Todos os Bairros Qualificados (${targetBairros.length} com ruas e fotos comprovadas) • Eleições 2026 | Período: ${selectedWeekLabel}`
-            : `Bairro: ${currentSelectedBairro.name.toUpperCase()} (${currentSelectedBairro.zone}) • Eleições 2026 | Período: ${selectedWeekLabel}`
+            ? `Delimitações Territoriais Oficiais e Ruas Auditadas Pintadas em Vermelho • ${targetBairros.length} Bairros Qualificados | Período: ${selectedWeekLabel}`
+            : `Delimitação Territorial Oficial e Ruas Auditadas no Leito Viário • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
         );
 
-        // Demographic & Activity KPI Cards for this Neighborhood
+        // Barra de status do Mapa Geral
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(14, 27, 269, 7.5, 1.5, 1.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(30, 58, 138);
+        doc.text(
+          isAllBairrosMode
+            ? `1. MAPA GERAL: ${targetBairros.length} Bairros Qualificados (com ruas e fotos comprovadas) • ${bairroCheckIns.length} Vias Sinalizadas no Leito Viário`
+            : `1. MAPA DO BAIRRO: ${currentSelectedBairro.name.toUpperCase()} • ${bairroCheckIns.length} Vias Sinalizadas no Leito Viário`,
+          18,
+          32
+        );
+
+        // Captura o mapa renderizado do DOM ou gera canvas Google Maps em alta resolução
+        let generalMapImg = '';
+        const generalMapDom = document.getElementById('neighborhood-report-map-wrapper');
+        if (generalMapDom) {
+          try {
+            const mapCanvas = await html2canvas(generalMapDom, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: false,
+              logging: false,
+              backgroundColor: '#ffffff'
+            });
+            generalMapImg = mapCanvas.toDataURL('image/png');
+          } catch (e) {
+            console.warn('Erro ao capturar mapa do DOM:', e);
+          }
+        }
+        if (!generalMapImg) {
+          generalMapImg = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns);
+        }
+
+        if (generalMapImg) {
+          doc.addImage(generalMapImg, 'PNG', 14, 37, 269, 145);
+        }
+
+        // -------------------------------------------------------------
+        // SEÇÃO 2: 2 - KPIS E DADOS CONSOLIDADOS
+        // -------------------------------------------------------------
+        doc.addPage('a4', 'landscape');
+        drawHeaderBanner(
+          isAllBairrosMode
+            ? 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - 2. KPIS E DADOS CONSOLIDADOS'
+            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - 2. KPIS E DADOS: ${currentSelectedBairro.name.toUpperCase()}`,
+          isAllBairrosMode
+            ? `Indicadores Consolidados de População (IBGE), Eleitores, Ruas, Abordagens, Comércios e Materiais | Período: ${selectedWeekLabel}`
+            : `Indicadores de População (IBGE), Eleitores, Ruas, Abordagens e Materiais • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
+        );
+
+        // 6 Cards de Indicadores Consolidados
         doc.setFillColor(248, 250, 252);
         doc.roundedRect(14, 27, 269, 17, 2, 2, 'F');
         doc.setDrawColor(226, 232, 240);
         doc.roundedRect(14, 27, 269, 17, 2, 2, 'D');
 
         const bairroKpiItems = [
-          { label: isAllBairrosMode ? 'POPULAÇÃO AUDITADA' : 'POPULAÇÃO (IBGE)', val: `${totalPop.toLocaleString('pt-BR')} hab.` },
+          { label: 'POPULAÇÃO AUDITADA (IBGE)', val: `${totalPop.toLocaleString('pt-BR')} hab.` },
           { label: 'ELEITORES ESTIMADOS', val: `${totalVot.toLocaleString('pt-BR')}` },
-          { label: isAllBairrosMode ? 'BAIRROS & RUAS' : 'RUAS REGISTRADAS', val: `${bairroCheckIns.length} ruas (${isAllBairrosMode ? `${targetBairros.length} bairros` : `${coveragePercent}%`})` },
+          { label: 'RUAS REGISTRADAS', val: `${bairroCheckIns.length} ruas (${targetBairros.length} bairros)` },
           { label: 'ABORDAGENS DIRETAS', val: `${totalAbordBairro} eleitores` },
-          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComBairro}` },
-          { label: 'MATERIAIS NO TOTAL', val: `${totalMatBairro.toLocaleString('pt-BR')}` },
+          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComBairro} pontos` },
+          { label: 'MATERIAIS TOTAIS', val: `${totalMatBairro.toLocaleString('pt-BR')}` }
         ];
 
         const bKpiWidth = 269 / bairroKpiItems.length;
@@ -1240,363 +1296,254 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           doc.text(kpi.val, xPos, 39.5, { align: 'center' });
         });
 
-        // High-Definition Google Map & Chart Generation for Page 1
-        setExportFeedback(isAllBairrosMode
-          ? `Renderizando mapa territorial consolidado de todos os bairros qualificados...`
-          : `Renderizando mapa do Google com ruas pintadas e pins de ${currentSelectedBairro.name}...`
-        );
-        
-        let mapImgData = '';
-        const mapDomElement = document.getElementById('neighborhood-report-map-wrapper');
-        if (mapDomElement) {
-          try {
-            const mapCanvas = await html2canvas(mapDomElement, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: false,
-              logging: false,
-              backgroundColor: '#ffffff'
-            });
-            mapImgData = mapCanvas.toDataURL('image/png');
-          } catch (e) {
-            console.warn('Erro ao capturar mapa do DOM, usando gerador Google Maps:', e);
-          }
-        }
-        
-        if (!mapImgData) {
-          mapImgData = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns);
-        }
-
+        // Gráfico de pizza de materiais e cobertura territorial
         const chartImgData = generateMaterialsChartCanvas(currentSelectedBairro, bairroCheckIns);
-
-        // PAGE 1: FULL-WIDTH NEIGHBORHOOD MAP (Maximizes width to 269mm on A4 Landscape)
-        if (mapImgData) {
-          doc.addImage(mapImgData, 'PNG', 14, 46, 269, 136);
-        }
-
-        // PAGE 2: FULL-WIDTH DETAILED PERFORMANCE & MATERIALS CHART (Maximizes width to 269mm on A4 Landscape)
-        doc.addPage('a4', 'landscape');
-        drawHeaderBanner(
-          isAllBairrosMode
-            ? `SISTEMA DE MILITÂNCIA SÃO JOSÉ - DESEMPENHO E DISTRIBUIÇÃO CONSOLIDADA`
-            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - DESEMPENHO E DISTRIBUIÇÃO: ${currentSelectedBairro.name.toUpperCase()}`,
-          isAllBairrosMode
-            ? `Distribuição de Materiais, Abordagens, Metas e Auditoria dos Bairros Qualificados (${targetBairros.length} bairros) | Período: ${selectedWeekLabel}`
-            : `Distribuição de Materiais, Abordagens, Metas e Auditoria • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
-        );
         if (chartImgData) {
-          doc.addImage(chartImgData, 'PNG', 14, 28, 269, 150);
+          doc.addImage(chartImgData, 'PNG', 14, 48, 269, 136);
         }
 
-        // PAGE 3: DETAILED STREET TABLE FOR THIS NEIGHBORHOOD
-        doc.addPage('a4', 'landscape');
-        drawHeaderBanner(
-          isAllBairrosMode
-            ? `SISTEMA DE MILITÂNCIA SÃO JOSÉ - AUDITORIA CONSOLIDADA DE RUAS AUDITADAS`
-            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - AUDITORIA DE RUAS: ${currentSelectedBairro.name.toUpperCase()}`,
-          isAllBairrosMode
-            ? `Logradouros, Bairros, GPS, Abordagens e Validação (${bairroCheckIns.length} ruas em ${targetBairros.length} bairros) | Período: ${selectedWeekLabel}`
-            : `Logradouros, Coordenadas GPS, Abordagens e Validação no Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
-        );
+        // -------------------------------------------------------------
+        // SEÇÃO 3, 4, 5... DASHBOARDS INDIVIDUAIS DE CADA BAIRRO QUALIFICADO
+        // Para cada bairro:
+        // - Começa pelo Mapa do Bairro com ruas pintadas em vermelho
+        // - Sequência de ruas e galerias:
+        //   3a Tabela da Rua 1 (9 colunas)
+        //   3b Galeria de fotos da Rua 1 (todas as fotos anexadas)
+        //   3c Tabela da Rua 2 (9 colunas)
+        //   3d Galeria de fotos da Rua 2...
+        // -------------------------------------------------------------
+        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
 
-        const bairroStreetRows = bairroCheckIns.map(chk => {
-          const militant = militants.find(m => m.id === chk.militantId);
-          const mat = militant?.matricula ? `(${militant.matricula})` : '';
-          const photoCount = chk.photos ? chk.photos.length : 0;
-          const photoText = photoCount > 0 ? `${photoCount} foto(s) [ANEXO]` : 'Sem foto';
-          const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
-          const bName = bMatch?.name || chk.neighborhoodName || 'São José';
+        for (let bIdx = 0; bIdx < targetBairros.length; bIdx++) {
+          const bairro = targetBairros[bIdx];
+          const bairroNumber = bIdx + 3; // 3 para o 1º bairro, 4 para o 2º, etc.
+          const nCheckIns = getCheckInsForNeighborhood(bairro, bairroCheckIns);
 
-          if (isAllBairrosMode) {
-            return [
-              chk.timestamp,
-              bName,
-              chk.streetName,
-              `${chk.militantName} ${mat}`,
-              `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
-              `${chk.materialsDelivered.abordagens || 0}`,
-              `${chk.materialsDelivered.comercio || 0}`,
-              `${chk.materialsDelivered.santinhos}`,
-              photoText,
-              chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
-            ];
-          }
+          const bAbord = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+          const bCom = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
+          const bMat = nCheckIns.reduce((acc, c) => {
+            const m = c.materialsDelivered;
+            return acc + (m.santinhos || 0) + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
+          }, 0);
 
-          return [
-            chk.timestamp,
-            chk.streetName,
-            `${chk.militantName} ${mat}`,
-            `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
-            `${chk.materialsDelivered.abordagens || 0}`,
-            `${chk.materialsDelivered.comercio || 0}`,
-            `${chk.materialsDelivered.santinhos}`,
-            photoText,
-            chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
-          ];
-        });
+          setExportFeedback(`Exportando Dashboard do ${bIdx + 1}º Bairro (${bairro.name}) - Mapa e ${nCheckIns.length} ruas...`);
 
-        const tableHead = isAllBairrosMode ? [[
-          'Data / Hora',
-          'Bairro',
-          'Logradouro / Trecho Percorrido',
-          'Militante Responsável',
-          'GPS (Latitude, Longitude)',
-          'Abord.',
-          'Com.',
-          'Sant.',
-          'Comprovante',
-          'Auditoria'
-        ]] : [[
-          'Data / Hora',
-          'Logradouro / Trecho Percorrido',
-          'Militante Responsável',
-          'GPS (Latitude, Longitude)',
-          'Abordagens',
-          'Comércio',
-          'Santinhos',
-          'Comprovante',
-          'Status Auditoria'
-        ]];
-
-        const tableColStyles: any = isAllBairrosMode ? {
-          0: { cellWidth: 26 },
-          1: { cellWidth: 32, fontStyle: 'bold' },
-          2: { cellWidth: 50, fontStyle: 'bold' },
-          3: { cellWidth: 36 },
-          4: { cellWidth: 36, font: 'courier' },
-          5: { cellWidth: 16, halign: 'center' },
-          6: { cellWidth: 16, halign: 'center' },
-          7: { cellWidth: 16, halign: 'center' },
-          8: { cellWidth: 22, halign: 'center', fontStyle: 'bold' },
-          9: { cellWidth: 19, halign: 'center', fontStyle: 'bold' }
-        } : {
-          0: { cellWidth: 28 },
-          1: { cellWidth: 62, fontStyle: 'bold' },
-          2: { cellWidth: 42 },
-          3: { cellWidth: 38, font: 'courier' },
-          4: { cellWidth: 20, halign: 'center' },
-          5: { cellWidth: 18, halign: 'center' },
-          6: { cellWidth: 18, halign: 'center' },
-          7: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
-          8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
-        };
-
-        autoTable(doc, {
-          head: tableHead,
-          body: bairroStreetRows.length > 0 ? bairroStreetRows : [['-', isAllBairrosMode ? 'Nenhum bairro com ruas registradas e fotos anexadas' : `Nenhuma rua cadastrada para o bairro ${currentSelectedBairro.name} no período`, '-', '-', '-', '-', '-', '-', '-']],
-          startY: 28,
-          margin: { left: 14, right: 14, bottom: 28 },
-          styles: {
-            fontSize: 7.5,
-            cellPadding: 2.2,
-            textColor: [30, 41, 59],
-            lineColor: [226, 232, 240],
-            lineWidth: 0.1
-          },
-          headStyles: {
-            fillColor: [241, 245, 249],
-            textColor: [15, 23, 42],
-            fontStyle: 'bold',
-            fontSize: 8
-          },
-          alternateRowStyles: {
-            fillColor: [248, 250, 252]
-          },
-          columnStyles: tableColStyles
-        });
-
-        // PAGE 3+: GALERIA DE COMPROVAÇÃO FOTOGRÁFICA DAS RUAS DO BAIRRO
-        interface PhotoProofItem {
-          photoUrl: string;
-          streetName: string;
-          militantName: string;
-          matricula: string;
-          timestamp: string;
-          lat: number;
-          lng: number;
-          santinhos: number;
-          abordagens: number;
-        }
-
-        const photoProofItems: PhotoProofItem[] = [];
-        bairroCheckIns.forEach(chk => {
-          const mObj = militants.find(m => m.id === chk.militantId);
-          const mat = mObj?.matricula || 'Mil001';
-          const bMatch = neighborhoods.find(n => isCheckInInNeighborhood(chk, n));
-          const bName = bMatch?.name || chk.neighborhoodName || '';
-          const streetDisplayName = isAllBairrosMode && bName ? `[${bName}] ${chk.streetName}` : chk.streetName;
-
-          // Recupera foto do banco de dados ou cofre dedicado se não estiver no array direto
-          const dbPhoto = StorageService.getPhotoForCheckIn(chk.id);
-          const validPhotos = (chk.photos || []).filter(p => p && p !== '[vault_photo]' && !p.includes('unsplash.com'));
-          const effectivePhotos = validPhotos.length > 0 ? validPhotos : (dbPhoto ? [dbPhoto] : []);
-
-          if (effectivePhotos.length > 0) {
-            effectivePhotos.forEach(photo => {
-              photoProofItems.push({
-                photoUrl: photo,
-                streetName: streetDisplayName,
-                militantName: chk.militantName,
-                matricula: mat,
-                timestamp: chk.timestamp,
-                lat: chk.latitude,
-                lng: chk.longitude,
-                santinhos: chk.materialsDelivered.santinhos || 0,
-                abordagens: chk.materialsDelivered.abordagens || 0
-              });
-            });
-          } else {
-            // Se não houver foto enviada, gera o comprovante de auditoria georreferenciado via GPS
-            photoProofItems.push({
-              photoUrl: '',
-              streetName: streetDisplayName,
-              militantName: chk.militantName,
-              matricula: mat,
-              timestamp: chk.timestamp,
-              lat: chk.latitude,
-              lng: chk.longitude,
-              santinhos: chk.materialsDelivered.santinhos || 0,
-              abordagens: chk.materialsDelivered.abordagens || 0
-            });
-          }
-        });
-
-        // Preload base64 images
-        setExportFeedback(isAllBairrosMode
-          ? `Carregando fotos de comprovação de todos os bairros qualificados...`
-          : `Carregando fotos de comprovação de ${currentSelectedBairro.name}...`
-        );
-        const preloadedImages = await Promise.all(
-          photoProofItems.map(item => (item.photoUrl ? loadBase64Image(item.photoUrl) : Promise.resolve('')))
-        );
-
-        const itemsPerPage = 6;
-        const totalPhotoPages = Math.max(Math.ceil(photoProofItems.length / itemsPerPage), 1);
-
-        for (let pageIdx = 0; pageIdx < totalPhotoPages; pageIdx++) {
+          // 1. PÁGINA DO DASHBOARD DO BAIRRO: CABEÇALHO COM MÉTRICAS + MAPA DO BAIRRO
           doc.addPage('a4', 'landscape');
           drawHeaderBanner(
-            `SISTEMA DE MILITÂNCIA SÃO JOSÉ - GALERIA DE COMPROVAÇÃO FOTOGRÁFICA DAS RUAS`,
-            isAllBairrosMode
-              ? `Auditoria Visual das Ruas e Comprovantes em Campo • Todos os Bairros Qualificados (Pág. ${pageIdx + 1}/${totalPhotoPages}) | Período: ${selectedWeekLabel}`
-              : `Auditoria Visual das Ruas e Comprovantes em Campo • Bairro ${currentSelectedBairro.name} (Pág. ${pageIdx + 1}/${totalPhotoPages}) | Período: ${selectedWeekLabel}`
+            `SISTEMA DE MILITÂNCIA SÃO JOSÉ - ${bairroNumber}. DASHBOARD DO ${bIdx + 1}º BAIRRO: ${bairro.name.toUpperCase()}`,
+            `Área Delimitada Oficial do Bairro e Ruas Pintadas em Vermelho no Leito Viário (${nCheckIns.length} ruas) | Período: ${selectedWeekLabel}`
           );
 
-          // Sub-header title bar
-          doc.setFillColor(241, 245, 249);
-          doc.roundedRect(14, 27, 269, 7.5, 1.5, 1.5, 'F');
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(7.5);
-          doc.setTextColor(30, 41, 59);
-          doc.text(
-            isAllBairrosMode
-              ? `REGISTROS FOTOGRÁFICOS DE CAMPO COM VALIDAÇÃO GPS • TODOS OS BAIRROS AUDITADOS`
-              : `REGISTROS FOTOGRÁFICOS DE CAMPO COM VALIDAÇÃO GPS • BAIRRO ${currentSelectedBairro.name.toUpperCase()}`,
-            18,
-            32
-          );
-          
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7);
-          doc.setTextColor(100, 116, 139);
-          const startIdx = pageIdx * itemsPerPage;
-          const endIdx = Math.min((pageIdx + 1) * itemsPerPage, photoProofItems.length);
-          doc.text(`Exibindo ${photoProofItems.length > 0 ? startIdx + 1 : 0} a ${endIdx} de ${photoProofItems.length} registros`, pageWidth - 18, 32, { align: 'right' });
+          // Sub-banner de métricas individuais do bairro
+          doc.setFillColor(248, 250, 252);
+          doc.roundedRect(14, 27, 269, 14, 2, 2, 'F');
+          doc.setDrawColor(226, 232, 240);
+          doc.roundedRect(14, 27, 269, 14, 2, 2, 'D');
 
-          // Grid of 3 cols x 2 rows
-          const pagePhotos = photoProofItems.slice(startIdx, endIdx);
-          const cardW = 87;
-          const cardH = 68;
-          const gapX = 4;
-          const gapY = 4;
-          const startX = 14;
-          const startY = 37;
+          const singleBairroKpis = [
+            { label: 'HABITANTES (IBGE)', val: `${(bairro.population || 0).toLocaleString('pt-BR')} hab.` },
+            { label: 'ELEITORES ESTIMADOS', val: `${(bairro.votersEstimated || 0).toLocaleString('pt-BR')}` },
+            { label: 'RUAS AUDITADAS', val: `${nCheckIns.length} ruas` },
+            { label: 'ABORDAGENS DIRETAS', val: `${bAbord} eleitores` },
+            { label: 'COMÉRCIOS ATENDIDOS', val: `${bCom} pontos` },
+            { label: 'MATERIAIS TOTAIS', val: `${bMat.toLocaleString('pt-BR')}` },
+          ];
 
-          pagePhotos.forEach((item, idx) => {
-            const globalIdx = startIdx + idx;
-            const col = idx % 3;
-            const row = Math.floor(idx / 3);
-            const cardX = startX + col * (cardW + gapX);
-            const cardY = startY + row * (cardH + gapY);
-
-            // Card Frame
-            doc.setFillColor(248, 250, 252);
-            doc.setDrawColor(203, 213, 225);
-            doc.roundedRect(cardX, cardY, cardW, cardH, 2, 2, 'FD');
-
-            const photoBase64 = preloadedImages[globalIdx];
-            const photoH = 43;
-            const photoW = cardW - 4;
-
-            if (photoBase64) {
-              try {
-                doc.addImage(photoBase64, 'JPEG', cardX + 2, cardY + 2, photoW, photoH);
-              } catch {
-                // Placeholder fallback
-                doc.setFillColor(226, 232, 240);
-                doc.roundedRect(cardX + 2, cardY + 2, photoW, photoH, 1, 1, 'F');
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(8);
-                doc.setTextColor(100, 116, 139);
-                doc.text('Comprovante Fotográfico de Campo', cardX + cardW / 2, cardY + 24, { align: 'center' });
-              }
-            } else {
-              // Graphic Card Placeholder
-              doc.setFillColor(241, 245, 249);
-              doc.roundedRect(cardX + 2, cardY + 2, photoW, photoH, 1, 1, 'F');
-              doc.setFont('helvetica', 'bold');
-              doc.setFontSize(8.5);
-              doc.setTextColor(71, 85, 105);
-              doc.text('Registro Georreferenciado via GPS', cardX + cardW / 2, cardY + 20, { align: 'center' });
-              doc.setFont('helvetica', 'normal');
-              doc.setFontSize(7);
-              doc.setTextColor(100, 116, 139);
-              doc.text(`Lat: ${item.lat.toFixed(5)}, Lng: ${item.lng.toFixed(5)}`, cardX + cardW / 2, cardY + 27, { align: 'center' });
-            }
-
-            // Photo Border
-            doc.setDrawColor(203, 213, 225);
-            doc.roundedRect(cardX + 2, cardY + 2, photoW, photoH, 1, 1, 'D');
-
-            // Validated Badge on Top-Right of photo
-            doc.setFillColor(16, 185, 129);
-            doc.roundedRect(cardX + cardW - 24, cardY + 4, 20, 5, 1, 1, 'F');
+          const sKpiWidth = 269 / singleBairroKpis.length;
+          singleBairroKpis.forEach((kpi, idx) => {
+            const xPos = 14 + (idx * sKpiWidth) + (sKpiWidth / 2);
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(6.5);
-            doc.setTextColor(255, 255, 255);
-            doc.text('VALIDADO', cardX + cardW - 14, cardY + 7.6, { align: 'center' });
-
-            // Photo Details below image
-            // Street Name
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(7.8);
-            doc.setTextColor(15, 23, 42);
-            const streetLabel = item.streetName.length > 32 ? item.streetName.substring(0, 30) + '...' : item.streetName;
-            doc.text(streetLabel, cardX + 4, cardY + 49);
-
-            // Militant Name
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(6.5);
-            doc.setTextColor(51, 65, 85);
-            doc.text(`Militante: ${item.militantName} (${item.matricula})`, cardX + 4, cardY + 54.5);
-
-            // Timestamp
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(6);
             doc.setTextColor(100, 116, 139);
-            doc.text(`Data/Hora: ${formatDateTimeBR(item.timestamp)}`, cardX + 4, cardY + 59.5);
-
-            // GPS & Materials
-            doc.setFont('courier', 'bold');
-            doc.setFontSize(6);
-            doc.setTextColor(220, 38, 38);
-            doc.text(`GPS: ${item.lat.toFixed(4)}, ${item.lng.toFixed(4)}`, cardX + 4, cardY + 64.5);
+            doc.text(kpi.label, xPos, 31.5, { align: 'center' });
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(6.5);
+            doc.setFontSize(9);
             doc.setTextColor(30, 58, 138);
-            doc.text(`${item.santinhos} sant | ${item.abordagens} abord`, cardX + cardW - 4, cardY + 64.5, { align: 'right' });
+            doc.text(kpi.val, xPos, 37.5, { align: 'center' });
           });
+
+          // Mapa individual do bairro com leito viário pintado em vermelho
+          const bairroMapCanvas = await generateNeighborhoodMapCanvas(bairro, nCheckIns);
+          if (bairroMapCanvas) {
+            doc.addImage(bairroMapCanvas, 'PNG', 14, 44, 269, 138);
+          }
+
+          // 2. SEQUÊNCIA DE RUAS E GALERIAS DO BAIRRO (3a Tabela, 3b Galeria, 3c Tabela, 3d Galeria...)
+          for (let rIdx = 0; rIdx < nCheckIns.length; rIdx++) {
+            const chk = nCheckIns[rIdx];
+            const sIdx = rIdx * 2;
+            const gIdx = rIdx * 2 + 1;
+            const streetTag = `${bairroNumber}${sIdx < alphabet.length ? alphabet[sIdx] : `.${sIdx + 1}`}`;
+            const galleryTag = `${bairroNumber}${gIdx < alphabet.length ? alphabet[gIdx] : `.${gIdx + 1}`}`;
+            const streetPhotos = getAllPhotosForCheckIn(chk);
+            const mObj = militants.find(m => m.id === chk.militantId);
+            const mat = mObj?.matricula ? `(${mObj.matricula})` : '';
+
+            doc.addPage('a4', 'landscape');
+            drawHeaderBanner(
+              `SISTEMA DE MILITÂNCIA SÃO JOSÉ - ${streetTag} / ${galleryTag}: AUDITORIA DE RUA E GALERIA FOTOGRÁFICA`,
+              `Bairro ${bairro.name} • Rua ${rIdx + 1} de ${nCheckIns.length}: ${chk.streetName} | Período: ${selectedWeekLabel}`
+            );
+
+            // Sub-header da Rua (3a / 4a)
+            doc.setFillColor(239, 246, 255);
+            doc.roundedRect(14, 27, 269, 7.5, 1.5, 1.5, 'F');
+            doc.setDrawColor(191, 219, 254);
+            doc.roundedRect(14, 27, 269, 7.5, 1.5, 1.5, 'D');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(30, 58, 138);
+            doc.text(
+              `[${streetTag}] DADOS DE AUDITORIA: ${chk.streetName.toUpperCase()} (${chk.houseNumberRange || 'Trecho Geral'}) • MILITANTE: ${chk.militantName} ${mat}`,
+              18,
+              32
+            );
+
+            // Tabela com as 9 colunas solicitadas:
+            // Data/Hora, Logradouro, Militante, GPS, Abordagens, Comércio, Santinhos, Comprovante, Status Auditoria
+            autoTable(doc, {
+              head: [[
+                'Data / Hora',
+                'Logradouro / Trecho Percorrido',
+                'Militante Responsável',
+                'GPS (Latitude, Longitude)',
+                'Abordagens',
+                'Comércio',
+                'Santinhos',
+                'Comprovante',
+                'Status Auditoria'
+              ]],
+              body: [[
+                formatDateTimeBR(chk.timestamp),
+                chk.houseNumberRange && chk.houseNumberRange !== 'Trecho Geral'
+                  ? `${chk.streetName} (${chk.houseNumberRange})`
+                  : chk.streetName,
+                `${chk.militantName} ${mat}`,
+                `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
+                `${chk.materialsDelivered.abordagens || 0}`,
+                `${chk.materialsDelivered.comercio || 0}`,
+                `${chk.materialsDelivered.santinhos.toLocaleString('pt-BR')}`,
+                `${streetPhotos.length} foto(s) anexada(s)`,
+                chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
+              ]],
+              startY: 36.5,
+              margin: { left: 14, right: 14 },
+              styles: {
+                fontSize: 8,
+                cellPadding: 3,
+                textColor: [30, 41, 59],
+                lineColor: [226, 232, 240],
+                lineWidth: 0.1
+              },
+              headStyles: {
+                fillColor: [30, 58, 138],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                fontSize: 8
+              },
+              columnStyles: {
+                0: { cellWidth: 28 },
+                1: { cellWidth: 62, fontStyle: 'bold' },
+                2: { cellWidth: 42 },
+                3: { cellWidth: 38, font: 'courier' },
+                4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+                5: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
+                6: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
+                7: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
+                8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+              }
+            });
+
+            const afterTableY = (doc as any).lastAutoTable?.finalY || 54;
+            const galleryStartY = afterTableY + 4;
+
+            // Header da Galeria Fotográfica dessa rua (3b / 4b)
+            doc.setFillColor(240, 253, 244);
+            doc.roundedRect(14, galleryStartY, 269, 7.5, 1.5, 1.5, 'F');
+            doc.setDrawColor(187, 247, 208);
+            doc.roundedRect(14, galleryStartY, 269, 7.5, 1.5, 1.5, 'D');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(22, 101, 52);
+            doc.text(
+              `[${galleryTag}] GALERIA DE FOTOS DESTA RUA • ${chk.streetName.toUpperCase()} (${streetPhotos.length} foto(s) anexada(s))`,
+              18,
+              galleryStartY + 5
+            );
+
+            // Carregamento e renderização de todas as fotos anexadas desta rua
+            if (streetPhotos.length === 0) {
+              doc.setFillColor(248, 250, 252);
+              doc.roundedRect(14, galleryStartY + 10, 269, 20, 2, 2, 'F');
+              doc.setFont('helvetica', 'italic');
+              doc.setFontSize(9);
+              doc.setTextColor(148, 163, 184);
+              doc.text(`Nenhuma foto anexada encontrada para o logradouro ${chk.streetName}.`, 148, galleryStartY + 22, { align: 'center' });
+            } else {
+              const preloadedStreetImages = await Promise.all(
+                streetPhotos.map(p => loadBase64Image(p))
+              );
+
+              // Renderiza as fotos em cards organizados
+              const photosAreaY = galleryStartY + 10;
+              const cardW = 63;
+              const cardH = 54;
+              const gapX = 5.5;
+              const gapY = 5;
+              const cols = 4;
+
+              preloadedStreetImages.forEach((imgBase64, pIdx) => {
+                const col = pIdx % cols;
+                const row = Math.floor(pIdx / cols);
+                const cX = 14 + col * (cardW + gapX);
+                const cY = photosAreaY + row * (cardH + gapY);
+
+                // Se exceder a página (mais de 8 fotos por rua), cria página adicional de continuação da galeria da rua
+                if (cY + cardH > 200) {
+                  doc.addPage('a4', 'landscape');
+                  drawHeaderBanner(
+                    `SISTEMA DE MILITÂNCIA SÃO JOSÉ - ${galleryTag}: CONTINUAÇÃO DA GALERIA FOTOGRÁFICA`,
+                    `Bairro ${bairro.name} • Logradouro: ${chk.streetName} | Período: ${selectedWeekLabel}`
+                  );
+                }
+
+                // Card Frame
+                doc.setFillColor(248, 250, 252);
+                doc.setDrawColor(203, 213, 225);
+                doc.roundedRect(cX, cY, cardW, cardH, 2, 2, 'FD');
+
+                const pImageH = 38;
+                const pImageW = cardW - 3;
+
+                if (imgBase64) {
+                  try {
+                    doc.addImage(imgBase64, 'JPEG', cX + 1.5, cY + 1.5, pImageW, pImageH);
+                  } catch {
+                    doc.setFillColor(226, 232, 240);
+                    doc.rect(cX + 1.5, cY + 1.5, pImageW, pImageH, 'F');
+                  }
+                } else {
+                  doc.setFillColor(226, 232, 240);
+                  doc.rect(cX + 1.5, cY + 1.5, pImageW, pImageH, 'F');
+                }
+
+                // Legenda da Foto
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7);
+                doc.setTextColor(30, 41, 59);
+                doc.text(`Foto ${pIdx + 1} de ${streetPhotos.length} • ${chk.streetName.substring(0, 20)}`, cX + 2.5, cY + pImageH + 4.5);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(6.5);
+                doc.setTextColor(100, 116, 139);
+                doc.text(`GPS: ${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)} | ${formatDateTimeBR(chk.timestamp).split(' ')[1] || ''}`, cX + 2.5, cY + pImageH + 8.5);
+              });
+            }
+          }
         }
 
         // Global pagination pass for All Pages
@@ -1606,10 +1553,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           drawFooter(p, totalPages);
         }
 
-        const sanitizedBairro = currentSelectedBairro.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const sanitizedBairro = isAllBairrosMode ? 'todos_os_bairros' : currentSelectedBairro.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
         doc.save(`relatorio_territorial_${sanitizedBairro}_${sanitizedWeek}.pdf`);
-        setExportFeedback(`✓ Relatório Territorial do Bairro ${currentSelectedBairro.name} com mapa, gráficos, tabela e galeria gerado com sucesso!`);
+        setExportFeedback(`✓ Relatório Territorial (${isAllBairrosMode ? 'Todos os Bairros' : currentSelectedBairro.name}) estruturado gerado com sucesso!`);
         setTimeout(() => setExportFeedback(null), 6000);
         return;
       }
@@ -2650,310 +2597,316 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           </div>
         </div>
 
-        {/* Aggregate KPI Summary for Selected Period */}
-        <div className="grid grid-cols-2 sm:grid-cols-7 gap-3">
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Ruas</span>
-            <span className="text-base font-bold text-slate-900">{filteredCheckIns.length} ruas</span>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Abordagens</span>
-            <span className="text-base font-bold text-purple-700">{totalAbordagens}</span>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Comércio</span>
-            <span className="text-base font-bold text-emerald-700">{totalComercios}</span>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Santinhos</span>
-            <span className="text-base font-bold text-blue-700">{totalSantinhos.toLocaleString('pt-BR')}</span>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Adesivos Bola</span>
-            <span className="text-base font-bold text-amber-700">{totalAdesivoBola.toLocaleString('pt-BR')}</span>
-          </div>
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-            <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Materiais</span>
-            <span className="text-base font-bold text-slate-900">{totalMateriaisGeral.toLocaleString('pt-BR')}</span>
-          </div>
-          <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-center col-span-2 sm:col-span-1">
-            <span className="text-[10px] text-emerald-700 uppercase font-bold block flex items-center justify-center gap-1">
-              <DollarSign className="w-3 h-3" /> Folha Total
-            </span>
-            <span className="text-sm font-black text-emerald-900 font-mono">
-              R$ {productivityData.reduce((acc, d) => acc + d.totalPay, 0).toFixed(2).replace('.', ',')}
-            </span>
-          </div>
-        </div>
-
-        {/* SECTION: GRÁFICOS DE PRODUTIVIDADE & DISTRIBUIÇÃO (Captured for PDF export) */}
-        <div ref={chartsContainerRef} className="p-4 sm:p-5 rounded-xl bg-slate-50/70 border border-slate-200 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
-            <div>
-              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-blue-600" />
-                Gráficos de Produtividade & Distribuição de Materiais
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Visualização comparativa de ruas percorridas, abordagens a eleitores e entrega de materiais por equipe
-              </p>
+        {/* Aggregate KPI Summary for Selected Period (Only for non por_bairro views) */}
+        {viewGrouping !== 'por_bairro' && (
+          <div className="grid grid-cols-2 sm:grid-cols-7 gap-3">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+              <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Ruas</span>
+              <span className="text-base font-bold text-slate-900">{filteredCheckIns.length} ruas</span>
             </div>
-            <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 self-start sm:self-center">
-              São José / SC • 2026
-            </span>
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+              <span className="text-[10px] text-slate-500 uppercase font-semibold block">Abordagens</span>
+              <span className="text-base font-bold text-purple-700">{totalAbordagens}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+              <span className="text-[10px] text-slate-500 uppercase font-semibold block">Comércio</span>
+              <span className="text-base font-bold text-emerald-700">{totalComercios}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+              <span className="text-[10px] text-slate-500 uppercase font-semibold block">Santinhos</span>
+              <span className="text-base font-bold text-blue-700">{totalSantinhos.toLocaleString('pt-BR')}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+              <span className="text-[10px] text-slate-500 uppercase font-semibold block">Adesivos Bola</span>
+              <span className="text-base font-bold text-amber-700">{totalAdesivoBola.toLocaleString('pt-BR')}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+              <span className="text-[10px] text-slate-500 uppercase font-semibold block">Total Materiais</span>
+              <span className="text-base font-bold text-slate-900">{totalMateriaisGeral.toLocaleString('pt-BR')}</span>
+            </div>
+            <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-center col-span-2 sm:col-span-1">
+              <span className="text-[10px] text-emerald-700 uppercase font-bold block flex items-center justify-center gap-1">
+                <DollarSign className="w-3 h-3" /> Folha Total
+              </span>
+              <span className="text-sm font-black text-emerald-900 font-mono">
+                R$ {productivityData.reduce((acc, d) => acc + d.totalPay, 0).toFixed(2).replace('.', ',')}
+              </span>
+            </div>
           </div>
+        )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Chart 1: Ruas & Abordagens por Militante (Bar Chart) */}
-            <div className="lg:col-span-2 p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
-                  Produtividade por Militante (Ruas vs. Abordagens)
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">Meta: 25 ruas/sem</span>
+        {/* SECTION: GRÁFICOS DE PRODUTIVIDADE & DISTRIBUIÇÃO (Captured for PDF export - Only for non por_bairro views) */}
+        {viewGrouping !== 'por_bairro' && (
+          <div ref={chartsContainerRef} className="p-4 sm:p-5 rounded-xl bg-slate-50/70 border border-slate-200 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  Gráficos de Produtividade & Distribuição de Materiais
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Visualização comparativa de ruas percorridas, abordagens a eleitores e entrega de materiais por equipe
+                </p>
               </div>
-              <div className="h-56 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={productivityData}
-                    margin={{ top: 10, right: 10, left: -15, bottom: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis
-                      dataKey="shortName"
-                      tick={{ fill: '#64748b', fontSize: 10 }}
-                      interval={0}
-                      angle={-20}
-                      textAnchor="end"
-                    />
-                    <YAxis tick={{ fill: '#64748b', fontSize: 10 }} />
-                    <RechartsTooltip
-                      formatter={(val: any, name: any) => [
-                        `${val}`,
-                        name === 'streetsCount' ? 'Ruas Percorridas' : (name === 'abordagens' ? 'Abordagens Diretas' : 'Comércios')
-                      ]}
-                      labelFormatter={(label) => `Militante: ${label}`}
-                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                    />
-                    <Legend
-                      verticalAlign="top"
-                      align="right"
-                      wrapperStyle={{ fontSize: 10, paddingBottom: 6 }}
-                      formatter={(value) => (
-                        <span className="text-slate-700 text-xs">
-                          {value === 'streetsCount' ? 'Ruas' : (value === 'abordagens' ? 'Abordagens' : 'Comércio')}
-                        </span>
-                      )}
-                    />
-                    <Bar dataKey="streetsCount" name="streetsCount" fill="#2563eb" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="abordagens" name="abordagens" fill="#9333ea" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="comercios" name="comercios" fill="#059669" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200 self-start sm:self-center">
+                São José / SC • 2026
+              </span>
             </div>
 
-            {/* Chart 2: Distribuição de Materiais Entregues (Pie Chart) */}
-            <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                  <PieChartIcon className="w-3.5 h-3.5 text-indigo-600" />
-                  Composição de Materiais
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">Total: {totalMateriaisGeral}</span>
-              </div>
-              <div className="h-44 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={materialsPieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={36}
-                      outerRadius={58}
-                      paddingAngle={3}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Chart 1: Ruas & Abordagens por Militante (Bar Chart) */}
+              <div className="lg:col-span-2 p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+                    Produtividade por Militante (Ruas vs. Abordagens)
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Meta: 25 ruas/sem</span>
+                </div>
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={productivityData}
+                      margin={{ top: 10, right: 10, left: -15, bottom: 20 }}
                     >
-                      {materialsPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip
-                      formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unid.`, name]}
-                      contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis
+                        dataKey="shortName"
+                        tick={{ fill: '#64748b', fontSize: 10 }}
+                        interval={0}
+                        angle={-20}
+                        textAnchor="end"
+                      />
+                      <YAxis tick={{ fill: '#64748b', fontSize: 10 }} />
+                      <RechartsTooltip
+                        formatter={(val: any, name: any) => [
+                          `${val}`,
+                          name === 'streetsCount' ? 'Ruas Percorridas' : (name === 'abordagens' ? 'Abordagens Diretas' : 'Comércios')
+                        ]}
+                        labelFormatter={(label) => `Militante: ${label}`}
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
+                      />
+                      <Legend
+                        verticalAlign="top"
+                        align="right"
+                        wrapperStyle={{ fontSize: 10, paddingBottom: 6 }}
+                        formatter={(value) => (
+                          <span className="text-slate-700 text-xs">
+                            {value === 'streetsCount' ? 'Ruas' : (value === 'abordagens' ? 'Abordagens' : 'Comércio')}
+                          </span>
+                        )}
+                      />
+                      <Bar dataKey="streetsCount" name="streetsCount" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="abordagens" name="abordagens" fill="#9333ea" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="comercios" name="comercios" fill="#059669" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-slate-100 text-[10px]">
-                {materialsPieData.map(item => (
-                  <div key={item.name} className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                    <span className="text-slate-600 truncate">{item.name}:</span>
-                    <strong className="text-slate-900 font-mono">{item.value.toLocaleString('pt-BR')}</strong>
-                  </div>
-                ))}
+
+              {/* Chart 2: Distribuição de Materiais Entregues (Pie Chart) */}
+              <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <PieChartIcon className="w-3.5 h-3.5 text-indigo-600" />
+                    Composição de Materiais
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">Total: {totalMateriaisGeral}</span>
+                </div>
+                <div className="h-44 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={materialsPieData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={36}
+                        outerRadius={58}
+                        paddingAngle={3}
+                      >
+                        {materialsPieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip
+                        formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unid.`, name]}
+                        contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-slate-100 text-[10px]">
+                  {materialsPieData.map(item => (
+                    <div key={item.name} className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                      <span className="text-slate-600 truncate">{item.name}:</span>
+                      <strong className="text-slate-900 font-mono">{item.value.toLocaleString('pt-BR')}</strong>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* SECTION: TABELA CONSOLIDADA DE PRODUTIVIDADE & FOLHA DE PAGAMENTOS */}
-        <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
-            <div>
-              <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <Target className="w-4 h-4 text-blue-600" />
-                Tabela Oficial de Produtividade & Folha de Pagamentos
-              </h3>
-              <p className="text-[11px] text-slate-500">
-                Valores de diárias, dias apurados e total a pagar 100% integrados à Folha de Pagamentos da campanha
-              </p>
+        {(viewGrouping === 'tabela_produtividade' || viewGrouping === 'tabela_geral') && (
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+              <div>
+                <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <Target className="w-4 h-4 text-blue-600" />
+                  Tabela Oficial de Produtividade & Folha de Pagamentos
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Valores de diárias, dias apurados e total a pagar 100% integrados à Folha de Pagamentos da campanha
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500 font-medium">
+                  Meta: <strong>25 ruas / militante</strong>
+                </span>
+                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono font-bold text-xs border border-emerald-200">
+                  Folha da {selectedWeekLabel.split('(')[0].trim()}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">
-                Meta: <strong>25 ruas / militante</strong>
-              </span>
-              <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono font-bold text-xs border border-emerald-200">
-                Folha da {selectedWeekLabel.split('(')[0].trim()}
-              </span>
-            </div>
-          </div>
 
-          <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-2xs">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px]">
-                <tr>
-                  <th className="py-2.5 px-3">Militante / Matrícula</th>
-                  <th className="py-2.5 px-3">Equipe</th>
-                  <th className="py-2.5 px-3 text-center">Ruas Feitas</th>
-                  <th className="py-2.5 px-3 text-center">Meta Semanal</th>
-                  <th className="py-2.5 px-3 text-center">% Atingimento</th>
-                  <th className="py-2.5 px-3 text-center">Abordagens</th>
-                  <th className="py-2.5 px-3 text-center">Comércios</th>
-                  <th className="py-2.5 px-3 text-center">Total Materiais</th>
-                  <th className="py-2.5 px-3 text-center">Diária (R$)</th>
-                  <th className="py-2.5 px-3 text-center">Dias (Folha)</th>
-                  <th className="py-2.5 px-3 text-center">Status Folha</th>
-                  <th className="py-2.5 px-3 text-right">Total a Pagar (R$)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {productivityData.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src={item.avatar}
-                          alt={item.name}
-                          className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200"
-                        />
-                        <div>
-                          <span className="font-bold text-slate-900 block">{item.name}</span>
-                          <span className="text-[10px] text-slate-500 font-mono">{item.matricula}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-3 font-medium text-slate-700 whitespace-nowrap">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-semibold text-slate-700">
-                        {item.teamName}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-center font-bold text-blue-700 text-sm whitespace-nowrap">
-                      {item.streetsCount}
-                    </td>
-                    <td className="py-2.5 px-3 text-center text-slate-500 whitespace-nowrap">
-                      {item.weeklyGoal} ruas
-                    </td>
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <div className="w-14 bg-slate-200 rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full ${
-                              item.completionRate >= 100 ? 'bg-emerald-500' : (item.completionRate >= 75 ? 'bg-blue-500' : 'bg-amber-500')
-                            }`}
-                            style={{ width: `${Math.min(item.completionRate, 100)}%` }}
+            <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-2xs">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px]">
+                  <tr>
+                    <th className="py-2.5 px-3">Militante / Matrícula</th>
+                    <th className="py-2.5 px-3">Equipe</th>
+                    <th className="py-2.5 px-3 text-center">Ruas Feitas</th>
+                    <th className="py-2.5 px-3 text-center">Meta Semanal</th>
+                    <th className="py-2.5 px-3 text-center">% Atingimento</th>
+                    <th className="py-2.5 px-3 text-center">Abordagens</th>
+                    <th className="py-2.5 px-3 text-center">Comércios</th>
+                    <th className="py-2.5 px-3 text-center">Total Materiais</th>
+                    <th className="py-2.5 px-3 text-center">Diária (R$)</th>
+                    <th className="py-2.5 px-3 text-center">Dias (Folha)</th>
+                    <th className="py-2.5 px-3 text-center">Status Folha</th>
+                    <th className="py-2.5 px-3 text-right">Total a Pagar (R$)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {productivityData.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50/80 transition">
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={item.avatar}
+                            alt={item.name}
+                            className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200"
                           />
+                          <div>
+                            <span className="font-bold text-slate-900 block">{item.name}</span>
+                            <span className="text-[10px] text-slate-500 font-mono">{item.matricula}</span>
+                          </div>
                         </div>
-                        <span className="font-bold text-[11px] text-slate-800">{item.completionRate}%</span>
-                      </div>
+                      </td>
+                      <td className="py-2.5 px-3 font-medium text-slate-700 whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-semibold text-slate-700">
+                          {item.teamName}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-blue-700 text-sm whitespace-nowrap">
+                        {item.streetsCount}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-slate-500 whitespace-nowrap">
+                        {item.weeklyGoal} ruas
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <div className="w-14 bg-slate-200 rounded-full h-2 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                item.completionRate >= 100 ? 'bg-emerald-500' : (item.completionRate >= 75 ? 'bg-blue-500' : 'bg-amber-500')
+                              }`}
+                              style={{ width: `${Math.min(item.completionRate, 100)}%` }}
+                            />
+                          </div>
+                          <span className="font-bold text-[11px] text-slate-800">{item.completionRate}%</span>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-purple-700 whitespace-nowrap">
+                        {item.abordagens}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
+                        {item.comercios}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-mono text-slate-800 whitespace-nowrap">
+                        {item.totalMat.toLocaleString('pt-BR')}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-mono text-slate-700 whitespace-nowrap">
+                        R$ {item.dailyRate.toFixed(2).replace('.', ',')}
+                      </td>
+                      <td className="py-2.5 px-3 text-center font-bold text-blue-800 whitespace-nowrap">
+                        {item.daysWorked} {item.daysWorked === 1 ? 'dia' : 'dias'}
+                      </td>
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          item.payrollStatus === 'pago'
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : (item.payrollStatus === 'aprovado'
+                              ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300')
+                        }`}>
+                          {item.payrollStatus || 'Pendente'}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-900 font-mono whitespace-nowrap">
+                        R$ {item.totalPay.toFixed(2).replace('.', ',')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-300 text-slate-900 text-xs">
+                  <tr>
+                    <td colSpan={2} className="py-2.5 px-3 uppercase text-slate-700">
+                      Totais Consolidados ({productivityData.length} militantes)
                     </td>
-                    <td className="py-2.5 px-3 text-center font-bold text-purple-700 whitespace-nowrap">
-                      {item.abordagens}
+                    <td className="py-2.5 px-3 text-center text-blue-800 text-sm">
+                      {productivityData.reduce((acc, d) => acc + d.streetsCount, 0)}
                     </td>
-                    <td className="py-2.5 px-3 text-center font-bold text-emerald-700 whitespace-nowrap">
-                      {item.comercios}
+                    <td className="py-2.5 px-3 text-center text-slate-500">
+                      {productivityData.length * 25}
                     </td>
-                    <td className="py-2.5 px-3 text-center font-mono text-slate-800 whitespace-nowrap">
-                      {item.totalMat.toLocaleString('pt-BR')}
+                    <td className="py-2.5 px-3 text-center text-emerald-700">
+                      {Math.round((productivityData.reduce((acc, d) => acc + d.streetsCount, 0) / Math.max(productivityData.length * 25, 1)) * 100)}%
                     </td>
-                    <td className="py-2.5 px-3 text-center font-mono text-slate-700 whitespace-nowrap">
-                      R$ {item.dailyRate.toFixed(2).replace('.', ',')}
+                    <td className="py-2.5 px-3 text-center text-purple-800">
+                      {totalAbordagens}
                     </td>
-                    <td className="py-2.5 px-3 text-center font-bold text-blue-800 whitespace-nowrap">
-                      {item.daysWorked} {item.daysWorked === 1 ? 'dia' : 'dias'}
+                    <td className="py-2.5 px-3 text-center text-emerald-800">
+                      {totalComercios}
                     </td>
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        item.payrollStatus === 'pago'
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : (item.payrollStatus === 'aprovado'
-                            ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                            : 'bg-amber-100 text-amber-800 border border-amber-300')
-                      }`}>
-                        {item.payrollStatus || 'Pendente'}
+                    <td className="py-2.5 px-3 text-center font-mono">
+                      {totalMateriaisGeral.toLocaleString('pt-BR')}
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-slate-500 font-mono">
+                      -
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-blue-800 font-bold">
+                      {productivityData.reduce((acc, d) => acc + d.daysWorked, 0)} d
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span className="text-[10px] text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded">
+                        HOMOLOGADO
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-right font-bold text-emerald-900 font-mono whitespace-nowrap">
-                      R$ {item.totalPay.toFixed(2).replace('.', ',')}
+                    <td className="py-2.5 px-3 text-right font-mono text-emerald-800 text-sm">
+                      R$ {productivityData.reduce((acc, d) => acc + d.totalPay, 0).toFixed(2).replace('.', ',')}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-slate-50 font-bold border-t-2 border-slate-300 text-slate-900 text-xs">
-                <tr>
-                  <td colSpan={2} className="py-2.5 px-3 uppercase text-slate-700">
-                    Totais Consolidados ({productivityData.length} militantes)
-                  </td>
-                  <td className="py-2.5 px-3 text-center text-blue-800 text-sm">
-                    {productivityData.reduce((acc, d) => acc + d.streetsCount, 0)}
-                  </td>
-                  <td className="py-2.5 px-3 text-center text-slate-500">
-                    {productivityData.length * 25}
-                  </td>
-                  <td className="py-2.5 px-3 text-center text-emerald-700">
-                    {Math.round((productivityData.reduce((acc, d) => acc + d.streetsCount, 0) / Math.max(productivityData.length * 25, 1)) * 100)}%
-                  </td>
-                  <td className="py-2.5 px-3 text-center text-purple-800">
-                    {totalAbordagens}
-                  </td>
-                  <td className="py-2.5 px-3 text-center text-emerald-800">
-                    {totalComercios}
-                  </td>
-                  <td className="py-2.5 px-3 text-center font-mono">
-                    {totalMateriaisGeral.toLocaleString('pt-BR')}
-                  </td>
-                  <td className="py-2.5 px-3 text-center text-slate-500 font-mono">
-                    -
-                  </td>
-                  <td className="py-2.5 px-3 text-center text-blue-800 font-bold">
-                    {productivityData.reduce((acc, d) => acc + d.daysWorked, 0)} d
-                  </td>
-                  <td className="py-2.5 px-3 text-center">
-                    <span className="text-[10px] text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded">
-                      HOMOLOGADO
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-right font-mono text-emerald-800 text-sm">
-                    R$ {productivityData.reduce((acc, d) => acc + d.totalPay, 0).toFixed(2).replace('.', ',')}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                </tfoot>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* SECTION 1: PER-MILITANT DETAILED STREETS BREAKDOWN */}
         {(viewGrouping === 'por_militante' || viewGrouping === 'tabela_geral') && (
@@ -3124,7 +3077,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
         {/* SECTION 2: POR BAIRRO & MAPAS (TERRITORIAL REPORT WITH MAPS, CHARTS & PHOTOS) */}
         {(viewGrouping === 'por_bairro' || viewGrouping === 'tabela_geral') && (
-          <div className="pt-4 border-t border-slate-200 space-y-3">
+          <div className={`space-y-3 ${viewGrouping !== 'por_bairro' ? 'pt-4 border-t border-slate-200' : 'pt-1'}`}>
             {viewGrouping === 'tabela_geral' && (
               <div className="flex items-center justify-between pb-1">
                 <h3 className="font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
