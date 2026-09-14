@@ -10,6 +10,7 @@ interface BairroInteractiveMapProps {
   mapId: string;
   bairro: Neighborhood;
   checkIns: StreetCheckIn[];
+  pinMap?: Record<string, number>;
   isGeneralMap?: boolean;
   qualifyingNeighborhoods?: Neighborhood[];
   height?: string;
@@ -20,6 +21,7 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
   mapId,
   bairro,
   checkIns,
+  pinMap,
   isGeneralMap = false,
   qualifyingNeighborhoods = [],
   height = '380px',
@@ -155,21 +157,25 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       layerGroup.addLayer(glowLine);
       layerGroup.addLayer(coreLine);
 
-      // Pin vermelho estilizado com checkmark
+      // Pin com número de acordo com a ordem de lançamento de dados
+      const pinNumber = (pinMap && pinMap[chk.id]) || (
+        [...checkIns]
+          .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+          .findIndex(c => c.id === chk.id) + 1
+      );
+
       const pinIcon = L.divIcon({
-        className: 'custom-red-pin-icon',
+        className: 'custom-numbered-pin-icon',
         html: `
           <div class="relative group cursor-pointer" style="transform: translate(-50%, -100%);">
-            <div class="absolute -inset-1 rounded-full bg-rose-500/50 animate-ping"></div>
-            <div class="relative w-7 h-7 rounded-full bg-gradient-to-br from-rose-500 via-red-600 to-red-800 border-2 border-white shadow-xl flex items-center justify-center text-white text-xs font-bold ring-2 ring-red-400 hover:scale-125 transition-transform">
-              📍
+            <div class="relative w-7 h-7 rounded-full bg-gradient-to-br from-red-600 via-rose-600 to-red-700 border-2 border-white shadow-xl flex items-center justify-center text-white text-xs font-black ring-2 ring-red-300 hover:scale-125 transition-transform">
+              ${pinNumber}
             </div>
-            <div class="w-1.5 h-1.5 bg-red-700 mx-auto -mt-0.5 rounded-b-full"></div>
-            <div class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center text-[7px] text-white font-black shadow-xs">✓</div>
+            <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-red-700 mx-auto"></div>
           </div>
         `,
-        iconSize: [28, 32],
-        iconAnchor: [14, 30]
+        iconSize: [28, 33],
+        iconAnchor: [14, 33]
       });
 
       const pinMarker = L.marker([chk.latitude, chk.longitude], { icon: pinIcon });

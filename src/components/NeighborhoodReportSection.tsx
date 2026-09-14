@@ -116,6 +116,18 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     100
   );
 
+  // Mapeamento cronológico de Pins por ordem de lançamento de dados para o bairro selecionado
+  const singlePinMap = useMemo(() => {
+    const sorted = [...bairroCheckIns].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    const map: Record<string, number> = {};
+    sorted.forEach((chk, idx) => {
+      map[chk.id] = idx + 1;
+    });
+    return map;
+  }, [bairroCheckIns]);
+
   // Dados para o gráfico de pizza de materiais
   const materialsPieData = useMemo(() => {
     return [

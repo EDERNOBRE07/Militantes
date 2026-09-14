@@ -61,6 +61,7 @@ interface MilitantAuditSectionProps {
   group: MilitantAuditGroup;
   bairroName: string;
   militantIndex: number;
+  pinMap?: Record<string, number>;
   onZoomPhoto: (photo: string) => void;
   onEditStreet?: (chk: StreetCheckIn) => void;
 }
@@ -69,19 +70,22 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
   group,
   bairroName,
   militantIndex,
+  pinMap,
   onZoomPhoto,
   onEditStreet
 }) => {
   // Coleta todas as fotos anexadas às ruas deste militante
-  const allPhotos: { photo: string; streetName: string; timestamp: string; chkId: string }[] = [];
+  const allPhotos: { photo: string; streetName: string; timestamp: string; chkId: string; pinNum: number }[] = [];
   group.checkIns.forEach(chk => {
+    const pinNum = (pinMap && pinMap[chk.id]) || 1;
     const photos = getAllPhotosForCheckIn(chk);
     photos.forEach(p => {
       allPhotos.push({
         photo: p,
         streetName: chk.streetName,
         timestamp: chk.timestamp,
-        chkId: chk.id
+        chkId: chk.id,
+        pinNum
       });
     });
   });
@@ -160,6 +164,7 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
             <tr>
               <th className="py-2.5 px-3">Data / Hora</th>
               <th className="py-2.5 px-3">Logradouro / Trecho Percorrido</th>
+              <th className="py-2.5 px-3 text-center whitespace-nowrap">Pin nº</th>
               <th className="py-2.5 px-3 text-center">Abordagens</th>
               <th className="py-2.5 px-3 text-center">Comércio</th>
               <th className="py-2.5 px-3 text-center">Santinhos</th>
@@ -170,6 +175,11 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
           <tbody className="divide-y divide-slate-100 text-slate-800">
             {group.checkIns.map((chk) => {
               const chkPhotos = getAllPhotosForCheckIn(chk);
+              const pinNumber = (pinMap && pinMap[chk.id]) || (
+                [...group.checkIns]
+                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                  .findIndex(c => c.id === chk.id) + 1
+              );
               return (
                 <tr key={chk.id} className="hover:bg-slate-50/70 transition">
                   {/* 1. Data / Hora */}
@@ -189,22 +199,29 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
                     </div>
                   </td>
 
-                  {/* 3. Abordagens */}
+                  {/* 3. Coluna Pin nº */}
+                  <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                    <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-full bg-rose-600 text-white font-mono font-black text-xs shadow-2xs">
+                      #{pinNumber}
+                    </span>
+                  </td>
+
+                  {/* 4. Abordagens */}
                   <td className="py-2.5 px-3 text-center font-bold text-purple-700 whitespace-nowrap font-mono">
                     {chk.materialsDelivered.abordagens || 0}
                   </td>
 
-                  {/* 4. Comércio */}
+                  {/* 5. Comércio */}
                   <td className="py-2.5 px-3 text-center font-bold text-emerald-700 whitespace-nowrap font-mono">
                     {chk.materialsDelivered.comercio || 0}
                   </td>
 
-                  {/* 5. Santinhos */}
+                  {/* 6. Santinhos */}
                   <td className="py-2.5 px-3 text-center font-bold text-blue-700 whitespace-nowrap font-mono">
                     {(chk.materialsDelivered.santinhos || 0).toLocaleString('pt-BR')}
                   </td>
 
-                  {/* 6. Comprovante */}
+                  {/* 7. Comprovante */}
                   <td className="py-2.5 px-3 text-center whitespace-nowrap">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
                       <Camera className="w-3 h-3 text-blue-600" />
@@ -212,7 +229,7 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
                     </span>
                   </td>
 
-                  {/* 7. Status Auditoria */}
+                  {/* 8. Status Auditoria */}
                   <td className="py-2.5 px-3 text-center whitespace-nowrap">
                     <div className="inline-flex items-center gap-1.5 justify-center">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
@@ -252,12 +269,12 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
             </h5>
           </div>
           <span className="text-[11px] text-slate-500 font-medium">
-            Grade compacta e organizada (Clique na foto para ampliar)
+            Grade de alta densidade (mínimo 15 fotos por bloco • Clique para ampliar)
           </span>
         </div>
 
         {allPhotos.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-2.5">
             {allPhotos.map((item, pIdx) => (
               <div
                 key={`militant-photo-${item.chkId}-${pIdx}`}
@@ -271,16 +288,20 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
                     loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
+                  {/* Badge com o número do Pin */}
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-rose-600 text-white text-[9px] font-mono font-black shadow-xs">
+                    Pin #{item.pinNum}
+                  </div>
                   <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-slate-900/80 text-white text-[9px] font-mono font-bold">
                     #{pIdx + 1}
                   </div>
                 </div>
                 <div className="p-1.5 bg-white space-y-0.5 border-t border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-800 truncate" title={item.streetName}>
-                    {item.streetName}
+                  <p className="text-[10px] font-bold text-slate-800 truncate" title={`Pin #${item.pinNum} • ${item.streetName}`}>
+                    Pin #{item.pinNum} • {item.streetName}
                   </p>
                   <p className="text-[9px] text-slate-500 font-mono">
-                    {formatDateTimeBR(item.timestamp).split(' ')[1] || formatDateTimeBR(item.timestamp)}
+                    {formatDateTimeBR(item.timestamp).split(' ')[1] || formatDateTimeBR(item.timestamp)} • Validado
                   </p>
                 </div>
               </div>
