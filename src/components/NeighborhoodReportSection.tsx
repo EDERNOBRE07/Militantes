@@ -421,37 +421,53 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                       </span>
                     </div>
 
-                    <BairroInteractiveMap
-                      mapId={`map-bairro-individual-${bairro.id}`}
-                      bairro={bairro}
-                      checkIns={nCheckIns}
-                      isGeneralMap={false}
-                      height="380px"
-                    />
-                  </div>
+                    {(() => {
+                      const nPinMap: Record<string, number> = {};
+                      [...nCheckIns]
+                        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+                        .forEach((c, idx) => {
+                          nPinMap[c.id] = idx + 1;
+                        });
 
-                  {/* SEQUÊNCIA POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 12 FOTOS) */}
-                  <div className="space-y-6 pt-2">
-                    <div className="flex items-center justify-between pb-1 border-b border-slate-100">
-                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        Auditoria de Ruas e Galerias Fotográficas por Militante ({nCheckIns.length} ruas)
-                      </span>
-                      <span className="text-[11px] text-slate-500">
-                        Tabela unificada por militante (sem GPS) seguida da respectiva galeria
-                      </span>
-                    </div>
+                      return (
+                        <>
+                          <BairroInteractiveMap
+                            mapId={`map-bairro-individual-${bairro.id}`}
+                            bairro={bairro}
+                            checkIns={nCheckIns}
+                            pinMap={nPinMap}
+                            isGeneralMap={false}
+                            height="380px"
+                          />
 
-                    {groupCheckInsByMilitant(nCheckIns, militants, teams).map((group, mIdx) => (
-                      <MilitantAuditSection
-                        key={group.militantId}
-                        group={group}
-                        bairroName={bairro.name}
-                        militantIndex={mIdx}
-                        onZoomPhoto={onZoomPhoto}
-                        onEditStreet={onEditStreet}
-                      />
-                    ))}
+                          {/* SEQUÊNCIA POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 15 FOTOS) */}
+                          <div className="space-y-6 pt-2">
+                            <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                Auditoria de Ruas e Galerias Fotográficas por Militante ({nCheckIns.length} ruas)
+                              </span>
+                              <span className="text-[11px] text-slate-500">
+                                Tabela unificada por militante (com Pin nº e sem GPS) seguida da respectiva galeria
+                              </span>
+                            </div>
+
+                            {groupCheckInsByMilitant(nCheckIns, militants, teams).map((group, mIdx) => (
+                              <MilitantAuditSection
+                                key={group.militantId}
+                                group={group}
+                                bairroName={bairro.name}
+                                militantIndex={mIdx}
+                                pinMap={nPinMap}
+                                onZoomPhoto={onZoomPhoto}
+                                onEditStreet={onEditStreet}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
+
                   </div>
 
                 </div>
@@ -491,6 +507,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                 mapId={`map-single-${currentBairro.id}`}
                 bairro={currentBairro}
                 checkIns={bairroCheckIns}
+                pinMap={singlePinMap}
                 isGeneralMap={false}
                 height="380px"
               />
@@ -619,6 +636,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                   group={group}
                   bairroName={currentBairro.name}
                   militantIndex={mIdx}
+                  pinMap={singlePinMap}
                   onZoomPhoto={onZoomPhoto}
                   onEditStreet={onEditStreet}
                 />

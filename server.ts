@@ -6,8 +6,7 @@ import { GoogleGenAI } from '@google/genai';
 
 async function startServer() {
   const app = express();
-  const rawPort = process.env.PORT || 3000;
-  const PORT = !isNaN(Number(rawPort)) ? Number(rawPort) : rawPort;
+  const PORT = 3000;
 
   app.use(express.json({ limit: '25mb' }));
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
@@ -1130,16 +1129,9 @@ Forneça sempre orientações táticas, distribuição eficiente de equipes e va
     });
   }
 
-  if (typeof PORT === 'number') {
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[Militância SJ Server] Running on http://localhost:${PORT}`);
-    });
-  } else {
-    // Unix socket for Hostinger / Phusion Passenger
-    app.listen(PORT, () => {
-      console.log(`[Militância SJ Server] Running on socket: ${PORT}`);
-    });
-  }
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[Militância SJ Server] Running on http://localhost:${PORT}`);
+  });
 }
 
 startServer();

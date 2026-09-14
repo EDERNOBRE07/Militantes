@@ -552,7 +552,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.restore();
     }
 
-    // 1. Draw Registered Streets in Vibrant RED exactly on the road bed
+    // 1. Draw Registered Streets in Vibrant RED exactly on the road bed (sem tags de nomes de ruas, conforme solicitado)
     bCheckIns.forEach(chk => {
       const roadBedCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, chk.latitude, chk.longitude);
       const points = roadBedCoords.map(([lat, lng]) => ({
@@ -584,63 +584,53 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
-
-        // Street Name Tag
-        const midPoint = points[Math.floor(points.length / 2)] || points[0];
-        ctx.font = 'bold 12.5px Helvetica, Arial, sans-serif';
-        const text = chk.streetName;
-        const textWidth = ctx.measureText(text).width;
-        const labelX = midPoint.x + 16;
-        const labelY = midPoint.y - 12;
-
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
-        ctx.beginPath();
-        ctx.roundRect(labelX - 4, labelY - 14, textWidth + 8, 20, 4);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(text, labelX, labelY);
       }
     });
 
-    // 2. Draw GPS Markers / Pins (📍)
+    // Mapeamento cronológico dos Pins do bairro para numeração por ordem de lançamento
+    const canvasPinMap: Record<string, number> = {};
+    [...bCheckIns]
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+      .forEach((chk, idx) => {
+        canvasPinMap[chk.id] = idx + 1;
+      });
+
+    // 2. Draw Numbered Pins (apenas pin com número correspondente à ordem de lançamento)
     bCheckIns.forEach(chk => {
       const px = toX(chk.longitude, chk.latitude);
       const py = toY(chk.latitude, chk.longitude);
+      const pinNum = canvasPinMap[chk.id] || 1;
 
       // Pin Shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
-      ctx.ellipse(px, py + 3, 8, 3.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(px, py + 3, 9, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pin Outer
+      // Pin Pin Pointer (Triângulo)
+      ctx.fillStyle = '#b91c1c';
+      ctx.beginPath();
+      ctx.moveTo(px - 5, py - 2);
+      ctx.lineTo(px, py + 3);
+      ctx.lineTo(px + 5, py - 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pin Outer Circle
       ctx.fillStyle = '#dc2626';
       ctx.beginPath();
-      ctx.arc(px, py - 10, 12, 0, Math.PI * 2);
+      ctx.arc(px, py - 11, 13, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
-      // Pin Center
+      // Pin Inner Number
+      ctx.font = 'bold 11px Helvetica, Arial, sans-serif';
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(px, py - 10, 4.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Checkmark Badge
-      ctx.fillStyle = '#10b981';
-      ctx.beginPath();
-      ctx.arc(px + 9, py - 18, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.font = 'bold 8px Helvetica, Arial, sans-serif';
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText('✓', px + 7.2, py - 15.2);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(pinNum), px, py - 10.5);
     });
 
     // 3. Top-Left Google Maps Branding Badge
@@ -1332,10 +1322,18 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           }
 
           // -----------------------------------------------------------
-          // 2. AGRUPAMENTO POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 12 FOTOS POR PÁGINA)
+          // 2. AGRUPAMENTO POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 15 FOTOS POR PÁGINA)
           // Sem cabeçalho e sem rodapé nas páginas de auditoria/galeria
           // -----------------------------------------------------------
           const militantGroups = groupCheckInsByMilitant(nCheckIns, militants, teams);
+
+          // Mapeamento cronológico dos Pins do bairro para numeração por ordem de lançamento
+          const bPinMap: Record<string, number> = {};
+          [...nCheckIns]
+            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+            .forEach((c, idx) => {
+              bPinMap[c.id] = idx + 1;
+            });
 
           for (let mIdx = 0; mIdx < militantGroups.length; mIdx++) {
             const mil = militantGroups[mIdx];
@@ -1372,14 +1370,16 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               { align: 'right' }
             );
 
-            // Tabela com TODAS as ruas deste militante (SEM COLUNA GPS!)
+            // Tabela com TODAS as ruas deste militante (COM COLUNA PIN Nº E SEM COLUNA GPS!)
             const tableRows = mil.checkIns.map(chk => {
               const photos = getAllPhotosForCheckIn(chk);
+              const pNum = bPinMap[chk.id] || 1;
               return [
                 formatDateTimeBR(chk.timestamp),
                 chk.houseNumberRange && chk.houseNumberRange !== 'Trecho Geral'
                   ? `${chk.streetName} (${chk.houseNumberRange})`
                   : chk.streetName,
+                `#${pNum}`,
                 String(chk.materialsDelivered.abordagens || 0),
                 String(chk.materialsDelivered.comercio || 0),
                 (chk.materialsDelivered.santinhos || 0).toLocaleString('pt-BR'),
@@ -1392,6 +1392,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               head: [[
                 'Data / Hora',
                 'Logradouro / Trecho Percorrido',
+                'Pin nº',
                 'Abordagens',
                 'Comércio',
                 'Santinhos',
@@ -1415,27 +1416,30 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 fontSize: 7.5
               },
               columnStyles: {
-                0: { cellWidth: 32 },
-                1: { cellWidth: 105, fontStyle: 'bold' },
-                2: { cellWidth: 25, halign: 'center', fontStyle: 'bold' },
-                3: { cellWidth: 25, halign: 'center', fontStyle: 'bold' },
-                4: { cellWidth: 30, halign: 'center', fontStyle: 'bold' },
-                5: { cellWidth: 35, halign: 'center', fontStyle: 'bold' },
-                6: { cellWidth: 25, halign: 'center', fontStyle: 'bold' }
+                0: { cellWidth: 28 },
+                1: { cellWidth: 88, fontStyle: 'bold' },
+                2: { cellWidth: 16, halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] },
+                3: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
+                4: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
+                5: { cellWidth: 28, halign: 'center', fontStyle: 'bold' },
+                6: { cellWidth: 35, halign: 'center', fontStyle: 'bold' },
+                7: { cellWidth: 24, halign: 'center', fontStyle: 'bold' }
               }
             });
 
             const afterTableY = (doc as any).lastAutoTable?.finalY || 35;
 
-            // Coleta todas as fotos comprovatórias das ruas deste militante
-            const milAllPhotos: { photo: string; streetName: string; timestamp: string }[] = [];
+            // Coleta todas as fotos comprovatórias das ruas deste militante com o número do Pin
+            const milAllPhotos: { photo: string; streetName: string; timestamp: string; pinNum: number }[] = [];
             mil.checkIns.forEach(chk => {
               const pList = getAllPhotosForCheckIn(chk);
+              const pNum = bPinMap[chk.id] || 1;
               pList.forEach(p => {
                 milAllPhotos.push({
                   photo: p,
                   streetName: chk.streetName,
-                  timestamp: chk.timestamp
+                  timestamp: chk.timestamp,
+                  pinNum: pNum
                 });
               });
             });
@@ -1453,7 +1457,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 milAllPhotos.map(async item => ({
                   base64: await loadBase64Image(item.photo),
                   streetName: item.streetName,
-                  timestamp: item.timestamp
+                  timestamp: item.timestamp,
+                  pinNum: item.pinNum
                 }))
               );
 
@@ -1476,18 +1481,18 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               doc.setFontSize(7);
               doc.setTextColor(21, 128, 61);
               doc.text(
-                `Grade de alta densidade (mínimo 12 fotos por página)`,
+                `Grade de alta densidade (mínimo 15 fotos por página)`,
                 283,
                 gHeaderY + 4.5,
                 { align: 'right' }
               );
 
-              // Grid de alta densidade: 4 colunas x 3 linhas = 12 fotos por página cheia!
-              const cols = 4;
-              const cardW = 66; // 4 * 66 = 264 + 3 * 4.3 = 277 mm
-              const cardH = 57;
-              const gapX = 4.3;
-              const gapY = 4;
+              // Grid de alta densidade: 5 colunas x 3 linhas = 15 fotos por página cheia!
+              const cols = 5;
+              const cardW = 52.6; // 5 * 52.6 = 263 + 4 * 3.5 = 277 mm
+              const cardH = 55;
+              const gapX = 3.5;
+              const gapY = 3.5;
               const startX = 10;
 
               let curY = gHeaderY + 8.5;
@@ -1517,7 +1522,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                   curY = 16.5;
                 }
 
-                // Renderiza uma linha com até 4 fotos
+                // Renderiza uma linha com até 5 fotos
                 for (let c = 0; c < cols && photoIdx < preloadedImages.length; c++, photoIdx++) {
                   const item = preloadedImages[photoIdx];
                   const cX = startX + c * (cardW + gapX);
@@ -1528,8 +1533,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                   doc.setDrawColor(203, 213, 225);
                   doc.roundedRect(cX, cY, cardW, cardH, 1.5, 1.5, 'FD');
 
-                  const imgW = cardW - 3; // 63mm
-                  const imgH = 44; // 44mm
+                  const imgW = cardW - 3; // 49.6mm
+                  const imgH = 41; // 41mm
 
                   if (item.base64) {
                     try {
@@ -1543,26 +1548,34 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                     doc.rect(cX + 1.5, cY + 1.5, imgW, imgH, 'F');
                   }
 
+                  // Badge de Pin nº sobre a foto
+                  doc.setFillColor(220, 38, 38);
+                  doc.roundedRect(cX + 2.5, cY + 2.5, 14, 4.5, 1, 1, 'F');
+                  doc.setFont('helvetica', 'bold');
+                  doc.setFontSize(6.5);
+                  doc.setTextColor(255, 255, 255);
+                  doc.text(`Pin #${item.pinNum}`, cX + 9.5, cY + 5.7, { align: 'center' });
+
                   // Rodapé do Card (SEM coordenadas GPS!)
                   doc.setFillColor(255, 255, 255);
                   doc.rect(cX + 1.5, cY + 1.5 + imgH, imgW, cardH - imgH - 3, 'F');
 
                   // Linha 1: Nome da Rua e Número da Foto
                   doc.setFont('helvetica', 'bold');
-                  doc.setFontSize(6.5);
+                  doc.setFontSize(6);
                   doc.setTextColor(30, 41, 59);
-                  const shortStreet = item.streetName.length > 24
-                    ? item.streetName.substring(0, 22) + '...'
+                  const shortStreet = item.streetName.length > 20
+                    ? item.streetName.substring(0, 18) + '...'
                     : item.streetName;
-                  doc.text(`${shortStreet} #${photoIdx + 1}`, cX + 2.5, cY + imgH + 5);
+                  doc.text(`${shortStreet} #${photoIdx + 1}`, cX + 2.5, cY + imgH + 4.8);
 
                   // Linha 2: Data/Hora e Status (SEM GPS!)
                   doc.setFont('helvetica', 'normal');
-                  doc.setFontSize(6);
+                  doc.setFontSize(5.5);
                   doc.setTextColor(100, 116, 139);
                   const timePart = formatDateTimeBR(item.timestamp).split(' ')[1] || '';
                   const datePart = formatDateTimeBR(item.timestamp).split(' ')[0] || '';
-                  doc.text(`${datePart} ${timePart} • Validado`, cX + 2.5, cY + imgH + 9);
+                  doc.text(`${datePart} ${timePart} • Validado`, cX + 2.5, cY + imgH + 8.6);
                 }
 
                 curY += cardH + gapY;
