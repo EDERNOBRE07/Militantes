@@ -61,8 +61,11 @@ import {
   Edit3,
   Trash2,
   RefreshCw,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Info,
+  X
 } from 'lucide-react';
+import { detectLegacySafariSierra, safeTriggerDownload } from '../utils/safariSierraPolyfills';
 
 interface WeeklyReportViewProps {
   militants: Militant[];
@@ -91,6 +94,16 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const [deletingCheckInId, setDeletingCheckInId] = useState<string | null>(null);
   const [isRecoveringPhotos, setIsRecoveringPhotos] = useState(false);
   const [photoRecoveryFeedback, setPhotoRecoveryFeedback] = useState<string | null>(null);
+  const [completedPdfModal, setCompletedPdfModal] = useState<{
+    isOpen: boolean;
+    fileName: string;
+    title: string;
+    blobUrl: string;
+    dataUri: string;
+    pageCount: number;
+    sizeBytes: number;
+    isSafariOrSierra: boolean;
+  } | null>(null);
 
   const handleRecoverPhotos = async () => {
     setIsRecoveringPhotos(true);
@@ -383,11 +396,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     bCheckIns: StreetCheckIn[],
     pinMap?: Record<string, number>
   ): Promise<string> => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1600;
-    canvas.height = 850;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1600;
+      canvas.height = 850;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return '';
 
     // Default background
     ctx.fillStyle = '#f1f5f9';
@@ -693,19 +707,29 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     ctx.fillStyle = '#475569';
     ctx.fillText(`Centro: Lat ${centerLat.toFixed(4)}, Lng ${centerLng.toFixed(4)} | Projeção EPSG:3857`, canvas.width - 342, canvas.height - 20);
 
-    return canvas.toDataURL('image/png');
-  };
+    try {
+      return canvas.toDataURL('image/png');
+    } catch (exportErr) {
+      console.warn('toDataURL falhou no mapa do bairro (possível CORS no Safari):', exportErr);
+      return '';
+    }
+  } catch (mapGenErr) {
+    console.warn('Erro ao gerar canvas do mapa do bairro:', mapGenErr);
+    return '';
+  }
+};
 
   // Helper to generate the neighborhood materials & progress chart canvas (Widescreen 1600x850)
   const generateMaterialsChartCanvas = (
     bairro: Neighborhood,
     bCheckIns: StreetCheckIn[]
   ): string => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1600;
-    canvas.height = 850;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1600;
+      canvas.height = 850;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return '';
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1059,8 +1083,17 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       barY += 56;
     });
 
-    return canvas.toDataURL('image/png');
-  };
+    try {
+      return canvas.toDataURL('image/png');
+    } catch (chartExportErr) {
+      console.warn('toDataURL falhou no gráfico de materiais:', chartExportErr);
+      return '';
+    }
+  } catch (chartErr) {
+    console.warn('Erro ao gerar gráfico de materiais:', chartErr);
+    return '';
+  }
+};
 
   // Helper to load image as base64 JPEG data URL safely with crossOrigin
   const loadBase64Image = async (src: string): Promise<string> => {
@@ -1095,6 +1128,63 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Helper robusto para finalizar, salvar e disponibilizar o download do PDF
+  // Compatível com navegadores legados (Safari macOS Sierra, iOS e navegadores com restrição de pop-up)
+  const finalizeAndSavePdf = (doc: jsPDF, fileName: string, reportTitle: string) => {
+    let pdfBlob: Blob | null = null;
+    let blobUrl = '';
+    let dataUri = '';
+
+    try {
+      pdfBlob = doc.output('blob');
+      if (pdfBlob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+        blobUrl = URL.createObjectURL(pdfBlob);
+      }
+    } catch (blobErr) {
+      console.warn('Erro ao gerar blob do PDF:', blobErr);
+    }
+
+    try {
+      dataUri = doc.output('datauristring');
+    } catch (uriErr) {
+      console.warn('Erro ao gerar data URI do PDF:', uriErr);
+    }
+
+    const sierraInfo = detectLegacySafariSierra();
+    const isSafari = sierraInfo.isLegacySafari || (typeof navigator !== 'undefined' && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium/.test(navigator.userAgent));
+
+    // Abre o modal interativo com botões de clique manual (que contornam o bloqueio estrito de downloads e popups do Safari no macOS Sierra)
+    setCompletedPdfModal({
+      isOpen: true,
+      fileName,
+      title: reportTitle,
+      blobUrl,
+      dataUri,
+      pageCount: doc.getNumberOfPages(),
+      sizeBytes: pdfBlob ? pdfBlob.size : 0,
+      isSafariOrSierra: isSafari
+    });
+
+    // Tentativa 1: Disparo seguro via tag <a> invisível com safeTriggerDownload
+    let autoTriggered = false;
+    if (blobUrl) {
+      autoTriggered = safeTriggerDownload(blobUrl, fileName);
+    } else if (dataUri) {
+      autoTriggered = safeTriggerDownload(dataUri, fileName);
+    }
+
+    // Tentativa 2: Fallback padrão do jsPDF se a tentativa 1 falhar
+    if (!autoTriggered) {
+      try {
+        doc.save(fileName);
+      } catch (saveErr) {
+        console.warn('doc.save fallback falhou:', saveErr);
+      }
+    }
+
+    setExportFeedback(`✓ ${reportTitle} compilado com sucesso! Se o download automático não iniciou no Safari, use as opções no painel.`);
   };
 
   // Comprehensive Multi-Report PDF Export Function
@@ -1598,9 +1688,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
         const sanitizedBairro = isAllBairrosMode ? 'todos_os_bairros' : currentSelectedBairro.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
-        doc.save(`relatorio_territorial_${sanitizedBairro}_${sanitizedWeek}.pdf`);
-        setExportFeedback(`✓ Relatório Territorial (${isAllBairrosMode ? 'Todos os Bairros' : currentSelectedBairro.name}) otimizado gerado com sucesso!`);
-        setTimeout(() => setExportFeedback(null), 6000);
+        const reportFileName = `relatorio_territorial_${sanitizedBairro}_${sanitizedWeek}.pdf`;
+        finalizeAndSavePdf(doc, reportFileName, `Relatório Territorial (${isAllBairrosMode ? 'Todos os Bairros' : currentSelectedBairro.name})`);
         return;
       }
 
@@ -1733,9 +1822,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         });
 
         const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
-        doc.save(`relatorio_militantes_${sanitizedWeek}.pdf`);
-        setExportFeedback('✓ Relatório por Militante gerado com sucesso!');
-        setTimeout(() => setExportFeedback(null), 6000);
+        const reportFileName = `relatorio_militantes_${sanitizedWeek}.pdf`;
+        finalizeAndSavePdf(doc, reportFileName, 'Relatório de Desempenho por Militante');
         return;
       }
 
@@ -1887,9 +1975,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         });
 
         const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
-        doc.save(`relatorio_produtividade_metas_${sanitizedWeek}.pdf`);
-        setExportFeedback('✓ Relatório Oficial de Produtividade & Metas gerado com sucesso!');
-        setTimeout(() => setExportFeedback(null), 6000);
+        const reportFileName = `relatorio_produtividade_metas_${sanitizedWeek}.pdf`;
+        finalizeAndSavePdf(doc, reportFileName, 'Relatório Oficial de Produtividade & Metas');
         return;
       }
 
@@ -2313,16 +2400,15 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         });
 
         const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
-        doc.save(`relatorio_compilado_geral_completo_${sanitizedWeek}.pdf`);
-        setExportFeedback('✓ Relatório Consolidado Compilado Geral de Todos os Relatórios gerado com sucesso!');
-        setTimeout(() => setExportFeedback(null), 6000);
+        const reportFileName = `relatorio_compilado_geral_completo_${sanitizedWeek}.pdf`;
+        finalizeAndSavePdf(doc, reportFileName, 'Relatório Consolidado Compilado Geral de Todos os Relatórios');
         return;
       }
 
     } catch (error: any) {
       console.error('Erro ao gerar PDF:', error);
-      setExportFeedback('Erro ao processar PDF. Você pode utilizar a opção Imprimir / Salvar PDF do navegador.');
-      setTimeout(() => setExportFeedback(null), 6000);
+      setExportFeedback(`Erro ao processar PDF: ${error?.message || 'Falha na compilação'}. Você também pode utilizar a opção Imprimir do navegador.`);
+      setTimeout(() => setExportFeedback(null), 8000);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -2527,6 +2613,18 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               <FileDown className="w-4 h-4" />
               {isGeneratingPdf ? 'Gerando PDF...' : getExportButtonLabel()}
             </button>
+
+            {completedPdfModal && (
+              <button
+                type="button"
+                onClick={() => setCompletedPdfModal(prev => prev ? { ...prev, isOpen: true } : null)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-xs font-bold text-amber-900 border border-amber-200 transition cursor-pointer shadow-xs"
+                title="Abrir painel de download e visualização do último PDF gerado (Otimizado para Safari / Mac)"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-amber-700" />
+                Baixar PDF Gerado
+              </button>
+            )}
 
             <button
               onClick={handlePrint}
@@ -3322,6 +3420,110 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           <div className="max-w-2xl max-h-[85vh] bg-white rounded-xl p-3 border border-slate-200 shadow-xl">
             <img src={selectedPhotoZoom} alt="Foto Ampliada" className="max-h-[75vh] w-auto rounded-lg object-contain" />
             <p className="text-xs text-slate-500 text-center py-2">Clique em qualquer lugar para fechar</p>
+          </div>
+        </div>
+      )}
+
+      {/* Safari & Universal PDF Download & View Modal */}
+      {completedPdfModal && completedPdfModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 text-slate-800 animate-in fade-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">Relatório PDF Compilado!</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{completedPdfModal.title}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCompletedPdfModal(prev => prev ? { ...prev, isOpen: false } : null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                title="Fechar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Document Details */}
+            <div className="mt-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+              <div>
+                <span className="font-semibold text-slate-700 block truncate max-w-xs">{completedPdfModal.fileName}</span>
+                <span className="text-slate-500">{completedPdfModal.pageCount} páginas {completedPdfModal.sizeBytes > 0 ? `• ${(completedPdfModal.sizeBytes / (1024 * 1024)).toFixed(2)} MB` : ''}</span>
+              </div>
+              <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[11px]">Pronto para Impressão</span>
+            </div>
+
+            {/* Safari on macOS Sierra Callout */}
+            <div className="mt-3.5 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                <strong className="text-amber-950 font-semibold block mb-0.5">Compatibilidade Safari / MacBook Pro 2012 (macOS Sierra):</strong>
+                Se o Safari bloqueou o download automático em segundo plano, clique diretamente em <strong>Baixar Arquivo PDF</strong> ou no botão <strong>Abrir PDF no Safari</strong> para visualizar todas as páginas e salvar com <kbd className="px-1.5 py-0.5 bg-white rounded border border-amber-300 font-mono text-[10px]">Cmd + S</kbd> ou imprimir com <kbd className="px-1.5 py-0.5 bg-white rounded border border-amber-300 font-mono text-[10px]">Cmd + P</kbd>.
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-5 flex flex-col sm:flex-row items-stretch gap-2.5">
+              {/* Direct Anchor Download Button (Works with explicit user click in Safari) */}
+              <a
+                href={completedPdfModal.blobUrl || completedPdfModal.dataUri}
+                download={completedPdfModal.fileName}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition cursor-pointer text-center"
+              >
+                <FileDown className="w-4 h-4" />
+                Baixar Arquivo PDF
+              </a>
+
+              {/* Open in Safari Browser tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (completedPdfModal.blobUrl) {
+                    window.open(completedPdfModal.blobUrl, '_blank');
+                  } else if (completedPdfModal.dataUri) {
+                    const newWin = window.open();
+                    if (newWin) {
+                      newWin.document.write(
+                        `<iframe src="${completedPdfModal.dataUri}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`
+                      );
+                    }
+                  }
+                }}
+                className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Abrir PDF no Safari
+              </button>
+            </div>
+
+            {/* Secondary actions */}
+            <div className="mt-3 flex items-center justify-between pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  window.print();
+                }}
+                className="text-xs text-slate-600 hover:text-slate-800 flex items-center gap-1.5 font-medium cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Imprimir Relatório (Cmd+P)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCompletedPdfModal(prev => prev ? { ...prev, isOpen: false } : null)}
+                className="px-4 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition cursor-pointer"
+              >
+                Concluir
+              </button>
+            </div>
           </div>
         </div>
       )}

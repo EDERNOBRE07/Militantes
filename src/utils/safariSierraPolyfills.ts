@@ -212,7 +212,155 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// 7. Detecção do Safari no macOS Sierra para diagnóstico
+// 7. Polyfill completo de CanvasRenderingContext2D.prototype.roundRect e Path2D.prototype.roundRect
+// (Introduzido na especificação apenas no Safari 15.4 / 2022. Essencial para Safari 10/11/12 no macOS Sierra)
+if (typeof window !== 'undefined' && typeof CanvasRenderingContext2D !== 'undefined') {
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function (
+      this: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      radii?: number | (number | any)[]
+    ) {
+      if (w === 0 || h === 0) {
+        this.rect(x, y, w, h);
+        return this;
+      }
+
+      if (w < 0) {
+        x += w;
+        w = -w;
+      }
+      if (h < 0) {
+        y += h;
+        h = -h;
+      }
+
+      let rTL = 0, rTR = 0, rBR = 0, rBL = 0;
+      if (typeof radii === 'number') {
+        rTL = rTR = rBR = rBL = Math.max(0, radii);
+      } else if (Array.isArray(radii)) {
+        if (radii.length === 1) {
+          rTL = rTR = rBR = rBL = Math.max(0, Number(radii[0]) || 0);
+        } else if (radii.length === 2) {
+          rTL = rBR = Math.max(0, Number(radii[0]) || 0);
+          rTR = rBL = Math.max(0, Number(radii[1]) || 0);
+        } else if (radii.length === 3) {
+          rTL = Math.max(0, Number(radii[0]) || 0);
+          rTR = rBL = Math.max(0, Number(radii[1]) || 0);
+          rBR = Math.max(0, Number(radii[2]) || 0);
+        } else if (radii.length >= 4) {
+          rTL = Math.max(0, Number(radii[0]) || 0);
+          rTR = Math.max(0, Number(radii[1]) || 0);
+          rBR = Math.max(0, Number(radii[2]) || 0);
+          rBL = Math.max(0, Number(radii[3]) || 0);
+        }
+      }
+
+      const maxR = Math.min(w / 2, h / 2);
+      rTL = Math.min(rTL, maxR);
+      rTR = Math.min(rTR, maxR);
+      rBR = Math.min(rBR, maxR);
+      rBL = Math.min(rBL, maxR);
+
+      this.moveTo(x + rTL, y);
+      this.lineTo(x + w - rTR, y);
+      if (rTR > 0) this.arcTo(x + w, y, x + w, y + rTR, rTR);
+      this.lineTo(x + w, y + h - rBR);
+      if (rBR > 0) this.arcTo(x + w, y + h, x + w - rBR, y + h, rBR);
+      this.lineTo(x + rBL, y + h);
+      if (rBL > 0) this.arcTo(x, y + h, x, y + h - rBL, rBL);
+      this.lineTo(x, y + rTL);
+      if (rTL > 0) this.arcTo(x, y, x + rTL, y, rTL);
+      this.closePath();
+      return this;
+    };
+    console.info('[Polyfill] CanvasRenderingContext2D.prototype.roundRect instalado para compatibilidade Safari / macOS Sierra.');
+  }
+
+  // Path2D roundRect polyfill se Path2D existir
+  if (typeof (window as any).Path2D !== 'undefined' && !(window as any).Path2D.prototype.roundRect) {
+    (window as any).Path2D.prototype.roundRect = function (
+      this: any,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      radii?: number | (number | any)[]
+    ) {
+      if (w === 0 || h === 0) {
+        this.rect(x, y, w, h);
+        return this;
+      }
+      if (w < 0) { x += w; w = -w; }
+      if (h < 0) { y += h; h = -h; }
+      let rTL = 0, rTR = 0, rBR = 0, rBL = 0;
+      if (typeof radii === 'number') {
+        rTL = rTR = rBR = rBL = Math.max(0, radii);
+      } else if (Array.isArray(radii)) {
+        if (radii.length === 1) {
+          rTL = rTR = rBR = rBL = Math.max(0, Number(radii[0]) || 0);
+        } else if (radii.length >= 2) {
+          rTL = Math.max(0, Number(radii[0]) || 0);
+          rTR = Math.max(0, Number(radii[1]) || 0);
+          rBR = Math.max(0, Number(radii[2]) || rTL);
+          rBL = Math.max(0, Number(radii[3]) || rTR);
+        }
+      }
+      const maxR = Math.min(w / 2, h / 2);
+      rTL = Math.min(rTL, maxR);
+      rTR = Math.min(rTR, maxR);
+      rBR = Math.min(rBR, maxR);
+      rBL = Math.min(rBL, maxR);
+
+      this.moveTo(x + rTL, y);
+      this.lineTo(x + w - rTR, y);
+      if (rTR > 0) this.arcTo(x + w, y, x + w, y + rTR, rTR);
+      this.lineTo(x + w, y + h - rBR);
+      if (rBR > 0) this.arcTo(x + w, y + h, x + w - rBR, y + h, rBR);
+      this.lineTo(x + rBL, y + h);
+      if (rBL > 0) this.arcTo(x, y + h, x, y + h - rBL, rBL);
+      this.lineTo(x, y + rTL);
+      if (rTL > 0) this.arcTo(x, y, x + rTL, y, rTL);
+      this.closePath();
+      return this;
+    };
+  }
+}
+
+// 8. Polyfill HTMLCanvasElement.prototype.toBlob (Safari 10 / macOS Sierra não possuía toBlob nativo)
+if (typeof window !== 'undefined' && typeof HTMLCanvasElement !== 'undefined' && !HTMLCanvasElement.prototype.toBlob) {
+  Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
+    value: function (callback: (blob: Blob | null) => void, type?: string, quality?: any) {
+      try {
+        const dataURL = this.toDataURL(type || 'image/png', quality);
+        setTimeout(() => {
+          try {
+            const parts = dataURL.split(',');
+            const base64 = parts[1];
+            const mime = parts[0].match(/:(.*?);/)?.[1] || type || 'image/png';
+            const binStr = atob(base64);
+            const len = binStr.length;
+            const u8arr = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+              u8arr[i] = binStr.charCodeAt(i);
+            }
+            callback(new Blob([u8arr], { type: mime }));
+          } catch {
+            callback(null);
+          }
+        }, 0);
+      } catch {
+        callback(null);
+      }
+    }
+  });
+  console.info('[Polyfill] HTMLCanvasElement.prototype.toBlob instalado para compatibilidade Safari / macOS Sierra.');
+}
+
+// 9. Detecção do Safari no macOS Sierra para diagnóstico e adaptação de UI
 export function detectLegacySafariSierra(): { isLegacySafari: boolean; isSierra: boolean; osInfo: string } {
   if (typeof window === 'undefined' || !navigator) {
     return { isLegacySafari: false, isSierra: false, osInfo: '' };
@@ -228,4 +376,38 @@ export function detectLegacySafariSierra(): { isLegacySafari: boolean; isSierra:
     isSierra,
     osInfo: isSierra ? 'macOS 10.12 Sierra' : 'macOS'
   };
+}
+
+// 10. Disparador seguro de download de arquivos compatível com Safari legado e modernas proteções de sandbox
+export function safeTriggerDownload(url: string, fileName: string): boolean {
+  if (typeof document === 'undefined') return false;
+  try {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+
+    if (typeof link.click === 'function') {
+      link.click();
+    } else {
+      const evt = document.createEvent('MouseEvents');
+      evt.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      link.dispatchEvent(evt);
+    }
+
+    setTimeout(() => {
+      try {
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
+      } catch {}
+    }, 1200);
+    return true;
+  } catch (err) {
+    console.warn('[safeTriggerDownload] Erro ao disparar download via <a>:', err);
+    return false;
+  }
 }
