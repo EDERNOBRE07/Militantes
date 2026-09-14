@@ -16,7 +16,8 @@ import {
   buildMilitantSequentialPinMap
 } from '../utils/neighborhoodHelpers';
 import { BairroInteractiveMap } from './BairroInteractiveMap';
-import { MilitantAuditSection, groupCheckInsByMilitant } from './MilitantAuditSection';
+import { UnifiedNeighborhoodAudit } from './UnifiedNeighborhoodAudit';
+import { GeneralReportDashboard } from './GeneralReportDashboard';
 import { StreetAuditRowWithGallery } from './StreetAuditRowWithGallery';
 import {
   Building2,
@@ -433,30 +434,16 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                             height="380px"
                           />
 
-                          {/* SEQUÊNCIA POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 15 FOTOS) */}
-                          <div className="space-y-6 pt-2">
-                            <div className="flex items-center justify-between pb-1 border-b border-slate-100">
-                              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                Auditoria de Ruas e Galerias Fotográficas por Militante ({nCheckIns.length} ruas)
-                              </span>
-                              <span className="text-[11px] text-slate-500">
-                                Tabela unificada por militante (com Pin nº e sem GPS) seguida da respectiva galeria
-                              </span>
-                            </div>
-
-                            {nMilitantGroups.map((group, mIdx) => (
-                              <MilitantAuditSection
-                                key={group.militantId}
-                                group={group}
-                                bairroName={bairro.name}
-                                militantIndex={mIdx}
-                                pinMap={nPinMap}
-                                onZoomPhoto={onZoomPhoto}
-                                onEditStreet={onEditStreet}
-                              />
-                            ))}
-                          </div>
+                          {/* TABELA ÚNICA DE RUAS COM COLUNA MILITANTE + GALERIA ÚNICA (MÍNIMO 15 FOTOS/PÁGINA) */}
+                          <UnifiedNeighborhoodAudit
+                            bairro={bairro}
+                            checkIns={nCheckIns}
+                            militants={militants}
+                            teams={teams}
+                            pinMap={nPinMap}
+                            onZoomPhoto={onZoomPhoto}
+                            onEditStreet={onEditStreet}
+                          />
                         </>
                       );
                     })()}
@@ -601,44 +588,33 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             </div>
           </div>
 
-          {/* 3. AUDITORIA DE RUAS E GALERIAS FOTOGRÁFICAS POR MILITANTE */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-1 border-b border-slate-200">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
-                  3
-                </span>
-                <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Auditoria de Ruas e Galerias Fotográficas por Militante em {currentBairro.name} ({bairroCheckIns.length} ruas)
-                </h4>
-              </div>
-              <span className="text-xs text-slate-500">
-                Tabela unificada por militante (sem GPS) e galeria otimizada (≥12 fotos)
-              </span>
-            </div>
-
-            {bairroCheckIns.length === 0 ? (
-              <div className="p-8 rounded-xl bg-slate-50 border border-slate-200 text-center text-slate-400 italic">
-                Nenhuma rua cadastrada no bairro {currentBairro.name} no período selecionado.
-              </div>
-            ) : (
-              singleMilitantGroups.map((group, mIdx) => (
-                <MilitantAuditSection
-                  key={group.militantId}
-                  group={group}
-                  bairroName={currentBairro.name}
-                  militantIndex={mIdx}
-                  pinMap={singlePinMap}
-                  onZoomPhoto={onZoomPhoto}
-                  onEditStreet={onEditStreet}
-                />
-              ))
-            )}
-          </div>
+          {/* 3. TABELA ÚNICA DE RUAS COM COLUNA MILITANTE + GALERIA ÚNICA (MÍNIMO 15 FOTOS/PÁGINA) */}
+          <UnifiedNeighborhoodAudit
+            bairro={currentBairro}
+            checkIns={bairroCheckIns}
+            militants={militants}
+            teams={teams}
+            pinMap={singlePinMap}
+            onZoomPhoto={onZoomPhoto}
+            onEditStreet={onEditStreet}
+          />
 
         </div>
       )}
+
+      {/* =========================================================================
+          2. DEPOIS DA EXIBIÇÃO DOS MAPAS: DASHBOARD GERAL CONSOLIDADO
+          Com gráficos e cards das pessoas abordadas, número de ruas, comércios,
+          materiais entregues e desempenho geral da campanha em São José.
+         ========================================================================= */}
+      <GeneralReportDashboard
+        checkIns={isAllBairros ? bairroCheckIns : checkIns}
+        militants={militants}
+        teams={teams}
+        neighborhoods={neighborhoods}
+        title="Dashboard Geral Consolidado Pós-Mapas"
+        subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e distribuição de materiais em ${isAllBairros ? 'todos os bairros qualificados' : currentBairro.name}`}
+      />
 
     </div>
   );

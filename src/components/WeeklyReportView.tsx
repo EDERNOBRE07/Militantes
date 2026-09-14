@@ -1425,257 +1425,389 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           }
 
           // -----------------------------------------------------------
-          // 2. AGRUPAMENTO POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 15 FOTOS POR PÁGINA)
+          // 2. TABELA ÚNICA DE RUAS DO BAIRRO (COM COLUNA MILITANTE)
           // Sem cabeçalho e sem rodapé nas páginas de auditoria/galeria
           // -----------------------------------------------------------
-          for (let mIdx = 0; mIdx < militantGroups.length; mIdx++) {
-            const mil = militantGroups[mIdx];
-            setExportFeedback(`Exportando militante ${mIdx + 1}/${militantGroups.length}: ${mil.militantName}...`);
+          setExportFeedback(`Exportando Tabela Única de Ruas: ${bairro.name}...`);
 
-            // Inicia página do militante SEM cabeçalho e SEM rodapé
-            doc.addPage('a4', 'landscape');
-            const milPageNum = doc.getNumberOfPages();
-            noHeaderFooterPages.add(milPageNum);
+          // Ordena check-ins pelo número do pin gerado
+          const sortedCheckIns = [...nCheckIns].sort((a, b) => (bPinMap[a.id] || 0) - (bPinMap[b.id] || 0));
 
-            // Banner compacto e elegante do Militante (altura 9mm no topo y=8)
-            doc.setFillColor(30, 58, 138); // Deep Navy Blue
-            doc.roundedRect(10, 8, 277, 9, 1.5, 1.5, 'F');
+          doc.addPage('a4', 'landscape');
+          const tablePageNum = doc.getNumberOfPages();
+          noHeaderFooterPages.add(tablePageNum);
 
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(8.5);
-            doc.setTextColor(255, 255, 255);
-            const milMatText = mil.matricula ? `(Mat. ${mil.matricula})` : '';
-            doc.text(
-              `AUDITORIA DE RUAS E GALERIA FOTOGRÁFICA • MILITANTE: ${mil.militantName.toUpperCase()} ${milMatText} • BAIRRO ${bairro.name.toUpperCase()}`,
-              14,
-              14
-            );
+          // Banner compacto e elegante da Tabela Única de Ruas
+          doc.setFillColor(30, 58, 138); // Deep Navy Blue
+          doc.roundedRect(10, 8, 277, 9, 1.5, 1.5, 'F');
 
-            // Resumo à direita
-            const totalMilPhotos = mil.checkIns.reduce((acc, c) => acc + getAllPhotosForCheckIn(c).length, 0);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(7.5);
-            doc.setTextColor(219, 234, 254);
-            doc.text(
-              `${mil.checkIns.length} ruas auditadas • ${totalMilPhotos} fotos anexadas • ${mil.totalAbordagens} abordagens • ${mil.totalSantinhos.toLocaleString('pt-BR')} santinhos`,
-              283,
-              14,
-              { align: 'right' }
-            );
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(255, 255, 255);
+          doc.text(
+            `AUDITORIA DE RUAS • TABELA ÚNICA • BAIRRO ${bairro.name.toUpperCase()} (${sortedCheckIns.length} RUAS AUDITADAS)`,
+            14,
+            14
+          );
 
-            // Tabela com TODAS as ruas deste militante (COM COLUNA PIN Nº E SEM COLUNA GPS!)
-            const tableRows = mil.checkIns.map(chk => {
-              const photos = getAllPhotosForCheckIn(chk);
-              const pNum = bPinMap[chk.id] || 1;
-              return [
-                formatDateTimeBR(chk.timestamp),
-                chk.houseNumberRange && chk.houseNumberRange !== 'Trecho Geral'
-                  ? `${chk.streetName} (${chk.houseNumberRange})`
-                  : chk.streetName,
-                `#${pNum}`,
-                String(chk.materialsDelivered.abordagens || 0),
-                String(chk.materialsDelivered.comercio || 0),
-                (chk.materialsDelivered.santinhos || 0).toLocaleString('pt-BR'),
-                `${photos.length} foto(s) anexada(s)`,
-                chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
-              ];
-            });
+          // Resumo à direita
+          const totalBairroPhotos = sortedCheckIns.reduce((acc, c) => acc + getAllPhotosForCheckIn(c).length, 0);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.5);
+          doc.setTextColor(219, 234, 254);
+          doc.text(
+            `${sortedCheckIns.length} ruas • ${totalBairroPhotos} fotos anexadas • ${bAbord} abordagens • ${bMat.toLocaleString('pt-BR')} materiais`,
+            283,
+            14,
+            { align: 'right' }
+          );
 
-            autoTable(doc, {
-              head: [[
-                'Data / Hora',
-                'Logradouro / Trecho Percorrido',
-                'Pin nº',
-                'Abordagens',
-                'Comércio',
-                'Santinhos',
-                'Comprovante',
-                'Status Auditoria'
-              ]],
-              body: tableRows,
-              startY: 19,
-              margin: { left: 10, right: 10 },
-              styles: {
-                fontSize: 7.5,
-                cellPadding: 2.2,
-                textColor: [30, 41, 59],
-                lineColor: [226, 232, 240],
-                lineWidth: 0.1
-              },
-              headStyles: {
-                fillColor: [30, 58, 138],
-                textColor: [255, 255, 255],
-                fontStyle: 'bold',
-                fontSize: 7.5
-              },
-              columnStyles: {
-                0: { cellWidth: 28 },
-                1: { cellWidth: 88, fontStyle: 'bold' },
-                2: { cellWidth: 16, halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] },
-                3: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
-                4: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
-                5: { cellWidth: 28, halign: 'center', fontStyle: 'bold' },
-                6: { cellWidth: 35, halign: 'center', fontStyle: 'bold' },
-                7: { cellWidth: 24, halign: 'center', fontStyle: 'bold' }
+          // Tabela Única com TODAS as ruas do bairro e coluna MILITANTE
+          const tableRows = sortedCheckIns.map(chk => {
+            const photos = getAllPhotosForCheckIn(chk);
+            const pNum = bPinMap[chk.id] || 1;
+            const mObj = militants.find(m => m.id === chk.militantId || m.name.toLowerCase() === (chk.militantName || '').toLowerCase());
+            const mName = chk.militantName || mObj?.name || 'Militante';
+            const mMat = mObj?.matricula ? ` (${mObj.matricula})` : '';
+
+            return [
+              formatDateTimeBR(chk.timestamp),
+              chk.houseNumberRange && chk.houseNumberRange !== 'Trecho Geral'
+                ? `${chk.streetName} (${chk.houseNumberRange})`
+                : chk.streetName,
+              `${mName}${mMat}`,
+              `#${pNum}`,
+              String(chk.materialsDelivered.abordagens || 0),
+              String(chk.materialsDelivered.comercio || 0),
+              (chk.materialsDelivered.santinhos || 0).toLocaleString('pt-BR'),
+              `${photos.length} foto(s)`,
+              chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
+            ];
+          });
+
+          autoTable(doc, {
+            head: [[
+              'Data / Hora',
+              'Logradouro / Trecho Percorrido',
+              'Militante Responsável',
+              'Pin nº',
+              'Abordagens',
+              'Comércio',
+              'Santinhos',
+              'Comprovante',
+              'Status'
+            ]],
+            body: tableRows,
+            startY: 19,
+            margin: { left: 10, right: 10 },
+            styles: {
+              fontSize: 7.2,
+              cellPadding: 2,
+              textColor: [30, 41, 59],
+              lineColor: [226, 232, 240],
+              lineWidth: 0.1
+            },
+            headStyles: {
+              fillColor: [30, 58, 138],
+              textColor: [255, 255, 255],
+              fontStyle: 'bold',
+              fontSize: 7.5
+            },
+            columnStyles: {
+              0: { cellWidth: 26 },
+              1: { cellWidth: 70, fontStyle: 'bold' },
+              2: { cellWidth: 50, fontStyle: 'bold', textColor: [30, 58, 138] },
+              3: { cellWidth: 16, halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] },
+              4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+              5: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+              6: { cellWidth: 25, halign: 'center', fontStyle: 'bold' },
+              7: { cellWidth: 28, halign: 'center', fontStyle: 'bold' },
+              8: { cellWidth: 22, halign: 'center', fontStyle: 'bold' }
+            },
+            didDrawPage: (data) => {
+              if (data.pageNumber > tablePageNum) {
+                noHeaderFooterPages.add(data.pageNumber);
               }
-            });
+            }
+          });
 
-            const afterTableY = (doc as any).lastAutoTable?.finalY || 35;
+          // -----------------------------------------------------------
+          // 3. GALERIA DE FOTOS ÚNICA DO BAIRRO (MÍNIMO 15 FOTOS POR PÁGINA)
+          // -----------------------------------------------------------
+          const bairroAllPhotos: {
+            photo: string;
+            streetName: string;
+            timestamp: string;
+            pinNum: number;
+            militantName: string;
+          }[] = [];
 
-            // Coleta todas as fotos comprovatórias das ruas deste militante com o número do Pin
-            const milAllPhotos: { photo: string; streetName: string; timestamp: string; pinNum: number }[] = [];
-            mil.checkIns.forEach(chk => {
-              const pList = getAllPhotosForCheckIn(chk);
-              const pNum = bPinMap[chk.id] || 1;
-              pList.forEach(p => {
-                milAllPhotos.push({
-                  photo: p,
-                  streetName: chk.streetName,
-                  timestamp: chk.timestamp,
-                  pinNum: pNum
-                });
+          sortedCheckIns.forEach(chk => {
+            const pList = getAllPhotosForCheckIn(chk);
+            const pNum = bPinMap[chk.id] || 1;
+            const mObj = militants.find(m => m.id === chk.militantId || m.name.toLowerCase() === (chk.militantName || '').toLowerCase());
+            const mName = chk.militantName || mObj?.name || 'Militante';
+            pList.forEach(p => {
+              bairroAllPhotos.push({
+                photo: p,
+                streetName: chk.streetName,
+                timestamp: chk.timestamp,
+                pinNum: pNum,
+                militantName: mName
               });
             });
+          });
 
-            if (milAllPhotos.length === 0) {
-              doc.setFillColor(248, 250, 252);
-              doc.roundedRect(10, afterTableY + 4, 277, 10, 1.5, 1.5, 'F');
-              doc.setFont('helvetica', 'italic');
-              doc.setFontSize(8);
-              doc.setTextColor(148, 163, 184);
-              doc.text('Nenhuma foto de comprovação anexada para as ruas deste militante.', 148, afterTableY + 10.5, { align: 'center' });
-            } else {
-              // Pré-carrega as fotos em paralelo
-              const preloadedImages = await Promise.all(
-                milAllPhotos.map(async item => ({
-                  base64: await loadBase64Image(item.photo),
-                  streetName: item.streetName,
-                  timestamp: item.timestamp,
-                  pinNum: item.pinNum
-                }))
-              );
+          if (bairroAllPhotos.length === 0) {
+            doc.addPage('a4', 'landscape');
+            noHeaderFooterPages.add(doc.getNumberOfPages());
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(10, 10, 277, 30, 2, 2, 'F');
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(10);
+            doc.setTextColor(148, 163, 184);
+            doc.text(`Nenhuma foto de comprovação anexada para as ruas do bairro ${bairro.name}.`, 148, 26, { align: 'center' });
+          } else {
+            setExportFeedback(`Pré-carregando ${bairroAllPhotos.length} fotos únicas do bairro ${bairro.name}...`);
+            const preloadedImages = await Promise.all(
+              bairroAllPhotos.map(async (item) => {
+                const b64 = await loadBase64Image(item.photo);
+                return { ...item, base64: b64 };
+              })
+            );
 
-              // Barra de título da galeria
-              const gHeaderY = afterTableY + 3;
-              doc.setFillColor(240, 253, 244); // Verde esmeralda claro
-              doc.roundedRect(10, gHeaderY, 277, 6.5, 1.2, 1.2, 'F');
-              doc.setDrawColor(187, 247, 208);
-              doc.roundedRect(10, gHeaderY, 277, 6.5, 1.2, 1.2, 'D');
+            // Grade de alta densidade: 5 colunas x 3 linhas = 15 fotos por página (MÍNIMO 15 FOTOS POR PÁGINA)
+            const photosPerPage = 15;
+            const totalGalleryPages = Math.ceil(preloadedImages.length / photosPerPage);
+
+            const cols = 5;
+            const cardW = 52.6; // 5 * 52.6 = 263mm + 4 * 3.5mm = 277mm
+            const cardH = 55;   // 3 * 55 = 165mm + 2 * 3.5mm = 172mm
+            const gapX = 3.5;
+            const gapY = 3.5;
+            const startX = 10;
+            const startY = 21; // Logo após o banner do topo (y=8 a 17)
+
+            for (let pageIdx = 0; pageIdx < totalGalleryPages; pageIdx++) {
+              doc.addPage('a4', 'landscape');
+              const galPageNum = doc.getNumberOfPages();
+              noHeaderFooterPages.add(galPageNum);
+
+              // Banner verde esmeralda no topo (y=8, h=9mm)
+              doc.setFillColor(5, 150, 105); // Emerald 600
+              doc.roundedRect(10, 8, 277, 9, 1.5, 1.5, 'F');
 
               doc.setFont('helvetica', 'bold');
-              doc.setFontSize(7.5);
-              doc.setTextColor(22, 101, 52);
+              doc.setFontSize(8.5);
+              doc.setTextColor(255, 255, 255);
+              const pageSuffix = totalGalleryPages > 1 ? ` (Página ${pageIdx + 1} de ${totalGalleryPages})` : '';
               doc.text(
-                `GALERIA FOTOGRÁFICA DO MILITANTE • ${mil.militantName.toUpperCase()} (${preloadedImages.length} fotos comprovatórias)`,
+                `GALERIA FOTOGRÁFICA ÚNICA • BAIRRO ${bairro.name.toUpperCase()}${pageSuffix} • 15 FOTOS POR PÁGINA`,
                 14,
-                gHeaderY + 4.5
+                14
               );
+
               doc.setFont('helvetica', 'normal');
-              doc.setFontSize(7);
-              doc.setTextColor(21, 128, 61);
+              doc.setFontSize(7.5);
+              doc.setTextColor(209, 250, 229);
+              const startPhotoNum = pageIdx * photosPerPage + 1;
+              const endPhotoNum = Math.min((pageIdx + 1) * photosPerPage, preloadedImages.length);
               doc.text(
-                `Grade de alta densidade (mínimo 15 fotos por página)`,
+                `Exibindo fotos ${startPhotoNum} a ${endPhotoNum} de ${preloadedImages.length} • Todas as fotos sincronizadas com pins no mapa`,
                 283,
-                gHeaderY + 4.5,
+                14,
                 { align: 'right' }
               );
 
-              // Grid de alta densidade: 5 colunas x 3 linhas = 15 fotos por página cheia!
-              const cols = 5;
-              const cardW = 52.6; // 5 * 52.6 = 263 + 4 * 3.5 = 277 mm
-              const cardH = 55;
-              const gapX = 3.5;
-              const gapY = 3.5;
-              const startX = 10;
+              // Renderiza as até 15 fotos desta página
+              const pagePhotos = preloadedImages.slice(pageIdx * photosPerPage, (pageIdx + 1) * photosPerPage);
 
-              let curY = gHeaderY + 8.5;
-              let photoIdx = 0;
+              for (let idx = 0; idx < pagePhotos.length; idx++) {
+                const item = pagePhotos[idx];
+                const col = idx % cols;
+                const row = Math.floor(idx / cols);
 
-              while (photoIdx < preloadedImages.length) {
-                // Se a próxima linha de fotos não couber na página atual, abre nova página
-                if (curY + cardH > 204) {
-                  doc.addPage('a4', 'landscape');
-                  const contPage = doc.getNumberOfPages();
-                  noHeaderFooterPages.add(contPage);
+                const cX = startX + col * (cardW + gapX);
+                const cY = startY + row * (cardH + gapY);
 
-                  // Banner de continuação compacto (SEM cabeçalho e SEM rodapé)
-                  doc.setFillColor(240, 253, 244);
-                  doc.roundedRect(10, 8, 277, 6.5, 1.2, 1.2, 'F');
-                  doc.setDrawColor(187, 247, 208);
-                  doc.roundedRect(10, 8, 277, 6.5, 1.2, 1.2, 'D');
+                // Fundo do card
+                doc.setFillColor(255, 255, 255);
+                doc.setDrawColor(203, 213, 225);
+                doc.setLineWidth(0.2);
+                doc.roundedRect(cX, cY, cardW, cardH, 1.5, 1.5, 'FD');
 
-                  doc.setFont('helvetica', 'bold');
-                  doc.setFontSize(7.5);
-                  doc.setTextColor(22, 101, 52);
-                  doc.text(
-                    `GALERIA FOTOGRÁFICA (CONTINUAÇÃO): ${mil.militantName.toUpperCase()} • BAIRRO ${bairro.name.toUpperCase()} (Fotos ${photoIdx + 1} a ${preloadedImages.length})`,
-                    14,
-                    12.5
-                  );
-                  curY = 16.5;
-                }
-
-                // Renderiza uma linha com até 5 fotos
-                for (let c = 0; c < cols && photoIdx < preloadedImages.length; c++, photoIdx++) {
-                  const item = preloadedImages[photoIdx];
-                  const cX = startX + c * (cardW + gapX);
-                  const cY = curY;
-
-                  // Moldura do Card
-                  doc.setFillColor(248, 250, 252);
-                  doc.setDrawColor(203, 213, 225);
-                  doc.roundedRect(cX, cY, cardW, cardH, 1.5, 1.5, 'FD');
-
-                  const imgW = cardW - 3; // 49.6mm
-                  const imgH = 41; // 41mm
-
-                  if (item.base64) {
-                    try {
-                      doc.addImage(item.base64, 'JPEG', cX + 1.5, cY + 1.5, imgW, imgH);
-                    } catch {
-                      doc.setFillColor(226, 232, 240);
-                      doc.rect(cX + 1.5, cY + 1.5, imgW, imgH, 'F');
-                    }
-                  } else {
-                    doc.setFillColor(226, 232, 240);
+                // Imagem (49.6mm x 37mm)
+                const imgW = cardW - 3;
+                const imgH = 37;
+                if (item.base64) {
+                  try {
+                    doc.addImage(item.base64, 'JPEG', cX + 1.5, cY + 1.5, imgW, imgH);
+                  } catch {
+                    doc.setFillColor(241, 245, 249);
                     doc.rect(cX + 1.5, cY + 1.5, imgW, imgH, 'F');
                   }
-
-                  // Badge de Pin nº sobre a foto
-                  doc.setFillColor(220, 38, 38);
-                  doc.roundedRect(cX + 2.5, cY + 2.5, 14, 4.5, 1, 1, 'F');
-                  doc.setFont('helvetica', 'bold');
-                  doc.setFontSize(6.5);
-                  doc.setTextColor(255, 255, 255);
-                  doc.text(`Pin #${item.pinNum}`, cX + 9.5, cY + 5.7, { align: 'center' });
-
-                  // Rodapé do Card (SEM coordenadas GPS!)
-                  doc.setFillColor(255, 255, 255);
-                  doc.rect(cX + 1.5, cY + 1.5 + imgH, imgW, cardH - imgH - 3, 'F');
-
-                  // Linha 1: Nome da Rua e Número da Foto
-                  doc.setFont('helvetica', 'bold');
-                  doc.setFontSize(6);
-                  doc.setTextColor(30, 41, 59);
-                  const shortStreet = item.streetName.length > 20
-                    ? item.streetName.substring(0, 18) + '...'
-                    : item.streetName;
-                  doc.text(`${shortStreet} #${photoIdx + 1}`, cX + 2.5, cY + imgH + 4.8);
-
-                  // Linha 2: Data/Hora e Status (SEM GPS!)
-                  doc.setFont('helvetica', 'normal');
-                  doc.setFontSize(5.5);
-                  doc.setTextColor(100, 116, 139);
-                  const timePart = formatDateTimeBR(item.timestamp).split(' ')[1] || '';
-                  const datePart = formatDateTimeBR(item.timestamp).split(' ')[0] || '';
-                  doc.text(`${datePart} ${timePart} • Validado`, cX + 2.5, cY + imgH + 8.6);
+                } else {
+                  doc.setFillColor(241, 245, 249);
+                  doc.rect(cX + 1.5, cY + 1.5, imgW, imgH, 'F');
                 }
 
-                curY += cardH + gapY;
+                // Badge de Pin Vermelho com borda arredondada no topo da foto
+                doc.setFillColor(220, 38, 38);
+                doc.roundedRect(cX + 2.5, cY + 2.5, 16, 5, 1, 1, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6.5);
+                doc.setTextColor(255, 255, 255);
+                doc.text(`Pin #${item.pinNum}`, cX + 10.5, cY + 6, { align: 'center' });
+
+                // Linha 1: Nome da Rua
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6.2);
+                doc.setTextColor(30, 41, 59);
+                const shortStreet = item.streetName.length > 22
+                  ? item.streetName.substring(0, 20) + '...'
+                  : item.streetName;
+                doc.text(shortStreet, cX + 2, cY + imgH + 4.8);
+
+                // Linha 2: Militante
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(5.5);
+                doc.setTextColor(37, 99, 235);
+                const shortMil = item.militantName.length > 24
+                  ? item.militantName.substring(0, 22) + '...'
+                  : item.militantName;
+                doc.text(`Militante: ${shortMil}`, cX + 2, cY + imgH + 8.5);
+
+                // Linha 3: Data/Hora e Status (SEM GPS!)
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(5.2);
+                doc.setTextColor(100, 116, 139);
+                const timePart = formatDateTimeBR(item.timestamp).split(' ')[1] || '';
+                const datePart = formatDateTimeBR(item.timestamp).split(' ')[0] || '';
+                doc.text(`${datePart} ${timePart} • Validado`, cX + 2, cY + imgH + 12);
               }
             }
           }
         }
+
+        // =========================================================================
+        // DEPOIS DA EXIBIÇÃO DOS MAPAS: DASHBOARD GERAL CONSOLIDADO (SOLICITADO)
+        // Com gráficos e cards das pessoas abordadas, número de ruas, comércios,
+        // distribuição de materiais e ranking consolidado da campanha.
+        // =========================================================================
+        setExportFeedback('Gerando Dashboard Geral Consolidado Pós-Mapas...');
+        doc.addPage('a4', 'landscape');
+
+        drawHeaderBanner(
+          'SISTEMA DE MILITÂNCIA SÃO JOSÉ - DASHBOARD GERAL CONSOLIDADO PÓS-MAPEAMENTO',
+          `Resumo Executivo Geral • Pessoas Abordadas, Ruas Percorridas e Distribuição de Materiais | Período: ${selectedWeekLabel}`
+        );
+
+        // 6 Cards de Indicadores Gerais
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
+
+        const postMapKpiItems = [
+          { label: 'PESSOAS ABORDADAS', val: `${totalAbordagens}` },
+          { label: 'RUAS AUDITADAS', val: `${filteredCheckIns.length}` },
+          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComercios}` },
+          { label: 'SANTINHOS DISTRIBUÍDOS', val: totalSantinhos.toLocaleString('pt-BR') },
+          { label: 'TOTAL DE MATERIAIS', val: totalMateriaisGeral.toLocaleString('pt-BR') },
+          { label: 'MILITANTES ATIVOS', val: `${activeMilitants.length}` }
+        ];
+
+        const postColW = 269 / postMapKpiItems.length;
+        postMapKpiItems.forEach((kpi, idx) => {
+          const kX = 14 + idx * postColW;
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6.5);
+          doc.setTextColor(100, 116, 139);
+          doc.text(kpi.label, kX + postColW / 2, 33.5, { align: 'center' });
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.setTextColor(15, 23, 42);
+          doc.text(kpi.val, kX + postColW / 2, 40.5, { align: 'center' });
+
+          if (idx < postMapKpiItems.length - 1) {
+            doc.setDrawColor(226, 232, 240);
+            doc.line(kX + postColW, 30, kX + postColW, 43);
+          }
+        });
+
+        // Gráfico de Produtividade & Materiais
+        let chartCaptured = false;
+        const chartElement = document.getElementById('general-dashboard-charts') || document.getElementById('charts-container') || chartsContainerRef.current;
+        if (chartElement) {
+          try {
+            const chartCanvas = await html2canvas(chartElement, {
+              scale: 2,
+              useCORS: true,
+              backgroundColor: '#ffffff',
+              logging: false
+            });
+            doc.addImage(chartCanvas, 'PNG', 14, 48, 269, 72);
+            chartCaptured = true;
+          } catch {
+            chartCaptured = false;
+          }
+        }
+
+        // Tabela de Desempenho e Produtividade dos Militantes
+        const tableStartY = chartCaptured ? 123 : 50;
+        const summaryRows = productivityData.map((mil, idx) => [
+          `${idx + 1}º`,
+          mil.name,
+          mil.teamName,
+          String(mil.streetsCount),
+          String(mil.abordagens),
+          String(mil.comercios),
+          mil.santinhos.toLocaleString('pt-BR'),
+          mil.totalMat.toLocaleString('pt-BR'),
+          `${mil.completionRate}%`
+        ]);
+
+        autoTable(doc, {
+          head: [[
+            '#',
+            'Militante',
+            'Equipe',
+            'Ruas',
+            'Pessoas Abordadas',
+            'Comércio',
+            'Santinhos',
+            'Total Materiais',
+            'Meta Atingida'
+          ]],
+          body: summaryRows,
+          startY: tableStartY,
+          margin: { left: 14, right: 14 },
+          styles: {
+            fontSize: 7.2,
+            cellPadding: 1.8,
+            textColor: [30, 41, 59],
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1
+          },
+          headStyles: {
+            fillColor: [30, 58, 138],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 7.5
+          },
+          columnStyles: {
+            0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
+            1: { cellWidth: 58, fontStyle: 'bold' },
+            2: { cellWidth: 35 },
+            3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+            4: { cellWidth: 34, halign: 'center', fontStyle: 'bold', textColor: [147, 51, 234] },
+            5: { cellWidth: 24, halign: 'center', fontStyle: 'bold', textColor: [5, 150, 105] },
+            6: { cellWidth: 30, halign: 'center', fontStyle: 'bold', textColor: [37, 99, 235] },
+            7: { cellWidth: 32, halign: 'center', fontStyle: 'bold' },
+            8: { cellWidth: 26, halign: 'center', fontStyle: 'bold' }
+          }
+        });
 
         // Global pagination pass for All Pages (apenas páginas sem noHeaderFooterPages)
         const totalPages = doc.getNumberOfPages();
