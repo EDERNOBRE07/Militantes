@@ -16,7 +16,11 @@ import {
   buildMilitantSequentialPinMap
 } from '../utils/neighborhoodHelpers';
 import { BairroInteractiveMap } from './BairroInteractiveMap';
-import { UnifiedNeighborhoodAudit } from './UnifiedNeighborhoodAudit';
+import {
+  UnifiedNeighborhoodAudit,
+  UnifiedNeighborhoodStreetTable,
+  UnifiedNeighborhoodPhotoGallery
+} from './UnifiedNeighborhoodAudit';
 import { GeneralReportDashboard } from './GeneralReportDashboard';
 import { StreetAuditRowWithGallery } from './StreetAuditRowWithGallery';
 import {
@@ -424,7 +428,8 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                       );
 
                       return (
-                        <>
+                        <div className="space-y-6">
+                          {/* 1. MAPA DO BAIRRO */}
                           <BairroInteractiveMap
                             mapId={`map-bairro-individual-${bairro.id}`}
                             bairro={bairro}
@@ -434,8 +439,18 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                             height="380px"
                           />
 
-                          {/* TABELA ÚNICA DE RUAS COM COLUNA MILITANTE + GALERIA ÚNICA (MÍNIMO 15 FOTOS/PÁGINA) */}
-                          <UnifiedNeighborhoodAudit
+                          {/* 2. DASHBOARD GERAL CONSOLIDADO PÓS-MAPAS */}
+                          <GeneralReportDashboard
+                            checkIns={nCheckIns}
+                            militants={militants}
+                            teams={teams}
+                            neighborhoods={neighborhoods}
+                            title="Dashboard Geral Consolidado Pós-Mapas"
+                            subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e distribuição de materiais no bairro ${bairro.name}`}
+                          />
+
+                          {/* 3. TABELAS DE RUAS */}
+                          <UnifiedNeighborhoodStreetTable
                             bairro={bairro}
                             checkIns={nCheckIns}
                             militants={militants}
@@ -444,7 +459,17 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                             onZoomPhoto={onZoomPhoto}
                             onEditStreet={onEditStreet}
                           />
-                        </>
+
+                          {/* 4. FINALIZA COM A GALERIA DE FOTOS */}
+                          <UnifiedNeighborhoodPhotoGallery
+                            bairro={bairro}
+                            checkIns={nCheckIns}
+                            militants={militants}
+                            teams={teams}
+                            pinMap={nPinMap}
+                            onZoomPhoto={onZoomPhoto}
+                          />
+                        </div>
                       );
                     })()}
 
@@ -588,8 +613,18 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             </div>
           </div>
 
-          {/* 3. TABELA ÚNICA DE RUAS COM COLUNA MILITANTE + GALERIA ÚNICA (MÍNIMO 15 FOTOS/PÁGINA) */}
-          <UnifiedNeighborhoodAudit
+          {/* 2. DASHBOARD GERAL CONSOLIDADO PÓS-MAPAS */}
+          <GeneralReportDashboard
+            checkIns={bairroCheckIns}
+            militants={militants}
+            teams={teams}
+            neighborhoods={neighborhoods}
+            title="Dashboard Geral Consolidado Pós-Mapas"
+            subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e distribuição de materiais no bairro ${currentBairro.name}`}
+          />
+
+          {/* 3. TABELAS DE RUAS */}
+          <UnifiedNeighborhoodStreetTable
             bairro={currentBairro}
             checkIns={bairroCheckIns}
             militants={militants}
@@ -599,22 +634,18 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             onEditStreet={onEditStreet}
           />
 
+          {/* 4. FINALIZA COM A GALERIA DE FOTOS */}
+          <UnifiedNeighborhoodPhotoGallery
+            bairro={currentBairro}
+            checkIns={bairroCheckIns}
+            militants={militants}
+            teams={teams}
+            pinMap={singlePinMap}
+            onZoomPhoto={onZoomPhoto}
+          />
+
         </div>
       )}
-
-      {/* =========================================================================
-          2. DEPOIS DA EXIBIÇÃO DOS MAPAS: DASHBOARD GERAL CONSOLIDADO
-          Com gráficos e cards das pessoas abordadas, número de ruas, comércios,
-          materiais entregues e desempenho geral da campanha em São José.
-         ========================================================================= */}
-      <GeneralReportDashboard
-        checkIns={isAllBairros ? bairroCheckIns : checkIns}
-        militants={militants}
-        teams={teams}
-        neighborhoods={neighborhoods}
-        title="Dashboard Geral Consolidado Pós-Mapas"
-        subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e distribuição de materiais em ${isAllBairros ? 'todos os bairros qualificados' : currentBairro.name}`}
-      />
 
     </div>
   );

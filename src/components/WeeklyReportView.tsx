@@ -65,7 +65,7 @@ import {
   Info,
   X
 } from 'lucide-react';
-import { detectLegacySafariSierra, safeTriggerDownload } from '../utils/safariSierraPolyfills';
+import { detectLegacySafariSierra, safeTriggerDownload, downloadOrOpenPdfInSafari } from '../utils/safariSierraPolyfills';
 
 interface WeeklyReportViewProps {
   militants: Militant[];
@@ -103,6 +103,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     pageCount: number;
     sizeBytes: number;
     isSafariOrSierra: boolean;
+    pdfBlob?: Blob | null;
   } | null>(null);
 
   const handleRecoverPhotos = async () => {
@@ -710,14 +711,150 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     try {
       return canvas.toDataURL('image/png');
     } catch (exportErr) {
-      console.warn('toDataURL falhou no mapa do bairro (possível CORS no Safari):', exportErr);
-      return '';
+      console.warn('toDataURL falhou no mapa do bairro (possível CORS no Safari). Gerando mapa vetorial nativo de contingência:', exportErr);
+      return generateVectorOnlyMap(canvas.width, canvas.height, centerLat, centerLng, zoom, bairroPolygon, officialBairro, bCheckIns, pinMap, bairro);
     }
   } catch (mapGenErr) {
     console.warn('Erro ao gerar canvas do mapa do bairro:', mapGenErr);
     return '';
   }
 };
+
+  // Helper de mapa vetorial nativo puro (sem imagens externas, 100% livre de tainted canvas no Safari 10/11)
+  const generateVectorOnlyMap = (
+    w: number,
+    h: number,
+    centerLat: number,
+    centerLng: number,
+    zoom: number,
+    bairroPolygon: [number, number][] | undefined,
+    officialBairro: any,
+    bCheckIns: StreetCheckIn[],
+    pinMap: Record<string, number> | undefined,
+    bairro: Neighborhood
+  ): string => {
+    try {
+      const vCanvas = document.createElement('canvas');
+      vCanvas.width = w;
+      vCanvas.height = h;
+      const vCtx = vCanvas.getContext('2d');
+      if (!vCtx) return '';
+
+      vCtx.fillStyle = '#f8fafc';
+      vCtx.fillRect(0, 0, w, h);
+
+      vCtx.strokeStyle = '#e2e8f0';
+      vCtx.lineWidth = 1;
+      for (let x = 0; x < w; x += 40) {
+        vCtx.beginPath();
+        vCtx.moveTo(x, 0);
+        vCtx.lineTo(x, h);
+        vCtx.stroke();
+      }
+      for (let y = 0; y < h; y += 40) {
+        vCtx.beginPath();
+        vCtx.moveTo(0, y);
+        vCtx.lineTo(w, y);
+        vCtx.stroke();
+      }
+
+      const toX = (lng: number, _lat?: number) => {
+        const worldX = ((lng + 180) / 360) * 256 * Math.pow(2, zoom);
+        const centerWorldX = ((centerLng + 180) / 360) * 256 * Math.pow(2, zoom);
+        return worldX - (centerWorldX - w / 2);
+      };
+      const toY = (lat: number, _lng?: number) => {
+        const sin = Math.sin((lat * Math.PI) / 180);
+        const worldY = (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * 256 * Math.pow(2, zoom);
+        const centerSin = Math.sin((centerLat * Math.PI) / 180);
+        const centerWorldY = (0.5 - Math.log((1 + centerSin) / (1 - centerSin)) / (4 * Math.PI)) * 256 * Math.pow(2, zoom);
+        return worldY - (centerWorldY - h / 2);
+      };
+
+      if (bairroPolygon && Array.isArray(bairroPolygon) && bairroPolygon.length > 2) {
+        vCtx.save();
+        vCtx.beginPath();
+        bairroPolygon.forEach((pt, idx) => {
+          const x = toX(Number(pt[1]), Number(pt[0]));
+          const y = toY(Number(pt[0]), Number(pt[1]));
+          if (idx === 0) vCtx.moveTo(x, y);
+          else vCtx.lineTo(x, y);
+        });
+        vCtx.closePath();
+        const polygonColor = officialBairro?.officialColor || '#2563eb';
+        vCtx.fillStyle = polygonColor + '18';
+        vCtx.fill();
+        vCtx.strokeStyle = polygonColor;
+        vCtx.lineWidth = 3.5;
+        vCtx.setLineDash([8, 6]);
+        vCtx.stroke();
+        vCtx.restore();
+      }
+
+      const drawnStreets = new Set<string>();
+      bCheckIns.forEach(c => {
+        const sKey = c.streetName.trim().toLowerCase();
+        if (drawnStreets.has(sKey)) return;
+        drawnStreets.add(sKey);
+        const roadPoints = getStreetRoadBedCoordinates(c.streetName, bairro.id, c.latitude, c.longitude);
+        if (roadPoints && roadPoints.length >= 2) {
+          vCtx.save();
+          vCtx.beginPath();
+          roadPoints.forEach((pt, idx) => {
+            const x = toX(pt[1], pt[0]);
+            const y = toY(pt[0], pt[1]);
+            if (idx === 0) vCtx.moveTo(x, y);
+            else vCtx.lineTo(x, y);
+          });
+          vCtx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+          vCtx.lineWidth = 14;
+          vCtx.lineCap = 'round';
+          vCtx.lineJoin = 'round';
+          vCtx.stroke();
+          vCtx.strokeStyle = '#dc2626';
+          vCtx.lineWidth = 6.5;
+          vCtx.stroke();
+          vCtx.restore();
+        }
+      });
+
+      bCheckIns.forEach((c, idx) => {
+        if (!c.latitude || !c.longitude) return;
+        const px = toX(c.longitude, c.latitude);
+        const py = toY(c.latitude, c.longitude);
+        const pNum = pinMap && pinMap[c.id] !== undefined ? pinMap[c.id] : (idx + 1);
+        const pColor = '#dc2626';
+
+        vCtx.beginPath();
+        vCtx.arc(px, py, 14, 0, Math.PI * 2);
+        vCtx.fillStyle = pColor;
+        vCtx.fill();
+        vCtx.strokeStyle = '#ffffff';
+        vCtx.lineWidth = 3;
+        vCtx.stroke();
+
+        vCtx.font = 'bold 12px Helvetica, Arial, sans-serif';
+        vCtx.fillStyle = '#ffffff';
+        vCtx.textAlign = 'center';
+        vCtx.textBaseline = 'middle';
+        vCtx.fillText(String(pNum), px, py);
+      });
+
+      vCtx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      vCtx.fillRect(16, 16, 520, 52);
+      vCtx.font = 'bold 16px Helvetica, Arial, sans-serif';
+      vCtx.fillStyle = '#ffffff';
+      vCtx.textAlign = 'left';
+      vCtx.fillText(`MAPA TERRITORIAL: ${bairro.name.toUpperCase()}`, 30, 38);
+      vCtx.font = '11px Helvetica, Arial, sans-serif';
+      vCtx.fillStyle = '#94a3b8';
+      vCtx.fillText(`Auditoria Vetorial Direta • Modo Safari macOS Sierra`, 30, 56);
+
+      return vCanvas.toDataURL('image/png');
+    } catch {
+      return '';
+    }
+  };
 
   // Helper to generate the neighborhood materials & progress chart canvas (Widescreen 1600x850)
   const generateMaterialsChartCanvas = (
@@ -1095,15 +1232,42 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   }
 };
 
-  // Helper to load image as base64 JPEG data URL safely with crossOrigin
+  // Helper para execução do html2canvas com timeout protetivo (evita travamento do export no Safari legado)
+  const safeHtml2Canvas = async (
+    element: HTMLElement,
+    options: any,
+    timeoutMs = 3500
+  ): Promise<HTMLCanvasElement | null> => {
+    try {
+      const canvasPromise = html2canvas(element, options);
+      const timeoutPromise = new Promise<null>((res) => setTimeout(() => res(null), timeoutMs));
+      return await Promise.race([canvasPromise, timeoutPromise]);
+    } catch (err) {
+      console.warn('safeHtml2Canvas falhou suavemente:', err);
+      return null;
+    }
+  };
+
+  // Helper to load image as base64 JPEG data URL safely with crossOrigin and timeout
   const loadBase64Image = async (src: string): Promise<string> => {
     if (!src) return '';
     if (src.startsWith('data:image/')) return src;
 
     return new Promise((resolve) => {
+      let isResolved = false;
+      const timer = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
+          resolve('');
+        }
+      }, 2500);
+
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
+        if (isResolved) return;
+        isResolved = true;
+        clearTimeout(timer);
         try {
           const canvas = document.createElement('canvas');
           canvas.width = img.naturalWidth || img.width || 400;
@@ -1120,6 +1284,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         resolve('');
       };
       img.onerror = () => {
+        if (isResolved) return;
+        isResolved = true;
+        clearTimeout(timer);
         resolve('');
       };
       img.src = src;
@@ -1138,12 +1305,19 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     let dataUri = '';
 
     try {
-      pdfBlob = doc.output('blob');
-      if (pdfBlob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+      const arrayBuffer = doc.output('arraybuffer');
+      pdfBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
         blobUrl = URL.createObjectURL(pdfBlob);
       }
     } catch (blobErr) {
-      console.warn('Erro ao gerar blob do PDF:', blobErr);
+      console.warn('Erro ao gerar blob do PDF via arraybuffer:', blobErr);
+      try {
+        pdfBlob = doc.output('blob');
+        if (pdfBlob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+          blobUrl = URL.createObjectURL(pdfBlob);
+        }
+      } catch {}
     }
 
     try {
@@ -1164,23 +1338,30 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       dataUri,
       pageCount: doc.getNumberOfPages(),
       sizeBytes: pdfBlob ? pdfBlob.size : 0,
-      isSafariOrSierra: isSafari
+      isSafariOrSierra: isSafari,
+      pdfBlob
     });
 
-    // Tentativa 1: Disparo seguro via tag <a> invisível com safeTriggerDownload
-    let autoTriggered = false;
-    if (blobUrl) {
-      autoTriggered = safeTriggerDownload(blobUrl, fileName);
-    } else if (dataUri) {
-      autoTriggered = safeTriggerDownload(dataUri, fileName);
-    }
+    // Se for Safari legado no macOS Sierra:
+    // Dispara via downloadOrOpenPdfInSafari com blob application/octet-stream (força o Safari a salvar diretamente no disco)
+    if (isSafari && pdfBlob) {
+      downloadOrOpenPdfInSafari(pdfBlob, dataUri, fileName, 'download');
+    } else {
+      // Tentativa 1: Disparo seguro via tag <a> invisível com safeTriggerDownload
+      let autoTriggered = false;
+      if (blobUrl) {
+        autoTriggered = safeTriggerDownload(blobUrl, fileName);
+      } else if (dataUri) {
+        autoTriggered = safeTriggerDownload(dataUri, fileName);
+      }
 
-    // Tentativa 2: Fallback padrão do jsPDF se a tentativa 1 falhar
-    if (!autoTriggered) {
-      try {
-        doc.save(fileName);
-      } catch (saveErr) {
-        console.warn('doc.save fallback falhou:', saveErr);
+      // Tentativa 2: Fallback padrão do jsPDF se a tentativa 1 falhar
+      if (!autoTriggered) {
+        try {
+          doc.save(fileName);
+        } catch (saveErr) {
+          console.warn('doc.save fallback falhou:', saveErr);
+        }
       }
     }
 
@@ -1332,14 +1513,16 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           const generalMapDom = document.getElementById('neighborhood-report-map-wrapper');
           if (generalMapDom) {
             try {
-              const mapCanvas = await html2canvas(generalMapDom, {
+              const mapCanvas = await safeHtml2Canvas(generalMapDom, {
                 scale: 2,
                 useCORS: true,
                 allowTaint: false,
                 logging: false,
                 backgroundColor: '#ffffff'
-              });
-              generalMapImg = mapCanvas.toDataURL('image/png');
+              }, 3000);
+              if (mapCanvas) {
+                generalMapImg = mapCanvas.toDataURL('image/png');
+              }
             } catch (e) {
               console.warn('Erro ao capturar mapa do DOM:', e);
             }
@@ -1361,6 +1544,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
           const bAbord = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
           const bCom = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
+          const bSant = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
           const bMat = nCheckIns.reduce((acc, c) => {
             const m = c.materialsDelivered;
             return acc + (m.santinhos || 0) + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
@@ -1425,7 +1609,170 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           }
 
           // -----------------------------------------------------------
-          // 2. TABELA ÚNICA DE RUAS DO BAIRRO (COM COLUNA MILITANTE)
+          // 2. DEPOIS DO MAPA: "Dashboard Geral Consolidado Pós-Mapas" (SOLICITADO)
+          // Com gráficos e cards das pessoas abordadas, número de ruas, comércios,
+          // santinhos e materiais.
+          // -----------------------------------------------------------
+          setExportFeedback(`Gerando Dashboard Geral Consolidado Pós-Mapas: ${bairro.name}...`);
+          doc.addPage('a4', 'landscape');
+
+          drawHeaderBanner(
+            `SISTEMA DE MILITÂNCIA SÃO JOSÉ - DASHBOARD GERAL CONSOLIDADO PÓS-MAPAS: ${bairro.name.toUpperCase()}`,
+            `Resumo Executivo Consolidado • Pessoas Abordadas, Ruas Percorridas e Distribuição de Materiais | Período: ${selectedWeekLabel}`
+          );
+
+          // 6 Cards de Indicadores do Bairro
+          doc.setFillColor(248, 250, 252);
+          doc.roundedRect(14, 28, 269, 17, 2, 2, 'F');
+          doc.setDrawColor(226, 232, 240);
+          doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
+
+          const bPostMapKpiItems = [
+            { label: 'PESSOAS ABORDADAS', val: `${bAbord}` },
+            { label: 'RUAS AUDITADAS', val: `${nCheckIns.length}` },
+            { label: 'COMÉRCIOS ATENDIDOS', val: `${bCom}` },
+            { label: 'SANTINHOS DISTRIBUÍDOS', val: bSant.toLocaleString('pt-BR') },
+            { label: 'TOTAL DE MATERIAIS', val: bMat.toLocaleString('pt-BR') },
+            { label: 'MILITANTES ATIVOS', val: `${new Set(nCheckIns.map(c => c.militantName)).size}` }
+          ];
+
+          const bPostColW = 269 / bPostMapKpiItems.length;
+          bPostMapKpiItems.forEach((kpi, idx) => {
+            const kX = 14 + idx * bPostColW;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text(kpi.label, kX + bPostColW / 2, 33.5, { align: 'center' });
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(15, 23, 42);
+            doc.text(kpi.val, kX + bPostColW / 2, 40.5, { align: 'center' });
+
+            if (idx < bPostMapKpiItems.length - 1) {
+              doc.setDrawColor(226, 232, 240);
+              doc.line(kX + bPostColW, 30, kX + bPostColW, 43);
+            }
+          });
+
+          // Gráfico de Produtividade & Materiais
+          let bChartCaptured = false;
+          const bChartElement = document.getElementById(`general-dashboard-charts-${bairro.id}`) ||
+                                document.getElementById('general-dashboard-charts') ||
+                                document.getElementById('charts-container') ||
+                                chartsContainerRef.current;
+          if (bChartElement) {
+            try {
+              const chartCanvas = await safeHtml2Canvas(bChartElement, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false
+              }, 3000);
+              if (chartCanvas) {
+                const chartImg = chartCanvas.toDataURL('image/png');
+                doc.addImage(chartImg, 'PNG', 14, 48, 269, 72);
+                bChartCaptured = true;
+              }
+            } catch {
+              bChartCaptured = false;
+            }
+          }
+
+          if (!bChartCaptured) {
+            try {
+              const canvasFallback = generateMaterialsChartCanvas(bairro, nCheckIns);
+              if (canvasFallback) {
+                doc.addImage(canvasFallback, 'PNG', 14, 48, 269, 72);
+                bChartCaptured = true;
+              }
+            } catch (canvasErr) {
+              console.warn('Canvas fallback falhou:', canvasErr);
+            }
+          }
+
+          // Tabela de Desempenho dos Militantes no Bairro
+          const bMilitantStats = militants.map(mil => {
+            const milCheckIns = nCheckIns.filter(c => c.militantId === mil.id || c.militantName === mil.name);
+            const streetsCount = milCheckIns.length;
+            const santinhos = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
+            const abordagens = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+            const comercios = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
+            const totalMat = milCheckIns.reduce((acc, c) => {
+              const m = c.materialsDelivered;
+              return acc + (m.santinhos || 0) + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
+            }, 0);
+            const team = teams.find(t => t.id === mil.teamId);
+            return {
+              name: mil.name,
+              teamName: team?.name || 'Equipe Geral',
+              streetsCount,
+              abordagens,
+              comercios,
+              santinhos,
+              totalMat,
+              completionRate: streetsCount > 0 ? 100 : 0
+            };
+          }).filter(m => m.streetsCount > 0).sort((a, b) => b.abordagens - a.abordagens);
+
+          const bTableStartY = bChartCaptured ? 123 : 50;
+          const bSummaryRows = bMilitantStats.map((mil, idx) => [
+            `${idx + 1}º`,
+            mil.name,
+            mil.teamName,
+            String(mil.streetsCount),
+            String(mil.abordagens),
+            String(mil.comercios),
+            mil.santinhos.toLocaleString('pt-BR'),
+            mil.totalMat.toLocaleString('pt-BR'),
+            `${mil.completionRate}%`
+          ]);
+
+          if (bSummaryRows.length > 0) {
+            autoTable(doc, {
+              head: [[
+                '#',
+                'Militante Atuando no Bairro',
+                'Equipe',
+                'Ruas',
+                'Pessoas Abordadas',
+                'Comércio',
+                'Santinhos',
+                'Total Materiais',
+                'Status'
+              ]],
+              body: bSummaryRows,
+              startY: bTableStartY,
+              margin: { left: 14, right: 14 },
+              styles: {
+                fontSize: 7.2,
+                cellPadding: 1.8,
+                textColor: [30, 41, 59],
+                lineColor: [226, 232, 240],
+                lineWidth: 0.1
+              },
+              headStyles: {
+                fillColor: [30, 58, 138],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+                fontSize: 7.5
+              },
+              columnStyles: {
+                0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
+                1: { cellWidth: 58, fontStyle: 'bold' },
+                2: { cellWidth: 35 },
+                3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+                4: { cellWidth: 34, halign: 'center', fontStyle: 'bold', textColor: [147, 51, 234] },
+                5: { cellWidth: 24, halign: 'center', fontStyle: 'bold', textColor: [5, 150, 105] },
+                6: { cellWidth: 30, halign: 'center', fontStyle: 'bold', textColor: [37, 99, 235] },
+                7: { cellWidth: 32, halign: 'center', fontStyle: 'bold' },
+                8: { cellWidth: 26, halign: 'center', fontStyle: 'bold' }
+              }
+            });
+          }
+
+          // -----------------------------------------------------------
+          // 3. TABELA ÚNICA DE RUAS DO BAIRRO (COM COLUNA MILITANTE)
           // Sem cabeçalho e sem rodapé nas páginas de auditoria/galeria
           // -----------------------------------------------------------
           setExportFeedback(`Exportando Tabela Única de Ruas: ${bairro.name}...`);
@@ -1688,126 +2035,6 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             }
           }
         }
-
-        // =========================================================================
-        // DEPOIS DA EXIBIÇÃO DOS MAPAS: DASHBOARD GERAL CONSOLIDADO (SOLICITADO)
-        // Com gráficos e cards das pessoas abordadas, número de ruas, comércios,
-        // distribuição de materiais e ranking consolidado da campanha.
-        // =========================================================================
-        setExportFeedback('Gerando Dashboard Geral Consolidado Pós-Mapas...');
-        doc.addPage('a4', 'landscape');
-
-        drawHeaderBanner(
-          'SISTEMA DE MILITÂNCIA SÃO JOSÉ - DASHBOARD GERAL CONSOLIDADO PÓS-MAPEAMENTO',
-          `Resumo Executivo Geral • Pessoas Abordadas, Ruas Percorridas e Distribuição de Materiais | Período: ${selectedWeekLabel}`
-        );
-
-        // 6 Cards de Indicadores Gerais
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(14, 28, 269, 17, 2, 2, 'F');
-        doc.setDrawColor(226, 232, 240);
-        doc.roundedRect(14, 28, 269, 17, 2, 2, 'D');
-
-        const postMapKpiItems = [
-          { label: 'PESSOAS ABORDADAS', val: `${totalAbordagens}` },
-          { label: 'RUAS AUDITADAS', val: `${filteredCheckIns.length}` },
-          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComercios}` },
-          { label: 'SANTINHOS DISTRIBUÍDOS', val: totalSantinhos.toLocaleString('pt-BR') },
-          { label: 'TOTAL DE MATERIAIS', val: totalMateriaisGeral.toLocaleString('pt-BR') },
-          { label: 'MILITANTES ATIVOS', val: `${activeMilitants.length}` }
-        ];
-
-        const postColW = 269 / postMapKpiItems.length;
-        postMapKpiItems.forEach((kpi, idx) => {
-          const kX = 14 + idx * postColW;
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(6.5);
-          doc.setTextColor(100, 116, 139);
-          doc.text(kpi.label, kX + postColW / 2, 33.5, { align: 'center' });
-
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10);
-          doc.setTextColor(15, 23, 42);
-          doc.text(kpi.val, kX + postColW / 2, 40.5, { align: 'center' });
-
-          if (idx < postMapKpiItems.length - 1) {
-            doc.setDrawColor(226, 232, 240);
-            doc.line(kX + postColW, 30, kX + postColW, 43);
-          }
-        });
-
-        // Gráfico de Produtividade & Materiais
-        let chartCaptured = false;
-        const chartElement = document.getElementById('general-dashboard-charts') || document.getElementById('charts-container') || chartsContainerRef.current;
-        if (chartElement) {
-          try {
-            const chartCanvas = await html2canvas(chartElement, {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#ffffff',
-              logging: false
-            });
-            doc.addImage(chartCanvas, 'PNG', 14, 48, 269, 72);
-            chartCaptured = true;
-          } catch {
-            chartCaptured = false;
-          }
-        }
-
-        // Tabela de Desempenho e Produtividade dos Militantes
-        const tableStartY = chartCaptured ? 123 : 50;
-        const summaryRows = productivityData.map((mil, idx) => [
-          `${idx + 1}º`,
-          mil.name,
-          mil.teamName,
-          String(mil.streetsCount),
-          String(mil.abordagens),
-          String(mil.comercios),
-          mil.santinhos.toLocaleString('pt-BR'),
-          mil.totalMat.toLocaleString('pt-BR'),
-          `${mil.completionRate}%`
-        ]);
-
-        autoTable(doc, {
-          head: [[
-            '#',
-            'Militante',
-            'Equipe',
-            'Ruas',
-            'Pessoas Abordadas',
-            'Comércio',
-            'Santinhos',
-            'Total Materiais',
-            'Meta Atingida'
-          ]],
-          body: summaryRows,
-          startY: tableStartY,
-          margin: { left: 14, right: 14 },
-          styles: {
-            fontSize: 7.2,
-            cellPadding: 1.8,
-            textColor: [30, 41, 59],
-            lineColor: [226, 232, 240],
-            lineWidth: 0.1
-          },
-          headStyles: {
-            fillColor: [30, 58, 138],
-            textColor: [255, 255, 255],
-            fontStyle: 'bold',
-            fontSize: 7.5
-          },
-          columnStyles: {
-            0: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [100, 116, 139] },
-            1: { cellWidth: 58, fontStyle: 'bold' },
-            2: { cellWidth: 35 },
-            3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-            4: { cellWidth: 34, halign: 'center', fontStyle: 'bold', textColor: [147, 51, 234] },
-            5: { cellWidth: 24, halign: 'center', fontStyle: 'bold', textColor: [5, 150, 105] },
-            6: { cellWidth: 30, halign: 'center', fontStyle: 'bold', textColor: [37, 99, 235] },
-            7: { cellWidth: 32, halign: 'center', fontStyle: 'bold' },
-            8: { cellWidth: 26, halign: 'center', fontStyle: 'bold' }
-          }
-        });
 
         // Global pagination pass for All Pages (apenas páginas sem noHeaderFooterPages)
         const totalPages = doc.getNumberOfPages();
@@ -2157,17 +2384,19 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         // Charts
         if (chartsContainerRef.current) {
           try {
-            const chartCanvas = await html2canvas(chartsContainerRef.current, {
+            const chartCanvas = await safeHtml2Canvas(chartsContainerRef.current, {
               scale: 2,
               useCORS: true,
               logging: false,
               backgroundColor: '#ffffff'
-            });
-            const imgData = chartCanvas.toDataURL('image/png');
-            const imgWidth = 269;
-            const imgHeight = (chartCanvas.height * imgWidth) / chartCanvas.width;
-            const finalImgHeight = Math.min(imgHeight, 115);
-            doc.addImage(imgData, 'PNG', 14, 48, imgWidth, finalImgHeight);
+            }, 3000);
+            if (chartCanvas) {
+              const imgData = chartCanvas.toDataURL('image/png');
+              const imgWidth = 269;
+              const imgHeight = (chartCanvas.height * imgWidth) / chartCanvas.width;
+              const finalImgHeight = Math.min(imgHeight, 115);
+              doc.addImage(imgData, 'PNG', 14, 48, imgWidth, finalImgHeight);
+            }
           } catch (err) {
             console.warn('Erro ao renderizar gráficos no PDF:', err);
           }
@@ -3601,32 +3830,33 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
             {/* Action Buttons */}
             <div className="mt-5 flex flex-col sm:flex-row items-stretch gap-2.5">
-              {/* Direct Anchor Download Button (Works with explicit user click in Safari) */}
-              <a
-                href={completedPdfModal.blobUrl || completedPdfModal.dataUri}
-                download={completedPdfModal.fileName}
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* Direct Download Button (Specialized for Safari on Sierra with octet-stream blob fallback) */}
+              <button
+                type="button"
+                onClick={() => {
+                  downloadOrOpenPdfInSafari(
+                    completedPdfModal.pdfBlob || null,
+                    completedPdfModal.dataUri,
+                    completedPdfModal.fileName,
+                    'download'
+                  );
+                }}
                 className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition cursor-pointer text-center"
               >
                 <FileDown className="w-4 h-4" />
                 Baixar Arquivo PDF
-              </a>
+              </button>
 
-              {/* Open in Safari Browser tab */}
+              {/* Open in Safari Browser tab / reader */}
               <button
                 type="button"
                 onClick={() => {
-                  if (completedPdfModal.blobUrl) {
-                    window.open(completedPdfModal.blobUrl, '_blank');
-                  } else if (completedPdfModal.dataUri) {
-                    const newWin = window.open();
-                    if (newWin) {
-                      newWin.document.write(
-                        `<iframe src="${completedPdfModal.dataUri}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`
-                      );
-                    }
-                  }
+                  downloadOrOpenPdfInSafari(
+                    completedPdfModal.pdfBlob || null,
+                    completedPdfModal.dataUri,
+                    completedPdfModal.fileName,
+                    'open'
+                  );
                 }}
                 className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
               >
@@ -3634,6 +3864,26 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 Abrir PDF no Safari
               </button>
             </div>
+
+            {/* Embedded Live PDF Preview for Safari on macOS Sierra (Never blocked by pop-ups) */}
+            {(completedPdfModal.blobUrl || completedPdfModal.dataUri) && (
+              <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden bg-slate-100">
+                <div className="bg-slate-200 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-700 font-semibold border-b border-slate-300">
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-blue-600" />
+                    Visualização Integrada no Navegador ({completedPdfModal.pageCount} págs.)
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-normal">
+                    Compatível com Safari Sierra
+                  </span>
+                </div>
+                <iframe
+                  src={completedPdfModal.blobUrl || completedPdfModal.dataUri}
+                  className="w-full h-72 border-0 bg-white"
+                  title="Pré-visualização do Relatório Oficial"
+                />
+              </div>
+            )}
 
             {/* Secondary actions */}
             <div className="mt-3 flex items-center justify-between pt-3 border-t border-slate-100">

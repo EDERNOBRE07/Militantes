@@ -106,6 +106,32 @@ if (typeof window !== 'undefined' && typeof (window as any).AbortController === 
   (window as any).AbortSignal = SimpleAbortSignal;
 }
 
+// 3.5 structuredClone polyfill (Safari < 15.4)
+if (typeof window !== 'undefined' && typeof (window as any).structuredClone === 'undefined') {
+  (window as any).structuredClone = function (obj: any) {
+    if (obj === undefined) return undefined;
+    return JSON.parse(JSON.stringify(obj));
+  };
+}
+
+// 3.6 requestIdleCallback polyfill (Safari < 16.4)
+if (typeof window !== 'undefined' && !window.requestIdleCallback) {
+  (window as any).requestIdleCallback = function (cb: any) {
+    const start = Date.now();
+    return setTimeout(() => {
+      try {
+        cb({
+          didTimeout: false,
+          timeRemaining: () => Math.max(0, 50 - (Date.now() - start))
+        });
+      } catch {}
+    }, 1);
+  };
+  (window as any).cancelIdleCallback = function (id: any) {
+    clearTimeout(id);
+  };
+}
+
 // 4. ResizeObserver polyfill (Safari < 13.1 - Essencial para Recharts / Leaflet)
 if (typeof window !== 'undefined' && !window.ResizeObserver) {
   class LegacyResizeObserver {
@@ -330,6 +356,29 @@ if (typeof window !== 'undefined' && typeof CanvasRenderingContext2D !== 'undefi
   }
 }
 
+// 7.1 Polyfill CanvasRenderingContext2D.prototype.ellipse (Safari < 13 / macOS Sierra)
+if (typeof window !== 'undefined' && typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.ellipse) {
+  CanvasRenderingContext2D.prototype.ellipse = function (
+    this: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radiusX: number,
+    radiusY: number,
+    rotation: number,
+    startAngle: number,
+    endAngle: number,
+    anticlockwise = false
+  ) {
+    this.save();
+    this.translate(x, y);
+    this.rotate(rotation);
+    this.scale(radiusX, radiusY);
+    this.arc(0, 0, 1, startAngle, endAngle, anticlockwise);
+    this.restore();
+  };
+  console.info('[Polyfill] CanvasRenderingContext2D.prototype.ellipse instalado para Safari legado.');
+}
+
 // 8. Polyfill HTMLCanvasElement.prototype.toBlob (Safari 10 / macOS Sierra não possuía toBlob nativo)
 if (typeof window !== 'undefined' && typeof HTMLCanvasElement !== 'undefined' && !HTMLCanvasElement.prototype.toBlob) {
   Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
@@ -408,6 +457,60 @@ export function safeTriggerDownload(url: string, fileName: string): boolean {
     return true;
   } catch (err) {
     console.warn('[safeTriggerDownload] Erro ao disparar download via <a>:', err);
+    return false;
+  }
+}
+
+// 11. Emissor especializado de PDF para Safari no macOS Sierra (MacBook Pro 2012)
+// O Safari 10/11 no macOS Sierra bloqueia downloads de blob: com a tag <a download>
+// e restringe pop-ups assíncronos. Esta função implementa as 3 vias infalíveis:
+// 1. Octet-Stream Blob (força o gerenciador de downloads do Safari a salvar o arquivo)
+// 2. Abertura direta do Blob para visualização e Cmd+S no visualizador nativo do macOS
+// 3. Fallback de Data URI ou nova janela/iframe
+export function downloadOrOpenPdfInSafari(
+  pdfBlob: Blob | null,
+  dataUri: string,
+  fileName: string,
+  mode: 'download' | 'open' = 'download'
+): boolean {
+  try {
+    if (mode === 'open') {
+      if (pdfBlob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+        const url = URL.createObjectURL(pdfBlob);
+        const win = window.open(url, '_blank');
+        if (win) {
+          setTimeout(() => { try { URL.revokeObjectURL(url); } catch {} }, 60000);
+          return true;
+        }
+      }
+      if (dataUri) {
+        const win = window.open();
+        if (win) {
+          win.document.write(
+            `<!DOCTYPE html><html><head><title>${fileName}</title></head><body style="margin:0;padding:0;overflow:hidden;"><iframe src="${dataUri}" frameborder="0" style="border:0;width:100vw;height:100vh;" allowfullscreen></iframe></body></html>`
+          );
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Mode: 'download'
+    // No Safari legado, um Blob do tipo application/octet-stream obriga o Safari a disparar o download
+    if (pdfBlob) {
+      const octetBlob = new Blob([pdfBlob], { type: 'application/octet-stream' });
+      const octetUrl = URL.createObjectURL(octetBlob);
+      const success = safeTriggerDownload(octetUrl, fileName);
+      setTimeout(() => { try { URL.revokeObjectURL(octetUrl); } catch {} }, 4000);
+      if (success) return true;
+    }
+
+    if (dataUri) {
+      return safeTriggerDownload(dataUri, fileName);
+    }
+    return false;
+  } catch (e) {
+    console.warn('[downloadOrOpenPdfInSafari] Falha na emissão para Safari legado:', e);
     return false;
   }
 }
