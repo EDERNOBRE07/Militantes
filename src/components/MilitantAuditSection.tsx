@@ -74,10 +74,15 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
   onZoomPhoto,
   onEditStreet
 }) => {
-  // Coleta todas as fotos anexadas às ruas deste militante
+  // Ordena os lançamentos deste militante estritamente por ordem cronológica de lançamento
+  const sortedCheckIns = [...group.checkIns].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
+  // Coleta todas as fotos anexadas às ruas deste militante com o número de Pin correspondente
   const allPhotos: { photo: string; streetName: string; timestamp: string; chkId: string; pinNum: number }[] = [];
-  group.checkIns.forEach(chk => {
-    const pinNum = (pinMap && pinMap[chk.id]) || 1;
+  sortedCheckIns.forEach(chk => {
+    const pinNum = (pinMap && (pinMap[chk.id] ?? pinMap[String(chk.id)])) || 1;
     const photos = getAllPhotosForCheckIn(chk);
     photos.forEach(p => {
       allPhotos.push({
@@ -173,13 +178,9 @@ export const MilitantAuditSection: React.FC<MilitantAuditSectionProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-800">
-            {group.checkIns.map((chk) => {
+            {sortedCheckIns.map((chk) => {
               const chkPhotos = getAllPhotosForCheckIn(chk);
-              const pinNumber = (pinMap && pinMap[chk.id]) || (
-                [...group.checkIns]
-                  .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-                  .findIndex(c => c.id === chk.id) + 1
-              );
+              const pinNumber = (pinMap && (pinMap[chk.id] ?? pinMap[String(chk.id)])) || 1;
               return (
                 <tr key={chk.id} className="hover:bg-slate-50/70 transition">
                   {/* 1. Data / Hora */}

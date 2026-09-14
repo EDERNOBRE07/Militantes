@@ -33,7 +33,8 @@ import {
   doesNeighborhoodQualify,
   isCheckInInNeighborhood,
   getAllPhotosForCheckIn,
-  getCheckInsForNeighborhood
+  getCheckInsForNeighborhood,
+  buildMilitantSequentialPinMap
 } from '../utils/neighborhoodHelpers';
 import {
   FileText,
@@ -80,7 +81,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 }) => {
   const [selectedMilitantId, setSelectedMilitantId] = useState<string>('todos');
   const [selectedTeamId, setSelectedTeamId] = useState<string>('todos');
-  const [selectedWeek, setSelectedWeek] = useState<string>('semana-1');
+  const [selectedWeek, setSelectedWeek] = useState<string>('todas');
   const [selectedPhotoZoom, setSelectedPhotoZoom] = useState<string | null>(null);
   const [viewGrouping, setViewGrouping] = useState<'por_militante' | 'tabela_geral' | 'tabela_produtividade' | 'por_bairro'>('por_militante');
   const [selectedBairroId, setSelectedBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
@@ -126,12 +127,13 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const COMMITTEE_NAME = 'Comitê Central de Campanha • São José - SC (Eleições 2026)';
 
   const weeks = [
-    { id: 'semana-1', label: 'Semana 1 (25/08 a 31/08/2026)' },
-    { id: 'semana-2', label: 'Semana 2 (01/09 a 07/09/2026)' },
-    { id: 'semana-3', label: 'Semana 3 (08/09 a 14/09/2026)' },
-    { id: 'semana-4', label: 'Semana 4 (15/09 a 21/09/2026)' },
-    { id: 'semana-5', label: 'Semana 5 (22/09 a 28/09/2026)' },
-    { id: 'semana-6', label: 'Semana 6 / Reta Final (29/09 a 04/10/2026)' }
+    { id: 'todas', label: 'Todas as Semanas (Período Integral da Campanha)', start: '2026-08-01', end: '2026-10-31' },
+    { id: 'semana-1', label: 'Semana 1 (25/08 a 31/08/2026)', start: '2026-08-25', end: '2026-08-31' },
+    { id: 'semana-2', label: 'Semana 2 (01/09 a 07/09/2026)', start: '2026-09-01', end: '2026-09-07' },
+    { id: 'semana-3', label: 'Semana 3 (08/09 a 14/09/2026)', start: '2026-09-08', end: '2026-09-14' },
+    { id: 'semana-4', label: 'Semana 4 (15/09 a 21/09/2026)', start: '2026-09-15', end: '2026-09-21' },
+    { id: 'semana-5', label: 'Semana 5 (22/09 a 28/09/2026)', start: '2026-09-22', end: '2026-09-28' },
+    { id: 'semana-6', label: 'Semana 6 / Reta Final (29/09 a 04/10/2026)', start: '2026-09-29', end: '2026-10-04' }
   ];
 
   // Folha de Pagamento sincronizada do StorageService
@@ -213,6 +215,13 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const filteredCheckIns = checkIns.filter(chk => {
     if (selectedMilitantId !== 'todos' && chk.militantId !== selectedMilitantId) return false;
     if (selectedTeamId !== 'todos' && chk.teamId !== selectedTeamId) return false;
+    if (selectedWeek !== 'todas') {
+      const wObj = weeks.find(w => w.id === selectedWeek);
+      if (wObj?.start && wObj?.end && chk.timestamp) {
+        const d = chk.timestamp.slice(0, 10);
+        if (d < wObj.start || d > wObj.end) return false;
+      }
+    }
     return true;
   });
 
@@ -371,7 +380,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   // Helper to generate a high-definition map canvas with real Google Maps tiles, painted streets and GPS pins
   const generateNeighborhoodMapCanvas = async (
     bairro: Neighborhood,
-    bCheckIns: StreetCheckIn[]
+    bCheckIns: StreetCheckIn[],
+    pinMap?: Record<string, number>
   ): Promise<string> => {
     const canvas = document.createElement('canvas');
     canvas.width = 1600;
@@ -587,19 +597,11 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       }
     });
 
-    // Mapeamento cronológico dos Pins do bairro para numeração por ordem de lançamento
-    const canvasPinMap: Record<string, number> = {};
-    [...bCheckIns]
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      .forEach((chk, idx) => {
-        canvasPinMap[chk.id] = idx + 1;
-      });
-
-    // 2. Draw Numbered Pins (apenas pin com número correspondente à ordem de lançamento)
+    // 2. Draw Numbered Pins (apenas pin com número correspondente à sequência de lançamento por militante)
     bCheckIns.forEach(chk => {
       const px = toX(chk.longitude, chk.latitude);
       const py = toY(chk.latitude, chk.longitude);
-      const pinNum = canvasPinMap[chk.id] || 1;
+      const pinNum = (pinMap && (pinMap[chk.id] ?? pinMap[String(chk.id)])) || 1;
 
       // Pin Shadow
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
@@ -1253,7 +1255,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             }
           }
           if (!generalMapImg) {
-            generalMapImg = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns);
+            const { pinMap: genPinMap } = buildMilitantSequentialPinMap(bairroCheckIns, militants, teams);
+            generalMapImg = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns, genPinMap);
           }
 
           if (generalMapImg) {
@@ -1315,8 +1318,18 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             doc.text(kpi.val, xPos, 37.5, { align: 'center' });
           });
 
-          // Mapa com ruas pintadas em vermelho exatamente no leito viário
-          const bairroMapCanvas = await generateNeighborhoodMapCanvas(bairro, nCheckIns);
+          // -----------------------------------------------------------
+          // 1. NUMERAÇÃO SEQUENCIAL DE PINS POR MILITANTE E MAPA DO BAIRRO
+          // Todos os pins de um militante (ordem de lançamento), continuando a sequência numérica com o próximo militante
+          // -----------------------------------------------------------
+          const { pinMap: bPinMap, groups: militantGroups } = buildMilitantSequentialPinMap(
+            nCheckIns,
+            militants,
+            teams
+          );
+
+          // Mapa com ruas pintadas em vermelho exatamente no leito viário e pins numerados sincronizados
+          const bairroMapCanvas = await generateNeighborhoodMapCanvas(bairro, nCheckIns, bPinMap);
           if (bairroMapCanvas) {
             doc.addImage(bairroMapCanvas, 'PNG', 14, 44, 269, 138);
           }
@@ -1325,16 +1338,6 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           // 2. AGRUPAMENTO POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 15 FOTOS POR PÁGINA)
           // Sem cabeçalho e sem rodapé nas páginas de auditoria/galeria
           // -----------------------------------------------------------
-          const militantGroups = groupCheckInsByMilitant(nCheckIns, militants, teams);
-
-          // Mapeamento cronológico dos Pins do bairro para numeração por ordem de lançamento
-          const bPinMap: Record<string, number> = {};
-          [...nCheckIns]
-            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-            .forEach((c, idx) => {
-              bPinMap[c.id] = idx + 1;
-            });
-
           for (let mIdx = 0; mIdx < militantGroups.length; mIdx++) {
             const mil = militantGroups[mIdx];
             setExportFeedback(`Exportando militante ${mIdx + 1}/${militantGroups.length}: ${mil.militantName}...`);

@@ -12,7 +12,8 @@ import {
   doesNeighborhoodQualify,
   isCheckInInNeighborhood,
   getCheckInsForNeighborhood,
-  getAllPhotosForCheckIn
+  getAllPhotosForCheckIn,
+  buildMilitantSequentialPinMap
 } from '../utils/neighborhoodHelpers';
 import { BairroInteractiveMap } from './BairroInteractiveMap';
 import { MilitantAuditSection, groupCheckInsByMilitant } from './MilitantAuditSection';
@@ -116,17 +117,10 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     100
   );
 
-  // Mapeamento cronológico de Pins por ordem de lançamento de dados para o bairro selecionado
-  const singlePinMap = useMemo(() => {
-    const sorted = [...bairroCheckIns].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-    const map: Record<string, number> = {};
-    sorted.forEach((chk, idx) => {
-      map[chk.id] = idx + 1;
-    });
-    return map;
-  }, [bairroCheckIns]);
+  // Mapeamento sequencial de Pins por ordem de lançamento e militante para o bairro selecionado
+  const { pinMap: singlePinMap, groups: singleMilitantGroups } = useMemo(() => {
+    return buildMilitantSequentialPinMap(bairroCheckIns, militants, teams);
+  }, [bairroCheckIns, militants, teams]);
 
   // Dados para o gráfico de pizza de materiais
   const materialsPieData = useMemo(() => {
@@ -422,12 +416,11 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                     </div>
 
                     {(() => {
-                      const nPinMap: Record<string, number> = {};
-                      [...nCheckIns]
-                        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-                        .forEach((c, idx) => {
-                          nPinMap[c.id] = idx + 1;
-                        });
+                      const { pinMap: nPinMap, groups: nMilitantGroups } = buildMilitantSequentialPinMap(
+                        nCheckIns,
+                        militants,
+                        teams
+                      );
 
                       return (
                         <>
@@ -452,7 +445,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                               </span>
                             </div>
 
-                            {groupCheckInsByMilitant(nCheckIns, militants, teams).map((group, mIdx) => (
+                            {nMilitantGroups.map((group, mIdx) => (
                               <MilitantAuditSection
                                 key={group.militantId}
                                 group={group}
@@ -630,7 +623,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                 Nenhuma rua cadastrada no bairro {currentBairro.name} no período selecionado.
               </div>
             ) : (
-              groupCheckInsByMilitant(bairroCheckIns, militants, teams).map((group, mIdx) => (
+              singleMilitantGroups.map((group, mIdx) => (
                 <MilitantAuditSection
                   key={group.militantId}
                   group={group}
