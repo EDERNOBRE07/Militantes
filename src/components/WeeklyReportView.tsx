@@ -24,6 +24,7 @@ import {
 import { formatDateTimeBR } from '../utils/formatters';
 import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
 import { NeighborhoodReportSection } from './NeighborhoodReportSection';
+import { groupCheckInsByMilitant } from './MilitantAuditSection';
 import { StorageService } from '../services/storageService';
 import { EditStreetModal } from './EditStreetModal';
 import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
@@ -1186,10 +1187,11 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         const isAllBairrosMode = selectedBairroId === 'todos';
         const qualifyingBairros = getQualifyingNeighborhoods(neighborhoods, filteredCheckIns);
         const targetBairros = isAllBairrosMode ? qualifyingBairros : [currentSelectedBairro];
+        const noHeaderFooterPages = new Set<number>();
 
         setExportFeedback(isAllBairrosMode
           ? `Gerando relatório estruturado dos bairros qualificados (${qualifyingBairros.length} bairros com ruas e fotos)...`
-          : `Gerando relatório completo do Bairro ${currentSelectedBairro.name} com mapas, tabelas e fotos...`
+          : `Gerando relatório otimizado do Bairro ${currentSelectedBairro.name}...`
         );
 
         // Filtro estrito: apenas check-ins com bairros qualificados
@@ -1204,116 +1206,70 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         const totalMatBairro = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos + (c.materialsDelivered.adesivo_bola || 0) + (c.materialsDelivered.adesivo_parachoque || 0) + (c.materialsDelivered.colinhas || 0)), 0);
 
         // -------------------------------------------------------------
-        // SEÇÃO 1: 1 - MAPA GERAL DOS BAIRROS
+        // CASO GERAL: SE SELECIONOU "TODOS OS BAIRROS", RENDERIZA O MAPA GERAL + KPIS CONSOLIDADOS
+        // Se escolheu um bairro específico, entra DIRETO no bairro selecionado!
         // -------------------------------------------------------------
-        setExportFeedback(`Renderizando 1. Mapa Geral dos Bairros com delimitações oficiais e ruas pintadas em vermelho...`);
-        drawHeaderBanner(
-          isAllBairrosMode
-            ? 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - 1. MAPA GERAL DOS BAIRROS'
-            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - 1. MAPA TERRITORIAL: ${currentSelectedBairro.name.toUpperCase()}`,
-          isAllBairrosMode
-            ? `Delimitações Territoriais Oficiais e Ruas Auditadas Pintadas em Vermelho • ${targetBairros.length} Bairros Qualificados | Período: ${selectedWeekLabel}`
-            : `Delimitação Territorial Oficial e Ruas Auditadas no Leito Viário • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
-        );
+        if (isAllBairrosMode) {
+          setExportFeedback(`Renderizando 1. Mapa Geral dos Bairros com delimitações oficiais e ruas pintadas em vermelho...`);
+          drawHeaderBanner(
+            'SISTEMA DE MILITÂNCIA SÃO JOSÉ - 1. MAPA GERAL DOS BAIRROS',
+            `Delimitações Territoriais Oficiais e Ruas Auditadas no Leito Viário • ${targetBairros.length} Bairros Qualificados | Período: ${selectedWeekLabel}`
+          );
 
-        // Barra de status do Mapa Geral
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(14, 27, 269, 7.5, 1.5, 1.5, 'F');
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7.5);
-        doc.setTextColor(30, 58, 138);
-        doc.text(
-          isAllBairrosMode
-            ? `1. MAPA GERAL: ${targetBairros.length} Bairros Qualificados (com ruas e fotos comprovadas) • ${bairroCheckIns.length} Vias Sinalizadas no Leito Viário`
-            : `1. MAPA DO BAIRRO: ${currentSelectedBairro.name.toUpperCase()} • ${bairroCheckIns.length} Vias Sinalizadas no Leito Viário`,
-          18,
-          32
-        );
+          // 6 Cards de Indicadores Consolidados
+          doc.setFillColor(248, 250, 252);
+          doc.roundedRect(14, 27, 269, 14, 2, 2, 'F');
+          doc.setDrawColor(226, 232, 240);
+          doc.roundedRect(14, 27, 269, 14, 2, 2, 'D');
 
-        // Captura o mapa renderizado do DOM ou gera canvas Google Maps em alta resolução
-        let generalMapImg = '';
-        const generalMapDom = document.getElementById('neighborhood-report-map-wrapper');
-        if (generalMapDom) {
-          try {
-            const mapCanvas = await html2canvas(generalMapDom, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: false,
-              logging: false,
-              backgroundColor: '#ffffff'
-            });
-            generalMapImg = mapCanvas.toDataURL('image/png');
-          } catch (e) {
-            console.warn('Erro ao capturar mapa do DOM:', e);
+          const bairroKpiItems = [
+            { label: 'POPULAÇÃO AUDITADA (IBGE)', val: `${totalPop.toLocaleString('pt-BR')} hab.` },
+            { label: 'ELEITORES ESTIMADOS', val: `${totalVot.toLocaleString('pt-BR')}` },
+            { label: 'RUAS REGISTRADAS', val: `${bairroCheckIns.length} ruas (${targetBairros.length} bairros)` },
+            { label: 'ABORDAGENS DIRETAS', val: `${totalAbordBairro} eleitores` },
+            { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComBairro} pontos` },
+            { label: 'MATERIAIS TOTAIS', val: `${totalMatBairro.toLocaleString('pt-BR')}` }
+          ];
+
+          const bKpiWidth = 269 / bairroKpiItems.length;
+          bairroKpiItems.forEach((kpi, idx) => {
+            const xPos = 14 + (idx * bKpiWidth) + (bKpiWidth / 2);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(6.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text(kpi.label, xPos, 31.5, { align: 'center' });
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(30, 58, 138);
+            doc.text(kpi.val, xPos, 37.5, { align: 'center' });
+          });
+
+          // Captura o mapa renderizado do DOM ou gera canvas Google Maps em alta resolução
+          let generalMapImg = '';
+          const generalMapDom = document.getElementById('neighborhood-report-map-wrapper');
+          if (generalMapDom) {
+            try {
+              const mapCanvas = await html2canvas(generalMapDom, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: false,
+                logging: false,
+                backgroundColor: '#ffffff'
+              });
+              generalMapImg = mapCanvas.toDataURL('image/png');
+            } catch (e) {
+              console.warn('Erro ao capturar mapa do DOM:', e);
+            }
+          }
+          if (!generalMapImg) {
+            generalMapImg = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns);
+          }
+
+          if (generalMapImg) {
+            doc.addImage(generalMapImg, 'PNG', 14, 44, 269, 138);
           }
         }
-        if (!generalMapImg) {
-          generalMapImg = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns);
-        }
-
-        if (generalMapImg) {
-          doc.addImage(generalMapImg, 'PNG', 14, 37, 269, 145);
-        }
-
-        // -------------------------------------------------------------
-        // SEÇÃO 2: 2 - KPIS E DADOS CONSOLIDADOS
-        // -------------------------------------------------------------
-        doc.addPage('a4', 'landscape');
-        drawHeaderBanner(
-          isAllBairrosMode
-            ? 'SISTEMA DE MILITÂNCIA SÃO JOSÉ - 2. KPIS E DADOS CONSOLIDADOS'
-            : `SISTEMA DE MILITÂNCIA SÃO JOSÉ - 2. KPIS E DADOS: ${currentSelectedBairro.name.toUpperCase()}`,
-          isAllBairrosMode
-            ? `Indicadores Consolidados de População (IBGE), Eleitores, Ruas, Abordagens, Comércios e Materiais | Período: ${selectedWeekLabel}`
-            : `Indicadores de População (IBGE), Eleitores, Ruas, Abordagens e Materiais • Bairro ${currentSelectedBairro.name} | Período: ${selectedWeekLabel}`
-        );
-
-        // 6 Cards de Indicadores Consolidados
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(14, 27, 269, 17, 2, 2, 'F');
-        doc.setDrawColor(226, 232, 240);
-        doc.roundedRect(14, 27, 269, 17, 2, 2, 'D');
-
-        const bairroKpiItems = [
-          { label: 'POPULAÇÃO AUDITADA (IBGE)', val: `${totalPop.toLocaleString('pt-BR')} hab.` },
-          { label: 'ELEITORES ESTIMADOS', val: `${totalVot.toLocaleString('pt-BR')}` },
-          { label: 'RUAS REGISTRADAS', val: `${bairroCheckIns.length} ruas (${targetBairros.length} bairros)` },
-          { label: 'ABORDAGENS DIRETAS', val: `${totalAbordBairro} eleitores` },
-          { label: 'COMÉRCIOS ATENDIDOS', val: `${totalComBairro} pontos` },
-          { label: 'MATERIAIS TOTAIS', val: `${totalMatBairro.toLocaleString('pt-BR')}` }
-        ];
-
-        const bKpiWidth = 269 / bairroKpiItems.length;
-        bairroKpiItems.forEach((kpi, idx) => {
-          const xPos = 14 + (idx * bKpiWidth) + (bKpiWidth / 2);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(6.5);
-          doc.setTextColor(100, 116, 139);
-          doc.text(kpi.label, xPos, 32.5, { align: 'center' });
-
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(9.5);
-          doc.setTextColor(30, 58, 138);
-          doc.text(kpi.val, xPos, 39.5, { align: 'center' });
-        });
-
-        // Gráfico de pizza de materiais e cobertura territorial
-        const chartImgData = generateMaterialsChartCanvas(currentSelectedBairro, bairroCheckIns);
-        if (chartImgData) {
-          doc.addImage(chartImgData, 'PNG', 14, 48, 269, 136);
-        }
-
-        // -------------------------------------------------------------
-        // SEÇÃO 3, 4, 5... DASHBOARDS INDIVIDUAIS DE CADA BAIRRO QUALIFICADO
-        // Para cada bairro:
-        // - Começa pelo Mapa do Bairro com ruas pintadas em vermelho
-        // - Sequência de ruas e galerias:
-        //   3a Tabela da Rua 1 (9 colunas)
-        //   3b Galeria de fotos da Rua 1 (todas as fotos anexadas)
-        //   3c Tabela da Rua 2 (9 colunas)
-        //   3d Galeria de fotos da Rua 2...
-        // -------------------------------------------------------------
-        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
 
         for (let bIdx = 0; bIdx < targetBairros.length; bIdx++) {
           const bairro = targetBairros[bIdx];
@@ -1327,28 +1283,32 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             return acc + (m.santinhos || 0) + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
           }, 0);
 
-          setExportFeedback(`Exportando Dashboard do ${bIdx + 1}º Bairro (${bairro.name}) - Mapa e ${nCheckIns.length} ruas...`);
+          setExportFeedback(`Renderizando Dashboard do Bairro: ${bairro.name}...`);
 
-          // 1. PÁGINA DO DASHBOARD DO BAIRRO: CABEÇALHO COM MÉTRICAS + MAPA DO BAIRRO
-          doc.addPage('a4', 'landscape');
+          // 1. PÁGINA DO DASHBOARD DO BAIRRO (MAPA COM RUAS NO LEITO VIÁRIO + KPIS)
+          // Se for único bairro selecionado, esta é a PÁGINA 1 direta!
+          if (isAllBairrosMode || bIdx > 0) {
+            doc.addPage('a4', 'landscape');
+          }
+
           drawHeaderBanner(
-            `SISTEMA DE MILITÂNCIA SÃO JOSÉ - ${bairroNumber}. DASHBOARD DO ${bIdx + 1}º BAIRRO: ${bairro.name.toUpperCase()}`,
-            `Área Delimitada Oficial do Bairro e Ruas Pintadas em Vermelho no Leito Viário (${nCheckIns.length} ruas) | Período: ${selectedWeekLabel}`
+            `SISTEMA DE MILITÂNCIA SÃO JOSÉ - RELATÓRIO TERRITORIAL: ${bairro.name.toUpperCase()} (${bairro.zone})`,
+            `Delimitação Territorial Oficial e Ruas Auditadas no Leito Viário (${nCheckIns.length} ruas) | Período: ${selectedWeekLabel}`
           );
 
-          // Sub-banner de métricas individuais do bairro
+          // 6 Cards de Indicadores do Bairro
           doc.setFillColor(248, 250, 252);
           doc.roundedRect(14, 27, 269, 14, 2, 2, 'F');
           doc.setDrawColor(226, 232, 240);
           doc.roundedRect(14, 27, 269, 14, 2, 2, 'D');
 
           const singleBairroKpis = [
-            { label: 'HABITANTES (IBGE)', val: `${(bairro.population || 0).toLocaleString('pt-BR')} hab.` },
+            { label: 'POPULAÇÃO (IBGE)', val: `${(bairro.population || 0).toLocaleString('pt-BR')} hab.` },
             { label: 'ELEITORES ESTIMADOS', val: `${(bairro.votersEstimated || 0).toLocaleString('pt-BR')}` },
             { label: 'RUAS AUDITADAS', val: `${nCheckIns.length} ruas` },
             { label: 'ABORDAGENS DIRETAS', val: `${bAbord} eleitores` },
             { label: 'COMÉRCIOS ATENDIDOS', val: `${bCom} pontos` },
-            { label: 'MATERIAIS TOTAIS', val: `${bMat.toLocaleString('pt-BR')}` },
+            { label: 'MATERIAIS ENTREGUES', val: `${bMat.toLocaleString('pt-BR')}` },
           ];
 
           const sKpiWidth = 269 / singleBairroKpis.length;
@@ -1365,76 +1325,85 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             doc.text(kpi.val, xPos, 37.5, { align: 'center' });
           });
 
-          // Mapa individual do bairro com leito viário pintado em vermelho
+          // Mapa com ruas pintadas em vermelho exatamente no leito viário
           const bairroMapCanvas = await generateNeighborhoodMapCanvas(bairro, nCheckIns);
           if (bairroMapCanvas) {
             doc.addImage(bairroMapCanvas, 'PNG', 14, 44, 269, 138);
           }
 
-          // 2. SEQUÊNCIA DE RUAS E GALERIAS DO BAIRRO (3a Tabela, 3b Galeria, 3c Tabela, 3d Galeria...)
-          for (let rIdx = 0; rIdx < nCheckIns.length; rIdx++) {
-            const chk = nCheckIns[rIdx];
-            const sIdx = rIdx * 2;
-            const gIdx = rIdx * 2 + 1;
-            const streetTag = `${bairroNumber}${sIdx < alphabet.length ? alphabet[sIdx] : `.${sIdx + 1}`}`;
-            const galleryTag = `${bairroNumber}${gIdx < alphabet.length ? alphabet[gIdx] : `.${gIdx + 1}`}`;
-            const streetPhotos = getAllPhotosForCheckIn(chk);
-            const mObj = militants.find(m => m.id === chk.militantId);
-            const mat = mObj?.matricula ? `(${mObj.matricula})` : '';
+          // -----------------------------------------------------------
+          // 2. AGRUPAMENTO POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 12 FOTOS POR PÁGINA)
+          // Sem cabeçalho e sem rodapé nas páginas de auditoria/galeria
+          // -----------------------------------------------------------
+          const militantGroups = groupCheckInsByMilitant(nCheckIns, militants, teams);
 
+          for (let mIdx = 0; mIdx < militantGroups.length; mIdx++) {
+            const mil = militantGroups[mIdx];
+            setExportFeedback(`Exportando militante ${mIdx + 1}/${militantGroups.length}: ${mil.militantName}...`);
+
+            // Inicia página do militante SEM cabeçalho e SEM rodapé
             doc.addPage('a4', 'landscape');
-            drawHeaderBanner(
-              `SISTEMA DE MILITÂNCIA SÃO JOSÉ - ${streetTag} / ${galleryTag}: AUDITORIA DE RUA E GALERIA FOTOGRÁFICA`,
-              `Bairro ${bairro.name} • Rua ${rIdx + 1} de ${nCheckIns.length}: ${chk.streetName} | Período: ${selectedWeekLabel}`
-            );
+            const milPageNum = doc.getNumberOfPages();
+            noHeaderFooterPages.add(milPageNum);
 
-            // Sub-header da Rua (3a / 4a)
-            doc.setFillColor(239, 246, 255);
-            doc.roundedRect(14, 27, 269, 7.5, 1.5, 1.5, 'F');
-            doc.setDrawColor(191, 219, 254);
-            doc.roundedRect(14, 27, 269, 7.5, 1.5, 1.5, 'D');
+            // Banner compacto e elegante do Militante (altura 9mm no topo y=8)
+            doc.setFillColor(30, 58, 138); // Deep Navy Blue
+            doc.roundedRect(10, 8, 277, 9, 1.5, 1.5, 'F');
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(8);
-            doc.setTextColor(30, 58, 138);
+            doc.setFontSize(8.5);
+            doc.setTextColor(255, 255, 255);
+            const milMatText = mil.matricula ? `(Mat. ${mil.matricula})` : '';
             doc.text(
-              `[${streetTag}] DADOS DE AUDITORIA: ${chk.streetName.toUpperCase()} (${chk.houseNumberRange || 'Trecho Geral'}) • MILITANTE: ${chk.militantName} ${mat}`,
-              18,
-              32
+              `AUDITORIA DE RUAS E GALERIA FOTOGRÁFICA • MILITANTE: ${mil.militantName.toUpperCase()} ${milMatText} • BAIRRO ${bairro.name.toUpperCase()}`,
+              14,
+              14
             );
 
-            // Tabela com as 9 colunas solicitadas:
-            // Data/Hora, Logradouro, Militante, GPS, Abordagens, Comércio, Santinhos, Comprovante, Status Auditoria
+            // Resumo à direita
+            const totalMilPhotos = mil.checkIns.reduce((acc, c) => acc + getAllPhotosForCheckIn(c).length, 0);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(219, 234, 254);
+            doc.text(
+              `${mil.checkIns.length} ruas auditadas • ${totalMilPhotos} fotos anexadas • ${mil.totalAbordagens} abordagens • ${mil.totalSantinhos.toLocaleString('pt-BR')} santinhos`,
+              283,
+              14,
+              { align: 'right' }
+            );
+
+            // Tabela com TODAS as ruas deste militante (SEM COLUNA GPS!)
+            const tableRows = mil.checkIns.map(chk => {
+              const photos = getAllPhotosForCheckIn(chk);
+              return [
+                formatDateTimeBR(chk.timestamp),
+                chk.houseNumberRange && chk.houseNumberRange !== 'Trecho Geral'
+                  ? `${chk.streetName} (${chk.houseNumberRange})`
+                  : chk.streetName,
+                String(chk.materialsDelivered.abordagens || 0),
+                String(chk.materialsDelivered.comercio || 0),
+                (chk.materialsDelivered.santinhos || 0).toLocaleString('pt-BR'),
+                `${photos.length} foto(s) anexada(s)`,
+                chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
+              ];
+            });
+
             autoTable(doc, {
               head: [[
                 'Data / Hora',
                 'Logradouro / Trecho Percorrido',
-                'Militante Responsável',
-                'GPS (Latitude, Longitude)',
                 'Abordagens',
                 'Comércio',
                 'Santinhos',
                 'Comprovante',
                 'Status Auditoria'
               ]],
-              body: [[
-                formatDateTimeBR(chk.timestamp),
-                chk.houseNumberRange && chk.houseNumberRange !== 'Trecho Geral'
-                  ? `${chk.streetName} (${chk.houseNumberRange})`
-                  : chk.streetName,
-                `${chk.militantName} ${mat}`,
-                `${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)}`,
-                `${chk.materialsDelivered.abordagens || 0}`,
-                `${chk.materialsDelivered.comercio || 0}`,
-                `${chk.materialsDelivered.santinhos.toLocaleString('pt-BR')}`,
-                `${streetPhotos.length} foto(s) anexada(s)`,
-                chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
-              ]],
-              startY: 36.5,
-              margin: { left: 14, right: 14 },
+              body: tableRows,
+              startY: 19,
+              margin: { left: 10, right: 10 },
               styles: {
-                fontSize: 8,
-                cellPadding: 3,
+                fontSize: 7.5,
+                cellPadding: 2.2,
                 textColor: [30, 41, 59],
                 lineColor: [226, 232, 240],
                 lineWidth: 0.1
@@ -1443,121 +1412,178 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                 fillColor: [30, 58, 138],
                 textColor: [255, 255, 255],
                 fontStyle: 'bold',
-                fontSize: 8
+                fontSize: 7.5
               },
               columnStyles: {
-                0: { cellWidth: 28 },
-                1: { cellWidth: 62, fontStyle: 'bold' },
-                2: { cellWidth: 42 },
-                3: { cellWidth: 38, font: 'courier' },
-                4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-                5: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
-                6: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
-                7: { cellWidth: 23, halign: 'center', fontStyle: 'bold' },
-                8: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+                0: { cellWidth: 32 },
+                1: { cellWidth: 105, fontStyle: 'bold' },
+                2: { cellWidth: 25, halign: 'center', fontStyle: 'bold' },
+                3: { cellWidth: 25, halign: 'center', fontStyle: 'bold' },
+                4: { cellWidth: 30, halign: 'center', fontStyle: 'bold' },
+                5: { cellWidth: 35, halign: 'center', fontStyle: 'bold' },
+                6: { cellWidth: 25, halign: 'center', fontStyle: 'bold' }
               }
             });
 
-            const afterTableY = (doc as any).lastAutoTable?.finalY || 54;
-            const galleryStartY = afterTableY + 4;
+            const afterTableY = (doc as any).lastAutoTable?.finalY || 35;
 
-            // Header da Galeria Fotográfica dessa rua (3b / 4b)
-            doc.setFillColor(240, 253, 244);
-            doc.roundedRect(14, galleryStartY, 269, 7.5, 1.5, 1.5, 'F');
-            doc.setDrawColor(187, 247, 208);
-            doc.roundedRect(14, galleryStartY, 269, 7.5, 1.5, 1.5, 'D');
+            // Coleta todas as fotos comprovatórias das ruas deste militante
+            const milAllPhotos: { photo: string; streetName: string; timestamp: string }[] = [];
+            mil.checkIns.forEach(chk => {
+              const pList = getAllPhotosForCheckIn(chk);
+              pList.forEach(p => {
+                milAllPhotos.push({
+                  photo: p,
+                  streetName: chk.streetName,
+                  timestamp: chk.timestamp
+                });
+              });
+            });
 
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(8);
-            doc.setTextColor(22, 101, 52);
-            doc.text(
-              `[${galleryTag}] GALERIA DE FOTOS DESTA RUA • ${chk.streetName.toUpperCase()} (${streetPhotos.length} foto(s) anexada(s))`,
-              18,
-              galleryStartY + 5
-            );
-
-            // Carregamento e renderização de todas as fotos anexadas desta rua
-            if (streetPhotos.length === 0) {
+            if (milAllPhotos.length === 0) {
               doc.setFillColor(248, 250, 252);
-              doc.roundedRect(14, galleryStartY + 10, 269, 20, 2, 2, 'F');
+              doc.roundedRect(10, afterTableY + 4, 277, 10, 1.5, 1.5, 'F');
               doc.setFont('helvetica', 'italic');
-              doc.setFontSize(9);
+              doc.setFontSize(8);
               doc.setTextColor(148, 163, 184);
-              doc.text(`Nenhuma foto anexada encontrada para o logradouro ${chk.streetName}.`, 148, galleryStartY + 22, { align: 'center' });
+              doc.text('Nenhuma foto de comprovação anexada para as ruas deste militante.', 148, afterTableY + 10.5, { align: 'center' });
             } else {
-              const preloadedStreetImages = await Promise.all(
-                streetPhotos.map(p => loadBase64Image(p))
+              // Pré-carrega as fotos em paralelo
+              const preloadedImages = await Promise.all(
+                milAllPhotos.map(async item => ({
+                  base64: await loadBase64Image(item.photo),
+                  streetName: item.streetName,
+                  timestamp: item.timestamp
+                }))
               );
 
-              // Renderiza as fotos em cards organizados
-              const photosAreaY = galleryStartY + 10;
-              const cardW = 63;
-              const cardH = 54;
-              const gapX = 5.5;
-              const gapY = 5;
+              // Barra de título da galeria
+              const gHeaderY = afterTableY + 3;
+              doc.setFillColor(240, 253, 244); // Verde esmeralda claro
+              doc.roundedRect(10, gHeaderY, 277, 6.5, 1.2, 1.2, 'F');
+              doc.setDrawColor(187, 247, 208);
+              doc.roundedRect(10, gHeaderY, 277, 6.5, 1.2, 1.2, 'D');
+
+              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(7.5);
+              doc.setTextColor(22, 101, 52);
+              doc.text(
+                `GALERIA FOTOGRÁFICA DO MILITANTE • ${mil.militantName.toUpperCase()} (${preloadedImages.length} fotos comprovatórias)`,
+                14,
+                gHeaderY + 4.5
+              );
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(7);
+              doc.setTextColor(21, 128, 61);
+              doc.text(
+                `Grade de alta densidade (mínimo 12 fotos por página)`,
+                283,
+                gHeaderY + 4.5,
+                { align: 'right' }
+              );
+
+              // Grid de alta densidade: 4 colunas x 3 linhas = 12 fotos por página cheia!
               const cols = 4;
+              const cardW = 66; // 4 * 66 = 264 + 3 * 4.3 = 277 mm
+              const cardH = 57;
+              const gapX = 4.3;
+              const gapY = 4;
+              const startX = 10;
 
-              preloadedStreetImages.forEach((imgBase64, pIdx) => {
-                const col = pIdx % cols;
-                const row = Math.floor(pIdx / cols);
-                const cX = 14 + col * (cardW + gapX);
-                const cY = photosAreaY + row * (cardH + gapY);
+              let curY = gHeaderY + 8.5;
+              let photoIdx = 0;
 
-                // Se exceder a página (mais de 8 fotos por rua), cria página adicional de continuação da galeria da rua
-                if (cY + cardH > 200) {
+              while (photoIdx < preloadedImages.length) {
+                // Se a próxima linha de fotos não couber na página atual, abre nova página
+                if (curY + cardH > 204) {
                   doc.addPage('a4', 'landscape');
-                  drawHeaderBanner(
-                    `SISTEMA DE MILITÂNCIA SÃO JOSÉ - ${galleryTag}: CONTINUAÇÃO DA GALERIA FOTOGRÁFICA`,
-                    `Bairro ${bairro.name} • Logradouro: ${chk.streetName} | Período: ${selectedWeekLabel}`
+                  const contPage = doc.getNumberOfPages();
+                  noHeaderFooterPages.add(contPage);
+
+                  // Banner de continuação compacto (SEM cabeçalho e SEM rodapé)
+                  doc.setFillColor(240, 253, 244);
+                  doc.roundedRect(10, 8, 277, 6.5, 1.2, 1.2, 'F');
+                  doc.setDrawColor(187, 247, 208);
+                  doc.roundedRect(10, 8, 277, 6.5, 1.2, 1.2, 'D');
+
+                  doc.setFont('helvetica', 'bold');
+                  doc.setFontSize(7.5);
+                  doc.setTextColor(22, 101, 52);
+                  doc.text(
+                    `GALERIA FOTOGRÁFICA (CONTINUAÇÃO): ${mil.militantName.toUpperCase()} • BAIRRO ${bairro.name.toUpperCase()} (Fotos ${photoIdx + 1} a ${preloadedImages.length})`,
+                    14,
+                    12.5
                   );
+                  curY = 16.5;
                 }
 
-                // Card Frame
-                doc.setFillColor(248, 250, 252);
-                doc.setDrawColor(203, 213, 225);
-                doc.roundedRect(cX, cY, cardW, cardH, 2, 2, 'FD');
+                // Renderiza uma linha com até 4 fotos
+                for (let c = 0; c < cols && photoIdx < preloadedImages.length; c++, photoIdx++) {
+                  const item = preloadedImages[photoIdx];
+                  const cX = startX + c * (cardW + gapX);
+                  const cY = curY;
 
-                const pImageH = 38;
-                const pImageW = cardW - 3;
+                  // Moldura do Card
+                  doc.setFillColor(248, 250, 252);
+                  doc.setDrawColor(203, 213, 225);
+                  doc.roundedRect(cX, cY, cardW, cardH, 1.5, 1.5, 'FD');
 
-                if (imgBase64) {
-                  try {
-                    doc.addImage(imgBase64, 'JPEG', cX + 1.5, cY + 1.5, pImageW, pImageH);
-                  } catch {
+                  const imgW = cardW - 3; // 63mm
+                  const imgH = 44; // 44mm
+
+                  if (item.base64) {
+                    try {
+                      doc.addImage(item.base64, 'JPEG', cX + 1.5, cY + 1.5, imgW, imgH);
+                    } catch {
+                      doc.setFillColor(226, 232, 240);
+                      doc.rect(cX + 1.5, cY + 1.5, imgW, imgH, 'F');
+                    }
+                  } else {
                     doc.setFillColor(226, 232, 240);
-                    doc.rect(cX + 1.5, cY + 1.5, pImageW, pImageH, 'F');
+                    doc.rect(cX + 1.5, cY + 1.5, imgW, imgH, 'F');
                   }
-                } else {
-                  doc.setFillColor(226, 232, 240);
-                  doc.rect(cX + 1.5, cY + 1.5, pImageW, pImageH, 'F');
+
+                  // Rodapé do Card (SEM coordenadas GPS!)
+                  doc.setFillColor(255, 255, 255);
+                  doc.rect(cX + 1.5, cY + 1.5 + imgH, imgW, cardH - imgH - 3, 'F');
+
+                  // Linha 1: Nome da Rua e Número da Foto
+                  doc.setFont('helvetica', 'bold');
+                  doc.setFontSize(6.5);
+                  doc.setTextColor(30, 41, 59);
+                  const shortStreet = item.streetName.length > 24
+                    ? item.streetName.substring(0, 22) + '...'
+                    : item.streetName;
+                  doc.text(`${shortStreet} #${photoIdx + 1}`, cX + 2.5, cY + imgH + 5);
+
+                  // Linha 2: Data/Hora e Status (SEM GPS!)
+                  doc.setFont('helvetica', 'normal');
+                  doc.setFontSize(6);
+                  doc.setTextColor(100, 116, 139);
+                  const timePart = formatDateTimeBR(item.timestamp).split(' ')[1] || '';
+                  const datePart = formatDateTimeBR(item.timestamp).split(' ')[0] || '';
+                  doc.text(`${datePart} ${timePart} • Validado`, cX + 2.5, cY + imgH + 9);
                 }
 
-                // Legenda da Foto
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(7);
-                doc.setTextColor(30, 41, 59);
-                doc.text(`Foto ${pIdx + 1} de ${streetPhotos.length} • ${chk.streetName.substring(0, 20)}`, cX + 2.5, cY + pImageH + 4.5);
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(6.5);
-                doc.setTextColor(100, 116, 139);
-                doc.text(`GPS: ${chk.latitude.toFixed(4)}, ${chk.longitude.toFixed(4)} | ${formatDateTimeBR(chk.timestamp).split(' ')[1] || ''}`, cX + 2.5, cY + pImageH + 8.5);
-              });
+                curY += cardH + gapY;
+              }
             }
           }
         }
 
-        // Global pagination pass for All Pages
+        // Global pagination pass for All Pages (apenas páginas sem noHeaderFooterPages)
         const totalPages = doc.getNumberOfPages();
         for (let p = 1; p <= totalPages; p++) {
-          doc.setPage(p);
-          drawFooter(p, totalPages);
+          if (!noHeaderFooterPages.has(p)) {
+            doc.setPage(p);
+            drawFooter(p, totalPages);
+          }
         }
 
         const sanitizedBairro = isAllBairrosMode ? 'todos_os_bairros' : currentSelectedBairro.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
         const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
         doc.save(`relatorio_territorial_${sanitizedBairro}_${sanitizedWeek}.pdf`);
-        setExportFeedback(`✓ Relatório Territorial (${isAllBairrosMode ? 'Todos os Bairros' : currentSelectedBairro.name}) estruturado gerado com sucesso!`);
+        setExportFeedback(`✓ Relatório Territorial (${isAllBairrosMode ? 'Todos os Bairros' : currentSelectedBairro.name}) otimizado gerado com sucesso!`);
         setTimeout(() => setExportFeedback(null), 6000);
         return;
       }

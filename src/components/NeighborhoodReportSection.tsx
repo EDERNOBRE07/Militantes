@@ -15,6 +15,7 @@ import {
   getAllPhotosForCheckIn
 } from '../utils/neighborhoodHelpers';
 import { BairroInteractiveMap } from './BairroInteractiveMap';
+import { MilitantAuditSection, groupCheckInsByMilitant } from './MilitantAuditSection';
 import { StreetAuditRowWithGallery } from './StreetAuditRowWithGallery';
 import {
   Building2,
@@ -417,25 +418,24 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                     />
                   </div>
 
-                  {/* SEQUÊNCIA DE RUAS E RESPECTIVAS GALERIAS: 3a, 3b, 3c, 3d... */}
-                  <div className="space-y-4 pt-2">
+                  {/* SEQUÊNCIA POR MILITANTE: TABELA ÚNICA DE RUAS + GALERIA (>= 12 FOTOS) */}
+                  <div className="space-y-6 pt-2">
                     <div className="flex items-center justify-between pb-1 border-b border-slate-100">
                       <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        Auditoria Detalhada de Cada Rua & Galerias de Fotos ({nCheckIns.length} ruas)
+                        Auditoria de Ruas e Galerias Fotográficas por Militante ({nCheckIns.length} ruas)
                       </span>
                       <span className="text-[11px] text-slate-500">
-                        Exibição sequencial com todas as fotos anexadas de cada logradouro
+                        Tabela unificada por militante (sem GPS) seguida da respectiva galeria
                       </span>
                     </div>
 
-                    {nCheckIns.map((chk, rIdx) => (
-                      <StreetAuditRowWithGallery
-                        key={chk.id}
-                        chk={chk}
-                        militants={militants}
-                        bairroNumber={bairroNumber}
-                        streetIndex={rIdx}
+                    {groupCheckInsByMilitant(nCheckIns, militants, teams).map((group, mIdx) => (
+                      <MilitantAuditSection
+                        key={group.militantId}
+                        group={group}
+                        bairroName={bairro.name}
+                        militantIndex={mIdx}
                         onZoomPhoto={onZoomPhoto}
                         onEditStreet={onEditStreet}
                       />
@@ -579,8 +579,8 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             </div>
           </div>
 
-          {/* 3. DASHBOARD DAS RUAS DO BAIRRO COM AS GALERIAS DE CADA RUA */}
-          <div className="space-y-4">
+          {/* 3. AUDITORIA DE RUAS E GALERIAS FOTOGRÁFICAS POR MILITANTE */}
+          <div className="space-y-6">
             <div className="flex items-center justify-between pb-1 border-b border-slate-200">
               <div className="flex items-center gap-2">
                 <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
@@ -588,11 +588,11 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                 </span>
                 <h4 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  Dashboard das Ruas Atendidas em {currentBairro.name} ({bairroCheckIns.length} ruas)
+                  Auditoria de Ruas e Galerias Fotográficas por Militante em {currentBairro.name} ({bairroCheckIns.length} ruas)
                 </h4>
               </div>
               <span className="text-xs text-slate-500">
-                Sequência de dados da rua e todas as fotos anexadas
+                Tabela unificada por militante (sem GPS) e galeria otimizada (≥12 fotos)
               </span>
             </div>
 
@@ -601,13 +601,12 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                 Nenhuma rua cadastrada no bairro {currentBairro.name} no período selecionado.
               </div>
             ) : (
-              bairroCheckIns.map((chk, rIdx) => (
-                <StreetAuditRowWithGallery
-                  key={chk.id}
-                  chk={chk}
-                  militants={militants}
-                  bairroNumber={3}
-                  streetIndex={rIdx}
+              groupCheckInsByMilitant(bairroCheckIns, militants, teams).map((group, mIdx) => (
+                <MilitantAuditSection
+                  key={group.militantId}
+                  group={group}
+                  bairroName={currentBairro.name}
+                  militantIndex={mIdx}
                   onZoomPhoto={onZoomPhoto}
                   onEditStreet={onEditStreet}
                 />
