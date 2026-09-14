@@ -67,7 +67,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
   const isAllBairros = selectedBairroId === 'todos';
 
-  // Obter apenas bairros que possuem lançamentos de ruas E fotos anexadas
+  // Obter apenas bairros que possuem lançamentos de ruas
   const qualifyingNeighborhoods = useMemo(() => {
     return getQualifyingNeighborhoods(neighborhoods, checkIns);
   }, [neighborhoods, checkIns]);
@@ -80,7 +80,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
       return {
         id: 'todos',
         name: 'Todos os Bairros (Consolidado)',
-        zone: `São José • ${qualifyingNeighborhoods.length} Bairros Auditados`,
+        zone: `São José • ${qualifyingNeighborhoods.length} Bairros com Lançamentos`,
         population: totalPop,
         households: 0,
         votersEstimated: totalVoters,
@@ -94,7 +94,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
         deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 }
       } as Neighborhood;
     }
-    return neighborhoods.find(n => n.id === selectedBairroId) || neighborhoods[0];
+    return qualifyingNeighborhoods.find(n => n.id === selectedBairroId) || qualifyingNeighborhoods[0] || neighborhoods.find(n => n.id === selectedBairroId) || neighborhoods[0];
   }, [neighborhoods, selectedBairroId, isAllBairros, qualifyingNeighborhoods]);
 
   // Filter checkins: se for "todos", inclui APENAS os check-ins dos bairros que se qualificam (com ruas E fotos anexadas)
@@ -169,13 +169,13 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer shadow-2xs"
           >
             <option value="todos" className="font-bold text-blue-700 bg-blue-50/50">
-              🌟 Todos os Bairros (Apenas com Ruas e Fotos: {qualifyingNeighborhoods.length} Bairros)
+              🌟 Todos os Bairros com Lançamentos ({qualifyingNeighborhoods.length} Bairros)
             </option>
-            {neighborhoods.map(n => {
-              const qualifies = doesNeighborhoodQualify(n, checkIns);
+            {qualifyingNeighborhoods.map(n => {
+              const bCheckIns = getCheckInsForNeighborhood(n, checkIns);
               return (
                 <option key={n.id} value={n.id}>
-                  {n.name} ({n.zone}) {qualifies ? '✓ Ruas & Fotos' : ''} - {n.population.toLocaleString('pt-BR')} hab.
+                  {n.name} ({n.zone}) • {bCheckIns.length} {bCheckIns.length === 1 ? 'rua auditada' : 'ruas auditadas'}
                 </option>
               );
             })}

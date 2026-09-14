@@ -34,7 +34,9 @@ import {
   isCheckInInNeighborhood,
   getAllPhotosForCheckIn,
   getCheckInsForNeighborhood,
-  buildMilitantSequentialPinMap
+  buildMilitantSequentialPinMap,
+  getMilitantsWithLaunches,
+  militantHasLaunches
 } from '../utils/neighborhoodHelpers';
 import {
   FileText,
@@ -66,6 +68,10 @@ import {
   X
 } from 'lucide-react';
 import { detectLegacySafariSierra, safeTriggerDownload, downloadOrOpenPdfInSafari } from '../utils/safariSierraPolyfills';
+
+// Caches globais em memória para acelerar a geração do PDF e evitar congelamento do navegador
+const globalTileCache = new Map<string, HTMLImageElement>();
+const globalPhotoBase64Cache = new Map<string, string>();
 
 interface WeeklyReportViewProps {
   militants: Militant[];
@@ -251,12 +257,24 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const selectedTeamObj = teams.find(t => t.id === selectedTeamId);
   const selectedWeekLabel = weeks.find(w => w.id === selectedWeek)?.label || selectedWeek;
 
-  // Filtered militants list
-  const activeMilitants = militants.filter(m => {
-    if (selectedMilitantId !== 'todos' && m.id !== selectedMilitantId) return false;
-    if (selectedTeamId !== 'todos' && m.teamId !== selectedTeamId) return false;
-    return true;
-  });
+  // Militantes que possuem lançamentos no sistema ("só colocar militantes com lançamentos")
+  const militantsWithLaunches = useMemo(() => {
+    return getMilitantsWithLaunches(militants, checkIns);
+  }, [militants, checkIns]);
+
+  // Lista de militantes ativos: APENAS militantes com lançamentos no período filtrado
+  const activeMilitants = useMemo(() => {
+    return militants.filter(m => {
+      const hasLaunches = filteredCheckIns.some(c => 
+        c.militantId === m.id || 
+        (c.militantName && m.name && c.militantName.trim().toLowerCase() === m.name.trim().toLowerCase())
+      );
+      if (!hasLaunches) return false;
+      if (selectedMilitantId !== 'todos' && m.id !== selectedMilitantId) return false;
+      if (selectedTeamId !== 'todos' && m.teamId !== selectedTeamId) return false;
+      return true;
+    });
+  }, [militants, filteredCheckIns, selectedMilitantId, selectedTeamId]);
 
   // Calculate consolidated productivity data per militant synced with payroll
   const productivityData = useMemo(() => {
@@ -510,13 +528,39 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         const serverNum = Math.abs((tx + ty) % 4);
         const url = `https://mt${serverNum}.google.com/vt/lyrs=m&x=${tx}&y=${ty}&z=${zoom}`;
 
+        if (globalTileCache.has(url)) {
+          const cachedImg = globalTileCache.get(url)!;
+          tilePromises.push(Promise.resolve({ img: cachedImg, destX, destY }));
+          continue;
+        }
+
         const p = new Promise<{ img: HTMLImageElement; destX: number; destY: number } | null>((resolve) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.onload = () => resolve({ img, destX, destY });
-          img.onerror = () => resolve(null);
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (!settled) {
+              settled = true;
+              resolve(null);
+            }
+          }, 1200);
+
+          img.onload = () => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              globalTileCache.set(url, img);
+              resolve({ img, destX, destY });
+            }
+          };
+          img.onerror = () => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              resolve(null);
+            }
+          };
           img.src = url;
-          setTimeout(() => resolve(null), 3000);
         });
         tilePromises.push(p);
       }
@@ -1252,6 +1296,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const loadBase64Image = async (src: string): Promise<string> => {
     if (!src) return '';
     if (src.startsWith('data:image/')) return src;
+    if (globalPhotoBase64Cache.has(src)) {
+      return globalPhotoBase64Cache.get(src)!;
+    }
 
     return new Promise((resolve) => {
       let isResolved = false;
@@ -1260,7 +1307,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           isResolved = true;
           resolve('');
         }
-      }, 2500);
+      }, 1500);
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -1275,7 +1322,9 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', 0.85));
+            const b64 = canvas.toDataURL('image/jpeg', 0.82);
+            globalPhotoBase64Cache.set(src, b64);
+            resolve(b64);
             return;
           }
         } catch (e) {
@@ -1448,12 +1497,21 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       // ================= 1. RELATÓRIO TERRITORIAL & AUDITORIA POR BAIRROS & MAPAS =================
       if (viewGrouping === 'por_bairro') {
         const isAllBairrosMode = selectedBairroId === 'todos';
-        const qualifyingBairros = getQualifyingNeighborhoods(neighborhoods, filteredCheckIns);
-        const targetBairros = isAllBairrosMode ? qualifyingBairros : [currentSelectedBairro];
+        // Regra estrita: apenas bairros com lançamentos (check-ins > 0)
+        const qualifyingBairros = getQualifyingNeighborhoods(neighborhoods, filteredCheckIns)
+          .filter(b => getCheckInsForNeighborhood(b, filteredCheckIns).length > 0);
+        const targetBairros = (isAllBairrosMode ? qualifyingBairros : [currentSelectedBairro])
+          .filter(b => getCheckInsForNeighborhood(b, filteredCheckIns).length > 0);
         const noHeaderFooterPages = new Set<number>();
 
+        if (targetBairros.length === 0) {
+          setExportFeedback('Nenhum bairro com lançamentos no período selecionado.');
+          setIsGeneratingPdf(false);
+          return;
+        }
+
         setExportFeedback(isAllBairrosMode
-          ? `Gerando relatório estruturado dos bairros qualificados (${qualifyingBairros.length} bairros com ruas e fotos)...`
+          ? `Iniciando relatório dos ${targetBairros.length} bairros com lançamentos...`
           : `Gerando relatório otimizado do Bairro ${currentSelectedBairro.name}...`
         );
 
@@ -1476,7 +1534,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           setExportFeedback(`Renderizando 1. Mapa Geral dos Bairros com delimitações oficiais e ruas pintadas em vermelho...`);
           drawHeaderBanner(
             'SISTEMA DE MILITÂNCIA SÃO JOSÉ - 1. MAPA GERAL DOS BAIRROS',
-            `Delimitações Territoriais Oficiais e Ruas Auditadas no Leito Viário • ${targetBairros.length} Bairros Qualificados | Período: ${selectedWeekLabel}`
+            `Delimitações Territoriais Oficiais e Ruas Auditadas no Leito Viário • ${targetBairros.length} Bairros com Lançamentos | Período: ${selectedWeekLabel}`
           );
 
           // 6 Cards de Indicadores Consolidados
@@ -1508,28 +1566,16 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             doc.text(kpi.val, xPos, 37.5, { align: 'center' });
           });
 
-          // Captura o mapa renderizado do DOM ou gera canvas Google Maps em alta resolução
+          // Captura o mapa em alta resolução
+          const { pinMap: genPinMap } = buildMilitantSequentialPinMap(bairroCheckIns, militants, teams);
           let generalMapImg = '';
-          const generalMapDom = document.getElementById('neighborhood-report-map-wrapper');
-          if (generalMapDom) {
-            try {
-              const mapCanvas = await safeHtml2Canvas(generalMapDom, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: false,
-                logging: false,
-                backgroundColor: '#ffffff'
-              }, 3000);
-              if (mapCanvas) {
-                generalMapImg = mapCanvas.toDataURL('image/png');
-              }
-            } catch (e) {
-              console.warn('Erro ao capturar mapa do DOM:', e);
-            }
-          }
-          if (!generalMapImg) {
-            const { pinMap: genPinMap } = buildMilitantSequentialPinMap(bairroCheckIns, militants, teams);
-            generalMapImg = await generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns, genPinMap);
+          try {
+            generalMapImg = await Promise.race([
+              generateNeighborhoodMapCanvas(currentSelectedBairro, bairroCheckIns, genPinMap),
+              new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Map timeout')), 4000))
+            ]);
+          } catch (genErr) {
+            console.warn('Erro ao gerar mapa geral:', genErr);
           }
 
           if (generalMapImg) {
@@ -1539,8 +1585,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
         for (let bIdx = 0; bIdx < targetBairros.length; bIdx++) {
           const bairro = targetBairros[bIdx];
-          const bairroNumber = bIdx + 3; // 3 para o 1º bairro, 4 para o 2º, etc.
           const nCheckIns = getCheckInsForNeighborhood(bairro, bairroCheckIns);
+          if (nCheckIns.length === 0) continue;
+
+          // Permite que o navegador atualize o feedback e mantenha a UI fluida
+          await new Promise(resolve => setTimeout(resolve, 40));
+          setExportFeedback(`Exportando Bairro ${bIdx + 1} de ${targetBairros.length}: ${bairro.name} (${nCheckIns.length} ruas)...`);
 
           const bAbord = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
           const bCom = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
@@ -1549,8 +1599,6 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             const m = c.materialsDelivered;
             return acc + (m.santinhos || 0) + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
           }, 0);
-
-          setExportFeedback(`Renderizando Dashboard do Bairro: ${bairro.name}...`);
 
           // 1. PÁGINA DO DASHBOARD DO BAIRRO (MAPA COM RUAS NO LEITO VIÁRIO + KPIS)
           // Se for único bairro selecionado, esta é a PÁGINA 1 direta!
@@ -1594,16 +1642,23 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
           // -----------------------------------------------------------
           // 1. NUMERAÇÃO SEQUENCIAL DE PINS POR MILITANTE E MAPA DO BAIRRO
-          // Todos os pins de um militante (ordem de lançamento), continuando a sequência numérica com o próximo militante
           // -----------------------------------------------------------
-          const { pinMap: bPinMap, groups: militantGroups } = buildMilitantSequentialPinMap(
+          const { pinMap: bPinMap } = buildMilitantSequentialPinMap(
             nCheckIns,
             militants,
             teams
           );
 
           // Mapa com ruas pintadas em vermelho exatamente no leito viário e pins numerados sincronizados
-          const bairroMapCanvas = await generateNeighborhoodMapCanvas(bairro, nCheckIns, bPinMap);
+          let bairroMapCanvas = '';
+          try {
+            bairroMapCanvas = await Promise.race([
+              generateNeighborhoodMapCanvas(bairro, nCheckIns, bPinMap),
+              new Promise<string>((_, reject) => setTimeout(() => reject(new Error('Map timeout')), 4000))
+            ]);
+          } catch (mapErr) {
+            console.warn('Erro ao gerar mapa do bairro:', mapErr);
+          }
           if (bairroMapCanvas) {
             doc.addImage(bairroMapCanvas, 'PNG', 14, 44, 269, 138);
           }
@@ -1613,6 +1668,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           // Com gráficos e cards das pessoas abordadas, número de ruas, comércios,
           // santinhos e materiais.
           // -----------------------------------------------------------
+          await new Promise(resolve => setTimeout(resolve, 30));
           setExportFeedback(`Gerando Dashboard Geral Consolidado Pós-Mapas: ${bairro.name}...`);
           doc.addPage('a4', 'landscape');
 
@@ -1655,45 +1711,26 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             }
           });
 
-          // Gráfico de Produtividade & Materiais
+          // Gráfico de Produtividade & Materiais do Bairro (Renderizado instantaneamente em alta resolução via Canvas, sem travar o navegador)
           let bChartCaptured = false;
-          const bChartElement = document.getElementById(`general-dashboard-charts-${bairro.id}`) ||
-                                document.getElementById('general-dashboard-charts') ||
-                                document.getElementById('charts-container') ||
-                                chartsContainerRef.current;
-          if (bChartElement) {
-            try {
-              const chartCanvas = await safeHtml2Canvas(bChartElement, {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff',
-                logging: false
-              }, 3000);
-              if (chartCanvas) {
-                const chartImg = chartCanvas.toDataURL('image/png');
-                doc.addImage(chartImg, 'PNG', 14, 48, 269, 72);
-                bChartCaptured = true;
-              }
-            } catch {
-              bChartCaptured = false;
+          try {
+            const canvasFallback = generateMaterialsChartCanvas(bairro, nCheckIns);
+            if (canvasFallback) {
+              doc.addImage(canvasFallback, 'PNG', 14, 48, 269, 72);
+              bChartCaptured = true;
             }
-          }
-
-          if (!bChartCaptured) {
-            try {
-              const canvasFallback = generateMaterialsChartCanvas(bairro, nCheckIns);
-              if (canvasFallback) {
-                doc.addImage(canvasFallback, 'PNG', 14, 48, 269, 72);
-                bChartCaptured = true;
-              }
-            } catch (canvasErr) {
-              console.warn('Canvas fallback falhou:', canvasErr);
-            }
+          } catch (canvasErr) {
+            console.warn('Canvas chart falhou:', canvasErr);
           }
 
           // Tabela de Desempenho dos Militantes no Bairro
-          const bMilitantStats = militants.map(mil => {
-            const milCheckIns = nCheckIns.filter(c => c.militantId === mil.id || c.militantName === mil.name);
+          // Regra de ouro: APENAS militantes com lançamentos neste bairro
+          const bMilitantsWithLaunches = militants.filter(mil => {
+            return nCheckIns.some(c => c.militantId === mil.id || (c.militantName && mil.name && c.militantName.trim().toLowerCase() === mil.name.trim().toLowerCase()));
+          });
+
+          const bMilitantStats = bMilitantsWithLaunches.map(mil => {
+            const milCheckIns = nCheckIns.filter(c => c.militantId === mil.id || (c.militantName && mil.name && c.militantName.trim().toLowerCase() === mil.name.trim().toLowerCase()));
             const streetsCount = milCheckIns.length;
             const santinhos = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
             const abordagens = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
@@ -1775,6 +1812,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           // 3. TABELA ÚNICA DE RUAS DO BAIRRO (COM COLUNA MILITANTE)
           // Sem cabeçalho e sem rodapé nas páginas de auditoria/galeria
           // -----------------------------------------------------------
+          await new Promise(resolve => setTimeout(resolve, 30));
           setExportFeedback(`Exportando Tabela Única de Ruas: ${bairro.name}...`);
 
           // Ordena check-ins pelo número do pin gerado
@@ -1915,6 +1953,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             doc.setTextColor(148, 163, 184);
             doc.text(`Nenhuma foto de comprovação anexada para as ruas do bairro ${bairro.name}.`, 148, 26, { align: 'center' });
           } else {
+            await new Promise(resolve => setTimeout(resolve, 30));
             setExportFeedback(`Pré-carregando ${bairroAllPhotos.length} fotos únicas do bairro ${bairro.name}...`);
             const preloadedImages = await Promise.all(
               bairroAllPhotos.map(async (item) => {
@@ -3048,8 +3087,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               onChange={(e) => setSelectedMilitantId(e.target.value)}
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 focus:ring-1 focus:ring-blue-500 outline-none"
             >
-              <option value="todos">Todos os Militantes ({militants.length})</option>
-              {militants.map(m => (
+              <option value="todos">Todos os Militantes com Lançamentos ({militantsWithLaunches.length})</option>
+              {militantsWithLaunches.map(m => (
                 <option key={m.id} value={m.id}>{m.name} ({m.matricula})</option>
               ))}
             </select>

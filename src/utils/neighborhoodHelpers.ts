@@ -235,20 +235,38 @@ export function buildMilitantSequentialPinMap(
 
 /**
  * Regra estrita de negócio:
- * Um bairro só se qualifica para o relatório consolidado se possuir:
- * 1. Lançamentos de ruas registradas (check-ins > 0)
- * 2. E fotos anexadas de comprovação (pelo menos 1 foto anexada).
+ * Um bairro só se qualifica para o relatório consolidado se possuir lançamentos de ruas (check-ins > 0).
  */
 export function doesNeighborhoodQualify(bairro: Neighborhood, allCheckIns: StreetCheckIn[]): boolean {
+  if (!bairro || !Array.isArray(allCheckIns)) return false;
   const bCheckIns = getCheckInsForNeighborhood(bairro, allCheckIns);
-  if (bCheckIns.length === 0) return false;
-  return bCheckIns.some(chk => checkInHasValidPhoto(chk));
+  return bCheckIns.length > 0;
 }
 
 /**
- * Retorna apenas os bairros que contêm lançamentos de ruas e fotos anexadas
+ * Retorna apenas os bairros que contêm lançamentos de ruas
  */
 export function getQualifyingNeighborhoods(neighborhoods: Neighborhood[], allCheckIns: StreetCheckIn[]): Neighborhood[] {
   if (!Array.isArray(neighborhoods)) return [];
   return neighborhoods.filter(n => doesNeighborhoodQualify(n, allCheckIns));
+}
+
+/**
+ * Verifica se um militante possui lançamentos no conjunto de check-ins fornecido
+ */
+export function militantHasLaunches(militant: Militant, allCheckIns: StreetCheckIn[]): boolean {
+  if (!militant || !Array.isArray(allCheckIns)) return false;
+  const mName = (militant.name || '').trim().toLowerCase();
+  return allCheckIns.some(c => 
+    c.militantId === militant.id || 
+    (c.militantName && mName && c.militantName.trim().toLowerCase() === mName)
+  );
+}
+
+/**
+ * Retorna apenas os militantes que possuem lançamentos (check-ins > 0)
+ */
+export function getMilitantsWithLaunches(militants: Militant[], allCheckIns: StreetCheckIn[]): Militant[] {
+  if (!Array.isArray(militants) || !Array.isArray(allCheckIns)) return [];
+  return militants.filter(m => militantHasLaunches(m, allCheckIns));
 }
