@@ -212,32 +212,53 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       }
     }
 
-    // Desenha as ruas sinalizadas e pintadas em vermelho brilhante sobre o leito viário
+    // Desenha as ruas sinalizadas e pintadas em vermelho brilhante sobre o leito viário (SOMENTE UMA VEZ POR RUA)
+    const drawnStreetLines = new Set<string>();
+    const seenMarkerCoords = new Map<string, number>();
+
     checkIns.forEach(chk => {
-      const streetCoords = getStreetRoadBedCoordinates(
-        chk.id,
-        chk.streetName,
-        chk.latitude,
-        chk.longitude
-      );
+      const cleanStreetKey = (chk.streetName || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\(nº.*?\)/gi, '')
+        .replace(/\(.*?\)/g, '')
+        .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
 
-      // Linha de brilho vermelho (glow) sobre o leito viário
-      const glowLine = L.polyline(streetCoords, {
-        color: '#ef4444',
-        weight: 12,
-        opacity: 0.5,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
+      // Pinta o leito viário da rua em vermelho SOMENTE UMA VEZ
+      if (cleanStreetKey && !drawnStreetLines.has(cleanStreetKey)) {
+        drawnStreetLines.add(cleanStreetKey);
 
-      // Linha central nítida em vermelho escarlate exatamente no leito da via
-      const coreLine = L.polyline(streetCoords, {
-        color: '#dc2626',
-        weight: 5.5,
-        opacity: 1.0,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });
+        const streetCoords = getStreetRoadBedCoordinates(
+          chk.id,
+          chk.streetName,
+          chk.latitude,
+          chk.longitude
+        );
+
+        // Linha de brilho vermelho (glow) sobre o leito viário
+        const glowLine = L.polyline(streetCoords, {
+          color: '#ef4444',
+          weight: 12,
+          opacity: 0.5,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+
+        // Linha central nítida em vermelho escarlate exatamente no leito da via
+        const coreLine = L.polyline(streetCoords, {
+          color: '#dc2626',
+          weight: 5.5,
+          opacity: 1.0,
+          lineCap: 'round',
+          lineJoin: 'round'
+        });
+
+        layerGroup.addLayer(glowLine);
+        layerGroup.addLayer(coreLine);
+      }
 
       const photos = getAllPhotosForCheckIn(chk);
       const firstPhoto = photos.length > 0 ? photos[0] : null;
@@ -259,13 +280,21 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
         </div>
       `;
 
-      glowLine.bindPopup(popupContent, { maxWidth: 280 });
-      coreLine.bindPopup(popupContent, { maxWidth: 280 });
-      layerGroup.addLayer(glowLine);
-      layerGroup.addLayer(coreLine);
-
       // Pin com número de acordo com a sequência de lançamento por militante
       const pinNumber = (pinMap && (pinMap[chk.id] ?? pinMap[String(chk.id)])) || 1;
+
+      // Se houver múltiplos check-ins na mesma coordenada, aplica pequeno offset geográfico para não sobrepor pins
+      let pinLat = chk.latitude;
+      let pinLng = chk.longitude;
+      const coordKey = `${pinLat.toFixed(5)},${pinLng.toFixed(5)}`;
+      const prevOccurrences = seenMarkerCoords.get(coordKey) || 0;
+      seenMarkerCoords.set(coordKey, prevOccurrences + 1);
+
+      if (prevOccurrences > 0) {
+        const angle = (prevOccurrences * Math.PI) / 3;
+        pinLat += Math.cos(angle) * 0.00018;
+        pinLng += Math.sin(angle) * 0.00018;
+      }
 
       const pinIcon = L.divIcon({
         className: 'custom-numbered-pin-icon',
@@ -281,7 +310,7 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
         iconAnchor: [14, 33]
       });
 
-      const pinMarker = L.marker([chk.latitude, chk.longitude], { icon: pinIcon });
+      const pinMarker = L.marker([pinLat, pinLng], { icon: pinIcon });
       pinMarker.bindPopup(popupContent, { maxWidth: 280 });
       layerGroup.addLayer(pinMarker);
     });

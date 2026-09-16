@@ -653,6 +653,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
         ? checkIns
         : checkIns.filter(chk => chk.neighborhoodId === selectedBairroFilter);
 
+      const drawnRoads = new Set<string>();
       activeCheckIns.forEach((chk) => {
         // Calibrate precise position on the registered street
         const pos = getCalibratedCheckInPosition(chk, neighborhoods);
@@ -811,27 +812,40 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
           </div>
         `;
 
-        // Pintar o leito viário em vermelho sobre o mapa
-        const roadCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, pinLat, pinLng);
-        if (roadCoords && roadCoords.length >= 2) {
-          const glowLine = L.polyline(roadCoords, {
-            color: '#ef4444',
-            weight: 9,
-            opacity: 0.45,
-            lineCap: 'round',
-            lineJoin: 'round'
-          });
-          const coreLine = L.polyline(roadCoords, {
-            color: '#dc2626',
-            weight: 4.5,
-            opacity: 0.95,
-            lineCap: 'round',
-            lineJoin: 'round'
-          });
-          glowLine.bindPopup(popupHtml, { maxWidth: 290 });
-          coreLine.bindPopup(popupHtml, { maxWidth: 290 });
-          layerGroup.addLayer(glowLine);
-          layerGroup.addLayer(coreLine);
+        // Pintar o leito viário em vermelho sobre o mapa (SOMENTE UMA VEZ POR RUA)
+        const streetCleanKey = (chk.streetName || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\(nº.*?\)/gi, '')
+          .replace(/\(.*?\)/g, '')
+          .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
+          .replace(/[^a-z0-9]/g, '')
+          .trim();
+
+        if (streetCleanKey && !drawnRoads.has(streetCleanKey)) {
+          drawnRoads.add(streetCleanKey);
+          const roadCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, pinLat, pinLng);
+          if (roadCoords && roadCoords.length >= 2) {
+            const glowLine = L.polyline(roadCoords, {
+              color: '#ef4444',
+              weight: 9,
+              opacity: 0.45,
+              lineCap: 'round',
+              lineJoin: 'round'
+            });
+            const coreLine = L.polyline(roadCoords, {
+              color: '#dc2626',
+              weight: 4.5,
+              opacity: 0.95,
+              lineCap: 'round',
+              lineJoin: 'round'
+            });
+            glowLine.bindPopup(popupHtml, { maxWidth: 290 });
+            coreLine.bindPopup(popupHtml, { maxWidth: 290 });
+            layerGroup.addLayer(glowLine);
+            layerGroup.addLayer(coreLine);
+          }
         }
 
         const marker = L.marker([pinLat, pinLng], { icon: streetPinIcon });

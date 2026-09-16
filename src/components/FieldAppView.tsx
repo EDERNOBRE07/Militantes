@@ -46,6 +46,8 @@ import {
   CheckCircle2,
   Calendar,
   AlertCircle,
+  AlertTriangle,
+  X,
   RefreshCw,
   Wifi,
   Loader2,
@@ -145,6 +147,10 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   const [isSyncingQueue, setIsSyncingQueue] = useState(false);
   const [deletingCheckIn, setDeletingCheckIn] = useState<{ id: string; streetName: string } | null>(null);
   const [editingCheckIn, setEditingCheckIn] = useState<StreetCheckIn | null>(null);
+  const [duplicateCheckInAlert, setDuplicateCheckInAlert] = useState<{
+    existing: StreetCheckIn;
+    candidate: StreetCheckIn;
+  } | null>(null);
   const [connStatus, setConnStatus] = useState<{ online: boolean; latencyMs?: number; label: string }>({
     online: true,
     latencyMs: 32,
@@ -402,6 +408,95 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Normaliza nome de rua para detecção precisa de duplicidades
+  const normalizeStreetForCheck = (name: string): string => {
+    return (name || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\(nº.*?\)/gi, '')
+      .replace(/\(.*?\)/g, '')
+      .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
+  };
+
+  // Salva e transmite o lançamento para o banco de dados e sincronização Hostinger MySQL
+  const executeSaveCheckIn = async (checkInToSave: StreetCheckIn) => {
+    setIsTransmitting(true);
+
+    // Primary API persistence and direct Hostinger MySQL transmission
+    const res = await StorageService.onCheckInCreated(checkInToSave);
+    setAllCheckIns(StorageService.getCheckIns());
+    setIsTransmitting(false);
+
+    if (res.status === 'synced_mysql') {
+      try {
+        confetti({
+          particleCount: 50,
+          spread: 60,
+          origin: { y: 0.7 }
+        });
+      } catch {}
+
+      setFeedbackMsg({
+        text: `✓ Check-in de ${activeMilitant.name} persistido no MySQL da Hostinger com sucesso! (${res.latencyMs || 28}ms)`,
+        destination: res.destination,
+        details: `Rua "${checkInToSave.streetName}" em ${checkInToSave.neighborhoodName} sincronizada no banco u844537895_Militantes.`
+      });
+    } else {
+      setFeedbackMsg({
+        text: `Check-in de ${activeMilitant.name} gravado com segurança na fila local de contingência!`,
+        destination: res.destination,
+        details: res.message || 'Sem conexão estável no momento. Será sincronizado automaticamente assim que o sinal retornar.',
+        isError: false
+      });
+    }
+
+    // Auto-open new fresh street registration for continuous fieldwork
+    const remainingSuggestions = sampleStreetsByBairro[selectedNeighborhoodId] || [];
+    const nextStreet = remainingSuggestions[Math.floor(Math.random() * remainingSuggestions.length)] || '';
+    
+    setStreetName(nextStreet);
+    setHouseNumberRange('');
+    setObservations('');
+    setPhotos([]);
+    setMaterials({
+      santinhos: 0,
+      adesivos: 0,
+      adesivo_bola: 0,
+      adesivo_parachoque: 0,
+      colinhas: 0,
+      abordagens: 0,
+      comercio: 0
+    });
+
+    onCheckInCreated();
+
+    setTimeout(() => {
+      setFeedbackMsg(null);
+    }, 7000);
+  };
+
+  const handleConfirmDuplicateCheckIn = async () => {
+    if (!duplicateCheckInAlert) return;
+    const toSave = duplicateCheckInAlert.candidate;
+    setDuplicateCheckInAlert(null);
+    await executeSaveCheckIn(toSave);
+  };
+
+  const handleDiscardDuplicateCheckIn = () => {
+    setDuplicateCheckInAlert(null);
+    setFeedbackMsg({
+      text: 'Lançamento duplicado descartado com sucesso.',
+      details: 'O lançamento anterior foi mantido inalterado e nenhum novo registro foi inserido no banco.',
+      isError: false
+    });
+    setTimeout(() => {
+      setFeedbackMsg(null);
+    }, 5000);
+  };
+
   const handleSubmitCheckin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -437,57 +532,52 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       synced: !isOffline
     };
 
-    // Primary API persistence and direct Hostinger MySQL transmission
-    const res = await StorageService.onCheckInCreated(newCheckIn);
-    setAllCheckIns(StorageService.getCheckIns());
     setIsTransmitting(false);
 
-    if (res.status === 'synced_mysql') {
-      try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.7 }
-        });
-      } catch {}
+    // Regra do Usuário:
+    // "1- se houver lançamento duplicado de ruas, conferir se a data é a mesma e se é o mesmo militante,
+    // se não for, validar o lançamento no banco de dados,
+    // se houver duplicidade de lançamentos, emitir um alerta e pedir para confirmar o lançamento ou descarta."
+    const candidateStreetClean = normalizeStreetForCheck(streetName);
+    const todayDatePrefix = newCheckIn.timestamp.substring(0, 10); // 'YYYY-MM-DD'
 
-      setFeedbackMsg({
-        text: `✓ Check-in de ${activeMilitant.name} persistido no MySQL da Hostinger com sucesso! (${res.latencyMs || 28}ms)`,
-        destination: res.destination,
-        details: `Rua "${newCheckIn.streetName}" em ${newCheckIn.neighborhoodName} sincronizada no banco u844537895_Militantes.`
-      });
-    } else {
-      setFeedbackMsg({
-        text: `Check-in de ${activeMilitant.name} gravado com segurança na fila local de contingência!`,
-        destination: res.destination,
-        details: res.message || 'Sem conexão estável no momento. Será sincronizado automaticamente assim que o sinal retornar.',
-        isError: false
-      });
-    }
-
-    // Auto-open new fresh street registration for continuous fieldwork
-    const remainingSuggestions = sampleStreetsByBairro[selectedNeighborhoodId] || [];
-    const nextStreet = remainingSuggestions[Math.floor(Math.random() * remainingSuggestions.length)] || '';
-    
-    setStreetName(nextStreet);
-    setHouseNumberRange('');
-    setObservations('');
-    setPhotos([]);
-    setMaterials({
-      santinhos: 0,
-      adesivos: 0,
-      adesivo_bola: 0,
-      adesivo_parachoque: 0,
-      colinhas: 0,
-      abordagens: 0,
-      comercio: 0
+    // Verifica nos check-ins existentes se já há registro desta rua no mesmo bairro
+    const existingCheckInsForStreet = allCheckIns.filter(c => {
+      const cStreetClean = normalizeStreetForCheck(c.streetName || '');
+      if (!cStreetClean || !candidateStreetClean) return false;
+      const sameStreet = cStreetClean === candidateStreetClean ||
+        (candidateStreetClean.length >= 4 && cStreetClean.includes(candidateStreetClean)) ||
+        (cStreetClean.length >= 4 && candidateStreetClean.includes(cStreetClean));
+      const sameBairro = c.neighborhoodId === selectedNeighborhood.id ||
+        (c.neighborhoodName && selectedNeighborhood.name && c.neighborhoodName.toLowerCase().trim() === selectedNeighborhood.name.toLowerCase().trim());
+      return sameStreet && sameBairro;
     });
 
-    onCheckInCreated();
+    if (existingCheckInsForStreet.length > 0) {
+      // Confere se a data é a mesma E se é o mesmo militante
+      const duplicateMatch = existingCheckInsForStreet.find(c => {
+        const cDatePrefix = (c.timestamp || '').substring(0, 10);
+        const isSameDate = cDatePrefix === todayDatePrefix;
+        const isSameMilitant = c.militantId === activeMilitant.id ||
+          (c.militantName && c.militantName.toLowerCase().trim() === activeMilitant.name.toLowerCase().trim());
 
-    setTimeout(() => {
-      setFeedbackMsg(null);
-    }, 7000);
+        return isSameDate && isSameMilitant;
+      });
+
+      if (duplicateMatch) {
+        // HOUVE DUPLICIDADE (mesma rua + mesma data + mesmo militante)
+        // Emite alerta pedindo para confirmar ou descartar
+        setDuplicateCheckInAlert({
+          existing: duplicateMatch,
+          candidate: newCheckIn
+        });
+        return;
+      }
+    }
+
+    // Se NÃO for a mesma data OU se NÃO for o mesmo militante (ou se não havia registro anterior),
+    // valida o lançamento diretamente no banco de dados
+    await executeSaveCheckIn(newCheckIn);
   };
 
   // Filter militants for Coordination Dashboard
@@ -1394,6 +1484,61 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
               >
                 <Trash2 className="w-4 h-4" />
                 Sim, Apagar Rua
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate Check-In Confirmation / Discard Modal */}
+      {duplicateCheckInAlert && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white border border-amber-200 rounded-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3 text-amber-600">
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Alerta de Lançamento Duplicado</h3>
+                <p className="text-xs text-amber-700 font-semibold">Mesma rua, mesma data e mesmo militante</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-amber-50/70 rounded-xl border border-amber-200 text-xs text-slate-700 space-y-2.5">
+              <p className="leading-relaxed">
+                O militante <strong className="text-slate-900">{duplicateCheckInAlert.candidate.militantName}</strong> já possui um lançamento registrado para a rua <strong className="text-slate-900">{duplicateCheckInAlert.candidate.streetName}</strong> no bairro <strong className="text-slate-900">{duplicateCheckInAlert.candidate.neighborhoodName}</strong> na data de hoje.
+              </p>
+              
+              <div className="p-2.5 bg-white/95 rounded-lg border border-amber-200/80 text-[11px] space-y-1 text-slate-600">
+                <p className="font-semibold text-slate-800">Detalhes do lançamento anterior:</p>
+                <p>• <strong>Horário registrado:</strong> {duplicateCheckInAlert.existing.timestamp}</p>
+                <p>• <strong>Materiais entregues na 1ª passagem:</strong> {duplicateCheckInAlert.existing.materialsDelivered.santinhos} santinhos • {duplicateCheckInAlert.existing.materialsDelivered.abordagens || 0} abordagens • {duplicateCheckInAlert.existing.materialsDelivered.comercio || 0} comércios</p>
+                {duplicateCheckInAlert.existing.photos && duplicateCheckInAlert.existing.photos.length > 0 && (
+                  <p>• <strong>Fotos anexadas:</strong> {duplicateCheckInAlert.existing.photos.length} foto(s) comprovatória(s)</p>
+                )}
+              </div>
+
+              <div className="p-2 bg-amber-100/60 rounded-md text-[11px] text-amber-900">
+                💡 <em>É possível que o militante tenha retornado à mesma rua para distribuir material adicional ou abordar novos moradores. Deseja confirmar este lançamento como um novo registro no banco ou descartá-lo?</em>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleDiscardDuplicateCheckIn}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5"
+              >
+                <X className="w-4 h-4" />
+                Descartar Lançamento
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDuplicateCheckIn}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Confirmar Lançamento
               </button>
             </div>
           </div>

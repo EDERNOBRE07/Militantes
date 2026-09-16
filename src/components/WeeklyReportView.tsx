@@ -622,7 +622,26 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     }
 
     // 1. Draw Registered Streets in Vibrant RED exactly on the road bed (sem tags de nomes de ruas, conforme solicitado)
+    // REGRA DO USUÁRIO: se houver 2 lançamentos da mesma rua, pintar de vermelho no mapa do bairro somente uma vez
+    const drawnStreetRoadBeds = new Set<string>();
     bCheckIns.forEach(chk => {
+      const cleanStreetKey = (chk.streetName || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\(nº.*?\)/gi, '')
+        .replace(/\(.*?\)/g, '')
+        .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+
+      if (cleanStreetKey && drawnStreetRoadBeds.has(cleanStreetKey)) {
+        return; // Pinta no leito viário somente uma vez
+      }
+      if (cleanStreetKey) {
+        drawnStreetRoadBeds.add(cleanStreetKey);
+      }
+
       const roadBedCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, chk.latitude, chk.longitude);
       const points = roadBedCoords.map(([lat, lng]) => ({
         x: toX(lng, lat),
@@ -657,9 +676,22 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
     });
 
     // 2. Draw Numbered Pins (apenas pin com número correspondente à sequência de lançamento por militante)
+    // Se houver 2 ou mais lançamentos para a mesma rua, ambos os pins são desenhados de forma visível
+    const pinCoordOccurrences = new Map<string, number>();
     bCheckIns.forEach(chk => {
-      const px = toX(chk.longitude, chk.latitude);
-      const py = toY(chk.latitude, chk.longitude);
+      let px = toX(chk.longitude, chk.latitude);
+      let py = toY(chk.latitude, chk.longitude);
+
+      const clusterKey = `${Math.round(px / 8)},${Math.round(py / 8)}`;
+      const prevOccurrences = pinCoordOccurrences.get(clusterKey) || 0;
+      pinCoordOccurrences.set(clusterKey, prevOccurrences + 1);
+
+      if (prevOccurrences > 0) {
+        const offsetAngle = (prevOccurrences * Math.PI) / 3;
+        px += Math.cos(offsetAngle) * 16;
+        py += Math.sin(offsetAngle) * 16;
+      }
+
       const pinNum = (pinMap && (pinMap[chk.id] ?? pinMap[String(chk.id)])) || 1;
 
       // Pin Shadow
@@ -837,9 +869,17 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
       const drawnStreets = new Set<string>();
       bCheckIns.forEach(c => {
-        const sKey = c.streetName.trim().toLowerCase();
-        if (drawnStreets.has(sKey)) return;
-        drawnStreets.add(sKey);
+        const sKey = (c.streetName || '')
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\(nº.*?\)/gi, '')
+          .replace(/\(.*?\)/g, '')
+          .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
+          .replace(/[^a-z0-9]/g, '')
+          .trim();
+        if (sKey && drawnStreets.has(sKey)) return;
+        if (sKey) drawnStreets.add(sKey);
         const roadPoints = getStreetRoadBedCoordinates(c.streetName, bairro.id, c.latitude, c.longitude);
         if (roadPoints && roadPoints.length >= 2) {
           vCtx.save();
