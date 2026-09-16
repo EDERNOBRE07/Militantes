@@ -880,7 +880,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           .trim();
         if (sKey && drawnStreets.has(sKey)) return;
         if (sKey) drawnStreets.add(sKey);
-        const roadPoints = getStreetRoadBedCoordinates(c.streetName, bairro.id, c.latitude, c.longitude);
+        const roadPoints = getStreetRoadBedCoordinates(c.id, c.streetName, c.latitude, c.longitude);
         if (roadPoints && roadPoints.length >= 2) {
           vCtx.save();
           vCtx.beginPath();

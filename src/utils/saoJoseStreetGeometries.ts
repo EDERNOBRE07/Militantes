@@ -51,36 +51,28 @@ export const CHECKIN_STREET_GEOMETRIES: Record<string, [number, number][]> = {
   ],
   "chk-1788547040971-0hx0t-mil1787843294191": [
     [
-      -27.5492849,
-      -48.6442143
+      -27.575967,
+      -48.671913
     ],
     [
-      -27.5477789,
-      -48.6453979
+      -27.575897,
+      -48.672243
     ],
     [
-      -27.547734,
-      -48.6454356
+      -27.57572,
+      -48.673067
     ],
     [
-      -27.546807,
-      -48.646175
+      -27.57525,
+      -48.67316
     ],
     [
-      -27.5467433,
-      -48.6462223
+      -27.574903,
+      -48.673519
     ],
     [
-      -27.5466916,
-      -48.6462639
-    ],
-    [
-      -27.5462374,
-      -48.6465758
-    ],
-    [
-      -27.5461911,
-      -48.6466098
+      -27.574751,
+      -48.674203
     ]
   ],
   "chk-1788546978547-6o5a9-mil1787843294191": [
@@ -6718,9 +6710,19 @@ function distCoord(p1: [number, number], p2: [number, number]): number {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+function minDistanceToComp(pin: [number, number], comp: [number, number][]): number {
+  let minD = Infinity;
+  for (const p of comp) {
+    const d = distCoord(pin, p);
+    if (d < minD) minD = d;
+  }
+  return minD;
+}
+
 /**
  * Retorna as coordenadas do leito da rua exatamente onde consta o pin
  * Utiliza o banco vetorial completo OpenStreetMap de São José (2.104 vias cartografadas)
+ * Garante com rigor que o traçado da rua pertença ao leito correto próximo ao pin do check-in.
  */
 export function getStreetRoadBedCoordinates(
   checkInId: string,
@@ -6728,9 +6730,15 @@ export function getStreetRoadBedCoordinates(
   pinLat: number,
   pinLng: number
 ): [number, number][] {
-  // 1. Verificação direta por ID do check-in
+  const pin: [number, number] = [pinLat, pinLng];
+  // Tolerância máxima de afastamento do leito da via em relação ao pin (~240 metros)
+  const MAX_ROAD_DISTANCE_DEG = 0.0022;
+
+  // 1. Verificação direta por ID do check-in (validando proximidade física ao ponto)
   if (CHECKIN_STREET_GEOMETRIES[checkInId] && CHECKIN_STREET_GEOMETRIES[checkInId].length >= 2) {
-    return CHECKIN_STREET_GEOMETRIES[checkInId];
+    if (!pinLat || !pinLng || minDistanceToComp(pin, CHECKIN_STREET_GEOMETRIES[checkInId]) <= MAX_ROAD_DISTANCE_DEG) {
+      return CHECKIN_STREET_GEOMETRIES[checkInId];
+    }
   }
 
   // 2. Normalização fonética e estrutural do nome da rua
@@ -6739,62 +6747,66 @@ export function getStreetRoadBedCoordinates(
     norm = STREET_ALIASES[norm];
   }
 
-  // 3. Busca nas vias OpenStreetMap de São José
+  // 3. Busca nas vias OpenStreetMap de São José com correspondência exata
   let candidates: [number, number][][] | undefined = OSM_ROADS[norm];
-  if (!candidates) {
-    // Busca difusa / substring no índice OSM
-    for (const [k, v] of Object.entries(OSM_ROADS)) {
-      if (norm.length > 4 && (k === norm || k.includes(norm) || norm.includes(k))) {
-        candidates = v;
-        break;
+  if (candidates && candidates.length > 0) {
+    if (!pinLat || !pinLng) return candidates[0];
+    let best = candidates[0];
+    let minD = minDistanceToComp(pin, best);
+    for (const comp of candidates) {
+      const d = minDistanceToComp(pin, comp);
+      if (d < minD) {
+        minD = d;
+        best = comp;
+      }
+    }
+    if (minD <= MAX_ROAD_DISTANCE_DEG) {
+      return best;
+    }
+  }
+
+  // 4. Busca difusa / aproximação por nome no índice OSM, com garantia de proximidade geográfica
+  let bestFuzzyComp: [number, number][] | null = null;
+  let bestFuzzyDist = Infinity;
+  for (const [k, comps] of Object.entries(OSM_ROADS)) {
+    if (norm.length >= 4 && (k === norm || k.includes(norm) || (norm.includes(k) && k.length >= 5))) {
+      for (const comp of comps) {
+        const d = minDistanceToComp(pin, comp);
+        if (d <= MAX_ROAD_DISTANCE_DEG && d < bestFuzzyDist) {
+          bestFuzzyDist = d;
+          bestFuzzyComp = comp;
+        }
+      }
+    }
+  }
+  if (bestFuzzyComp) {
+    return bestFuzzyComp;
+  }
+
+  // 5. Busca nas geometrias conhecidas pré-calibradas com validação de distância
+  const rawClean = (streetName || "").replace(/\(.*?\)/g, "").trim().toLowerCase();
+  const clean = rawClean.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const knownEntries = Object.entries(KNOWN_STREET_ROADBED_GEOMETRIES);
+  for (const [key, comp] of knownEntries) {
+    const normKey = normalizeRoadKey(key);
+    if (normKey === norm || key === rawClean || key === clean || (norm.length >= 5 && (normKey.includes(norm) || norm.includes(normKey)))) {
+      const d = minDistanceToComp(pin, comp);
+      if (d <= MAX_ROAD_DISTANCE_DEG) {
+        return comp;
       }
     }
   }
 
-  if (candidates && candidates.length > 0) {
-    if (candidates.length === 1 || !pinLat || !pinLng) {
-      return candidates[0];
-    }
-    // Seleciona o trecho que passa mais próximo do ponto de check-in (pinLat, pinLng)
-    let best = candidates[0];
-    let minD = Infinity;
-    candidates.forEach(comp => {
-      comp.forEach(p => {
-        const d = distCoord(p, [pinLat, pinLng]);
-        if (d < minD) {
-          minD = d;
-          best = comp;
-        }
-      });
-    });
-    return best;
-  }
-
-  // 4. Busca nas geometrias conhecidas pré-calibradas
-  const rawClean = (streetName || "").replace(/\(.*?\)/g, "").trim().toLowerCase();
-  const clean = rawClean.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (KNOWN_STREET_ROADBED_GEOMETRIES[rawClean]) return KNOWN_STREET_ROADBED_GEOMETRIES[rawClean];
-  if (KNOWN_STREET_ROADBED_GEOMETRIES[clean]) return KNOWN_STREET_ROADBED_GEOMETRIES[clean];
-
-  for (const key of Object.keys(KNOWN_STREET_ROADBED_GEOMETRIES)) {
-    const normKey = normalizeRoadKey(key);
-    if (normKey === norm || (norm.length > 4 && (normKey.includes(norm) || norm.includes(normKey)))) {
-      return KNOWN_STREET_ROADBED_GEOMETRIES[key];
-    }
-  }
-
-  // 5. Fallback espacial: busca a via real mais próxima no município de São José dentro de 150 metros
+  // 6. Fallback espacial: busca a via real mais próxima no município de São José dentro de ~160 metros
   if (pinLat && pinLng) {
     let nearestComp: [number, number][] | null = null;
-    let minD = 0.0015; // ~150 metros
+    let minD = 0.0015; // ~160 metros
     for (const comps of Object.values(OSM_ROADS)) {
       for (const comp of comps) {
-        for (const p of comp) {
-          const d = distCoord(p, [pinLat, pinLng]);
-          if (d < minD) {
-            minD = d;
-            nearestComp = comp;
-          }
+        const d = minDistanceToComp(pin, comp);
+        if (d < minD) {
+          minD = d;
+          nearestComp = comp;
         }
       }
     }
@@ -6803,12 +6815,12 @@ export function getStreetRoadBedCoordinates(
     }
   }
 
-  // 6. Fallback final: Alinhamento vetorial baseado na coordenada do pin
+  // 7. Fallback final calibrado: segmento de rua centralizado exatamente nas coordenadas do pin
   return [
-    [pinLat, pinLng - 0.00085],
-    [pinLat, pinLng - 0.00045],
+    [pinLat, pinLng - 0.0007],
+    [pinLat, pinLng - 0.00035],
     [pinLat, pinLng],
-    [pinLat, pinLng + 0.00045],
-    [pinLat, pinLng + 0.00085]
+    [pinLat, pinLng + 0.00035],
+    [pinLat, pinLng + 0.0007]
   ];
 }
