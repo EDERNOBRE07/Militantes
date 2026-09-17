@@ -1890,21 +1890,17 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           // Tabela Única com TODAS as ruas do bairro e coluna MILITANTE
           const tableRows = sortedCheckIns.map(chk => {
             const photos = getAllPhotosForCheckIn(chk);
-            const pNum = bPinMap[chk.id] || 1;
             const mObj = militants.find(m => m.id === chk.militantId || m.name.toLowerCase() === (chk.militantName || '').toLowerCase());
             const mName = chk.militantName || mObj?.name || 'Militante';
             const mMat = mObj?.matricula ? ` (${mObj.matricula})` : '';
 
             return [
-              formatDateTimeBR(chk.timestamp),
+              formatDateTimeBR(chk.timestamp).split(' ')[0],
               chk.houseNumberRange && chk.houseNumberRange !== 'Trecho Geral'
                 ? `${chk.streetName} (${chk.houseNumberRange})`
                 : chk.streetName,
               `${mName}${mMat}`,
-              `#${pNum}`,
               String(chk.materialsDelivered.abordagens || 0),
-              String(chk.materialsDelivered.comercio || 0),
-              (chk.materialsDelivered.santinhos || 0).toLocaleString('pt-BR'),
               `${photos.length} foto(s)`,
               chk.status === 'validado' ? 'VALIDADO' : 'PENDENTE'
             ];
@@ -1912,13 +1908,10 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
 
           autoTable(doc, {
             head: [[
-              'Data / Hora',
+              'Data',
               'Logradouro / Trecho Percorrido',
               'Militante Responsável',
-              'Pin nº',
               'Abordagens',
-              'Comércio',
-              'Santinhos',
               'Comprovante',
               'Status'
             ]],
@@ -1926,8 +1919,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             startY: 19,
             margin: { left: 10, right: 10 },
             styles: {
-              fontSize: 7.2,
-              cellPadding: 2,
+              fontSize: 7.5,
+              cellPadding: 2.2,
               textColor: [30, 41, 59],
               lineColor: [226, 232, 240],
               lineWidth: 0.1
@@ -1936,18 +1929,15 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               fillColor: [30, 58, 138],
               textColor: [255, 255, 255],
               fontStyle: 'bold',
-              fontSize: 7.5
+              fontSize: 7.8
             },
             columnStyles: {
-              0: { cellWidth: 26 },
-              1: { cellWidth: 70, fontStyle: 'bold' },
-              2: { cellWidth: 50, fontStyle: 'bold', textColor: [30, 58, 138] },
-              3: { cellWidth: 16, halign: 'center', fontStyle: 'bold', textColor: [220, 38, 38] },
-              4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-              5: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
-              6: { cellWidth: 25, halign: 'center', fontStyle: 'bold' },
-              7: { cellWidth: 28, halign: 'center', fontStyle: 'bold' },
-              8: { cellWidth: 22, halign: 'center', fontStyle: 'bold' }
+              0: { cellWidth: 28, halign: 'center', fontStyle: 'bold' },
+              1: { cellWidth: 95, fontStyle: 'bold' },
+              2: { cellWidth: 70, fontStyle: 'bold', textColor: [30, 58, 138] },
+              3: { cellWidth: 28, halign: 'center', fontStyle: 'bold', textColor: [126, 34, 206] },
+              4: { cellWidth: 30, halign: 'center', fontStyle: 'bold', textColor: [5, 150, 105] },
+              5: { cellWidth: 26, halign: 'center', fontStyle: 'bold' }
             },
             didDrawPage: (data) => {
               if (data.pageNumber > tablePageNum) {
@@ -2077,13 +2067,13 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                   doc.rect(cX + 1.5, cY + 1.5, imgW, imgH, 'F');
                 }
 
-                // Badge de Pin Vermelho com borda arredondada no topo da foto
-                doc.setFillColor(220, 38, 38);
-                doc.roundedRect(cX + 2.5, cY + 2.5, 16, 5, 1, 1, 'F');
+                // Badge com número sequencial da foto
+                doc.setFillColor(15, 23, 42);
+                doc.roundedRect(cX + 2.5, cY + 2.5, 14, 4.8, 1, 1, 'F');
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(6.5);
+                doc.setFontSize(6);
                 doc.setTextColor(255, 255, 255);
-                doc.text(`Pin #${item.pinNum}`, cX + 10.5, cY + 6, { align: 'center' });
+                doc.text(`#${pageIdx * photosPerPage + idx + 1}`, cX + 9.5, cY + 5.8, { align: 'center' });
 
                 // Linha 1: Nome da Rua
                 doc.setFont('helvetica', 'bold');
@@ -2103,13 +2093,12 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
                   : item.militantName;
                 doc.text(`Militante: ${shortMil}`, cX + 2, cY + imgH + 8.5);
 
-                // Linha 3: Data/Hora e Status (SEM GPS!)
+                // Linha 3: Data (Apenas Data, sem hora) e Status (SEM GPS!)
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(5.2);
                 doc.setTextColor(100, 116, 139);
-                const timePart = formatDateTimeBR(item.timestamp).split(' ')[1] || '';
                 const datePart = formatDateTimeBR(item.timestamp).split(' ')[0] || '';
-                doc.text(`${datePart} ${timePart} • Validado`, cX + 2, cY + imgH + 12);
+                doc.text(`${datePart} • Validado`, cX + 2, cY + imgH + 12);
               }
             }
           }

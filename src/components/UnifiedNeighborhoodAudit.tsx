@@ -83,6 +83,7 @@ export const UnifiedNeighborhoodStreetTable: React.FC<UnifiedNeighborhoodStreetT
   // Estatísticas agregadas deste bairro
   const totalRuas = enrichedCheckIns.length;
   const totalAbordagens = enrichedCheckIns.reduce((acc, c) => acc + (c.materials.abordagens || 0), 0);
+  const totalPhotosCount = enrichedCheckIns.reduce((acc, c) => acc + c.photos.length, 0);
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs" id={`unified-street-table-${bairro.id}`}>
