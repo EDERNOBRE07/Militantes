@@ -238,81 +238,48 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
           chk.longitude
         );
 
-        // Linha de brilho vermelho (glow) sobre o leito viário
         const glowLine = L.polyline(streetCoords, {
           color: '#ef4444',
-          weight: 12,
-          opacity: 0.5,
+          weight: 8,
+          opacity: 0.55,
           lineCap: 'round',
           lineJoin: 'round'
         });
 
-        // Linha central nítida em vermelho escarlate exatamente no leito da via
         const coreLine = L.polyline(streetCoords, {
           color: '#dc2626',
-          weight: 5.5,
-          opacity: 1.0,
+          weight: 4.5,
+          opacity: 0.95,
           lineCap: 'round',
           lineJoin: 'round'
         });
+
+        const photos = getAllPhotosForCheckIn(chk);
+        const firstPhoto = photos.length > 0 ? photos[0] : null;
+
+        const popupContent = `
+          <div class="p-2.5 text-slate-800 space-y-2 max-w-[260px] font-sans">
+            <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
+              <span class="text-[10px] font-bold uppercase text-red-700">📍 ${chk.neighborhoodName || bairro.name}</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Validado</span>
+            </div>
+            <h4 class="font-black text-sm text-slate-900 leading-tight">🛣️ ${chk.streetName}</h4>
+            ${firstPhoto ? `<img src="${firstPhoto}" class="w-full h-24 object-cover rounded-lg border border-slate-200 mt-1 shadow-2xs" />` : ''}
+            <div class="p-1.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-0.5">
+              <p><strong>Militante:</strong> ${chk.militantName}</p>
+              <p><strong>Data:</strong> ${formatDateTimeBR(chk.timestamp).split(' ')[0]}</p>
+              <p><strong>Abordagens:</strong> ${chk.materialsDelivered.abordagens || 0} pessoas</p>
+              <p class="text-[10px] text-blue-700 font-semibold">📷 ${photos.length} foto(s) anexada(s)</p>
+            </div>
+          </div>
+        `;
+
+        coreLine.bindPopup(popupContent, { maxWidth: 280 });
+        glowLine.bindPopup(popupContent, { maxWidth: 280 });
 
         layerGroup.addLayer(glowLine);
         layerGroup.addLayer(coreLine);
       }
-
-      const photos = getAllPhotosForCheckIn(chk);
-      const firstPhoto = photos.length > 0 ? photos[0] : null;
-
-      const popupContent = `
-        <div class="p-2.5 text-slate-800 space-y-2 max-w-[260px] font-sans">
-          <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
-            <span class="text-[10px] font-bold uppercase text-red-700">📍 ${chk.neighborhoodName || bairro.name}</span>
-            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Validado</span>
-          </div>
-          <h4 class="font-black text-sm text-slate-900 leading-tight">🛣️ ${chk.streetName}</h4>
-          ${firstPhoto ? `<img src="${firstPhoto}" class="w-full h-24 object-cover rounded-lg border border-slate-200 mt-1 shadow-2xs" />` : ''}
-          <div class="p-1.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-0.5">
-            <p><strong>Militante:</strong> ${chk.militantName}</p>
-            <p><strong>Data:</strong> ${formatDateTimeBR(chk.timestamp)}</p>
-            <p><strong>Materiais:</strong> ${chk.materialsDelivered.santinhos} santinhos | ${chk.materialsDelivered.abordagens || 0} abordagens</p>
-            <p class="text-[10px] text-blue-700 font-semibold">📷 ${photos.length} foto(s) anexada(s)</p>
-          </div>
-        </div>
-      `;
-
-      // Pin com número de acordo com a sequência de lançamento por militante
-      const pinNumber = (pinMap && (pinMap[chk.id] ?? pinMap[String(chk.id)])) || 1;
-
-      // Se houver múltiplos check-ins na mesma coordenada, aplica pequeno offset geográfico para não sobrepor pins
-      let pinLat = chk.latitude;
-      let pinLng = chk.longitude;
-      const coordKey = `${pinLat.toFixed(5)},${pinLng.toFixed(5)}`;
-      const prevOccurrences = seenMarkerCoords.get(coordKey) || 0;
-      seenMarkerCoords.set(coordKey, prevOccurrences + 1);
-
-      if (prevOccurrences > 0) {
-        const angle = (prevOccurrences * Math.PI) / 3;
-        pinLat += Math.cos(angle) * 0.00018;
-        pinLng += Math.sin(angle) * 0.00018;
-      }
-
-      const pinIcon = L.divIcon({
-        className: 'custom-numbered-pin-icon',
-        html: `
-          <div class="relative group cursor-pointer" style="transform: translate(-50%, -100%);">
-            <div class="relative w-7 h-7 rounded-full bg-gradient-to-br from-red-600 via-rose-600 to-red-700 border-2 border-white shadow-xl flex items-center justify-center text-white text-xs font-black ring-2 ring-red-300 hover:scale-125 transition-transform">
-              ${pinNumber}
-            </div>
-            <div class="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-red-700 mx-auto"></div>
-          </div>
-        `,
-        iconSize: [28, 33],
-        iconAnchor: [14, 33]
-      });
-
-      const pinMarker = L.marker([pinLat, pinLng], { icon: pinIcon });
-      pinMarker.bindPopup(popupContent, { maxWidth: 280 });
-      layerGroup.addLayer(pinMarker);
     });
 
     // REGRA DE OURO PARA ZOOM ESTÁVEL:
@@ -376,9 +343,6 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       <div className="absolute bottom-2.5 left-2.5 z-[1000] bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] shadow-sm text-slate-700 space-y-0.5 pointer-events-none">
         <div className="flex items-center gap-1.5 font-bold text-rose-700">
           <span className="w-3 h-1 bg-red-600 rounded-sm"></span> Ruas Auditadas (Linha Vermelha)
-        </div>
-        <div className="flex items-center gap-1.5 text-slate-600 font-medium">
-          <span className="text-xs">📍</span> Pins Sequenciais por Militante (#{checkIns.length} no total)
         </div>
       </div>
     </div>

@@ -109,13 +109,9 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   }, [isAllBairros, qualifyingNeighborhoods, currentBairro, checkIns]);
 
   // Estatísticas agregadas
-  const totalSantinhos = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
-  const totalAdesivoBola = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_bola || 0), 0);
-  const totalParachoque = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_parachoque || 0), 0);
-  const totalColinhas = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.colinhas || 0), 0);
   const totalAbordagens = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
   const totalComercios = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-  const totalMateriais = totalSantinhos + totalAdesivoBola + totalParachoque + totalColinhas;
+  const totalPhotosCount = bairroCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
 
   const coveragePercent = Math.min(
     Math.round((bairroCheckIns.length / Math.max(currentBairro.totalStreets, 1)) * 100),
@@ -127,15 +123,21 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
     return buildMilitantSequentialPinMap(bairroCheckIns, militants, teams);
   }, [bairroCheckIns, militants, teams]);
 
-  // Dados para o gráfico de pizza de materiais
-  const materialsPieData = useMemo(() => {
+  // Dados para o gráfico de pizza de distribuição por equipe
+  const teamDistributionPieData = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    bairroCheckIns.forEach(c => {
+      const mil = militants.find(m => m.id === c.militantId);
+      const teamId = c.teamId || mil?.teamId || 'geral';
+      counts[teamId] = (counts[teamId] || 0) + 1;
+    });
+
     return [
-      { name: 'Santinhos', value: totalSantinhos, color: '#2563eb' },
-      { name: 'Adesivos Bola', value: totalAdesivoBola, color: '#f59e0b' },
-      { name: 'Adesivo Para-choque', value: totalParachoque, color: '#8b5cf6' },
-      { name: 'Colinhas', value: totalColinhas, color: '#10b981' }
+      { name: 'Equipe Alpha', value: counts['team-alpha'] || 0, color: '#2563eb' },
+      { name: 'Equipe Bravo', value: counts['team-bravo'] || 0, color: '#9333ea' },
+      { name: 'Equipe Geral', value: counts['geral'] || 0, color: '#059669' }
     ].filter(item => item.value > 0);
-  }, [totalSantinhos, totalAdesivoBola, totalParachoque, totalColinhas]);
+  }, [bairroCheckIns, militants]);
 
   return (
     <div className="space-y-8 pt-2">
@@ -275,9 +277,9 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
               </div>
 
               <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
-                <span className="text-[10px] uppercase font-semibold text-slate-500 block">Materiais Entregues</span>
-                <strong className="text-lg font-bold text-emerald-700 font-mono">{totalMateriais.toLocaleString('pt-BR')}</strong>
-                <span className="text-[10px] text-emerald-600 block mt-0.5">{totalSantinhos} santinhos</span>
+                <span className="text-[10px] uppercase font-semibold text-slate-500 block">Comprovantes Fotográficos</span>
+                <strong className="text-lg font-bold text-emerald-700 font-mono">{totalPhotosCount} fotos</strong>
+                <span className="text-[10px] text-emerald-600 block mt-0.5">Auditoria georreferenciada</span>
               </div>
             </div>
 
@@ -286,19 +288,19 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
               <div className="md:col-span-4 space-y-2">
                 <h5 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                   <BarChart3 className="w-4 h-4 text-blue-600" />
-                  Distribuição de Materiais Consolidados
+                  Distribuição por Equipes
                 </h5>
                 <p className="text-[11px] text-slate-500">
-                  Volume de santinhos, adesivos e colinhas distribuídos nos {qualifyingNeighborhoods.length} bairros.
+                  Ruas auditadas e atuação das equipes nos {qualifyingNeighborhoods.length} bairros qualificados.
                 </p>
                 <div className="space-y-1.5 pt-2">
-                  {materialsPieData.map(item => (
+                  {teamDistributionPieData.map(item => (
                     <div key={item.name} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5 text-slate-600">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                         {item.name}:
                       </span>
-                      <strong className="font-mono text-slate-900">{item.value.toLocaleString('pt-BR')}</strong>
+                      <strong className="font-mono text-slate-900">{item.value} ruas</strong>
                     </div>
                   ))}
                 </div>
@@ -308,7 +310,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={materialsPieData}
+                      data={teamDistributionPieData}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
@@ -317,12 +319,12 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                       outerRadius={62}
                       paddingAngle={3}
                     >
-                      {materialsPieData.map((entry, index) => (
+                      {teamDistributionPieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <RechartsTooltip
-                      formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unidades`, name]}
+                      formatter={(val: any, name: any) => [`${val} ruas`, name]}
                       contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                     />
                   </PieChart>
@@ -366,11 +368,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 
               const bAbordagens = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
               const bComercios = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-              const bSantinhos = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
-              const bMateriais = nCheckIns.reduce((acc, c) => {
-                const m = c.materialsDelivered;
-                return acc + (m.santinhos || 0) + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
-              }, 0);
+              const bPhotos = nCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
 
               return (
                 <div
@@ -403,7 +401,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                         🏪 <strong>{bComercios}</strong> comércios
                       </span>
                       <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 font-bold text-emerald-800">
-                        📦 <strong>{bMateriais.toLocaleString('pt-BR')}</strong> materiais
+                        📷 <strong>{bPhotos}</strong> fotos
                       </span>
                     </div>
                   </div>
@@ -446,7 +444,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                             teams={teams}
                             neighborhoods={neighborhoods}
                             title="Dashboard Geral Consolidado Pós-Mapas"
-                            subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e distribuição de materiais no bairro ${bairro.name}`}
+                            subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e auditoria no bairro ${bairro.name}`}
                           />
 
                           {/* 3. TABELAS DE RUAS */}
@@ -518,21 +516,21 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
               />
             </div>
 
-            {/* Painel de Gráficos de Materiais */}
+            {/* Painel de Gráficos de Equipes */}
             <div id="neighborhood-report-charts-card" className="lg:col-span-5 rounded-xl border border-slate-200 bg-white p-4 shadow-2xs flex flex-col justify-between space-y-3">
               <div className="border-b border-slate-100 pb-2">
                 <h4 className="font-bold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                   <BarChart3 className="w-4 h-4 text-blue-600" />
-                  Distribuição de Materiais em {currentBairro.name}
+                  Distribuição por Equipes em {currentBairro.name}
                 </h4>
-                <p className="text-[11px] text-slate-500">Volume de santinhos e adesivos entregues</p>
+                <p className="text-[11px] text-slate-500">Ruas percorridas por equipe neste bairro</p>
               </div>
 
               <div className="h-44 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={materialsPieData}
+                      data={teamDistributionPieData}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
@@ -541,24 +539,26 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                       outerRadius={58}
                       paddingAngle={3}
                     >
-                      {materialsPieData.map((entry, index) => (
+                      {teamDistributionPieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <RechartsTooltip
-                      formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unidades`, name]}
+                      formatter={(val: any, name: any) => [`${val} ruas`, name]}
                       contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
 
-              <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100 text-[11px]">
-                {materialsPieData.map(item => (
-                  <div key={item.name} className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                    <span className="text-slate-600 truncate">{item.name}:</span>
-                    <strong className="text-slate-900 font-mono">{item.value.toLocaleString('pt-BR')}</strong>
+              <div className="grid grid-cols-1 gap-1.5 pt-2 border-t border-slate-100 text-[11px]">
+                {teamDistributionPieData.map(item => (
+                  <div key={item.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                      <span className="text-slate-600 truncate">{item.name}:</span>
+                    </div>
+                    <strong className="text-slate-900 font-mono">{item.value} ruas</strong>
                   </div>
                 ))}
               </div>
@@ -607,9 +607,9 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             </div>
 
             <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
-              <span className="text-[10px] uppercase font-semibold text-slate-500 block">Materiais Entregues</span>
-              <strong className="text-base font-bold text-emerald-700 font-mono">{totalMateriais.toLocaleString('pt-BR')}</strong>
-              <span className="text-[10px] text-emerald-600 block mt-0.5">{totalSantinhos} santinhos</span>
+              <span className="text-[10px] uppercase font-semibold text-slate-500 block">Comprovantes Fotográficos</span>
+              <strong className="text-base font-bold text-emerald-700 font-mono">{totalPhotosCount} fotos</strong>
+              <span className="text-[10px] text-emerald-600 block mt-0.5">Auditoria georreferenciada</span>
             </div>
           </div>
 
@@ -620,7 +620,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             teams={teams}
             neighborhoods={neighborhoods}
             title="Dashboard Geral Consolidado Pós-Mapas"
-            subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e distribuição de materiais no bairro ${currentBairro.name}`}
+            subtitle={`Visão executiva da campanha • Pessoas abordadas, ruas percorridas e auditoria no bairro ${currentBairro.name}`}
           />
 
           {/* 3. TABELAS DE RUAS */}

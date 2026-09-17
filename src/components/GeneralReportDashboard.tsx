@@ -19,11 +19,11 @@ import {
   MapPin,
   TrendingUp,
   PieChart as PieChartIcon,
-  Package,
   Store,
   CheckCircle2,
   Award,
   Sparkles,
+  Camera,
   Layers
 } from 'lucide-react';
 
@@ -44,17 +44,13 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
   neighborhoods,
   productivityData: externalProductivityData,
   title = "Dashboard Geral Consolidado pós-Mapeamento",
-  subtitle = "Visão executiva agregada • Pessoas abordadas, ruas percorridas e distribuição de materiais"
+  subtitle = "Visão executiva agregada • Pessoas abordadas, ruas percorridas e auditoria de campo"
 }) => {
   // Totais Gerais
   const totalRuas = checkIns.length;
   const totalAbordagens = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
   const totalComercios = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-  const totalSantinhos = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
-  const totalAdesivoBola = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_bola || 0), 0);
-  const totalParachoque = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.adesivo_parachoque || 0), 0);
-  const totalColinhas = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.colinhas || 0), 0);
-  const totalMateriais = totalSantinhos + totalAdesivoBola + totalParachoque + totalColinhas;
+  const totalPhotos = checkIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
 
   // Militantes Ativos e cálculo de produtividade consolidada se não passado via prop
   const computedProductivityData = useMemo(() => {
@@ -65,17 +61,12 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
     return militants.map(mil => {
       const milCheckIns = checkIns.filter(c => c.militantId === mil.id || c.militantName === mil.name);
       const streetsCount = milCheckIns.length;
-      const santinhos = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.santinhos || 0), 0);
       const abordagens = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
       const comercios = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-      const matTot = santinhos + milCheckIns.reduce((acc, c) => {
-        const m = c.materialsDelivered;
-        return acc + (m.adesivo_bola || 0) + (m.adesivo_parachoque || 0) + (m.colinhas || 0);
-      }, 0);
+      const photosCount = milCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
 
       const weeklyGoal = 25;
       const completionRate = Math.min(Math.round((streetsCount / weeklyGoal) * 100), 200);
-
       const teamObj = teams.find(t => t.id === mil.teamId);
 
       return {
@@ -85,25 +76,30 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
         matricula: mil.matricula,
         teamName: teamObj?.name || 'Geral',
         streetsCount,
-        santinhos,
         abordagens,
         comercios,
-        totalMat: matTot,
+        photosCount,
         completionRate,
         weeklyGoal
       };
     }).sort((a, b) => b.streetsCount - a.streetsCount);
   }, [militants, checkIns, teams, externalProductivityData]);
 
-  // Gráfico de Pizza de Materiais
-  const materialsPieData = useMemo(() => {
+  // Gráfico de Pizza por Equipes
+  const teamDistributionPieData = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    checkIns.forEach(c => {
+      const mil = militants.find(m => m.id === c.militantId);
+      const teamId = c.teamId || mil?.teamId || 'geral';
+      counts[teamId] = (counts[teamId] || 0) + 1;
+    });
+
     return [
-      { name: 'Santinhos', value: totalSantinhos, color: '#2563eb' },
-      { name: 'Adesivos Bola', value: totalAdesivoBola, color: '#f59e0b' },
-      { name: 'Adesivo Para-choque', value: totalParachoque, color: '#8b5cf6' },
-      { name: 'Colinhas', value: totalColinhas, color: '#10b981' }
+      { name: 'Equipe Alpha', value: counts['team-alpha'] || 0, color: '#2563eb' },
+      { name: 'Equipe Bravo', value: counts['team-bravo'] || 0, color: '#9333ea' },
+      { name: 'Equipe Geral', value: counts['geral'] || 0, color: '#059669' }
     ].filter(i => i.value > 0);
-  }, [totalSantinhos, totalAdesivoBola, totalParachoque, totalColinhas]);
+  }, [checkIns, militants]);
 
   const activeMilitantsCount = computedProductivityData.filter(d => d.streetsCount > 0).length || militants.length;
   const avgStreetsPerMilitant = activeMilitantsCount > 0 ? (totalRuas / activeMilitantsCount).toFixed(1) : '0';
@@ -136,7 +132,7 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
         </div>
       </div>
 
-      {/* 1. CARDS DE INDICADORES GERAIS (PESSOAS ABORDADAS, NÚMERO DE RUAS, ETC.) */}
+      {/* 1. CARDS DE INDICADORES GERAIS */}
       <div id="general-dashboard-kpi-cards" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         
         {/* Card 1: Pessoas Abordadas */}
@@ -177,35 +173,35 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
             {totalComercios}
           </strong>
           <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">
-            Estabelecimentos comerciais
+            Estabelecimentos visitados
           </span>
         </div>
 
-        {/* Card 4: Santinhos Distribuídos */}
+        {/* Card 4: Comprovantes Fotográficos */}
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider">Santinhos Entregues</span>
-            <Layers className="w-4 h-4 text-blue-600" />
+            <span className="text-[10px] uppercase font-bold tracking-wider">Fotos Anexadas</span>
+            <Camera className="w-4 h-4 text-blue-600" />
           </div>
           <strong className="text-xl font-black text-blue-700 font-mono block">
-            {totalSantinhos.toLocaleString('pt-BR')}
+            {totalPhotos}
           </strong>
           <span className="text-[10px] text-blue-600 font-medium block mt-0.5">
-            Material de mão em mão
+            Comprovações auditadas
           </span>
         </div>
 
-        {/* Card 5: Materiais Totais */}
+        {/* Card 5: Cobertura de Equipes */}
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider">Total de Materiais</span>
-            <Package className="w-4 h-4 text-amber-600" />
+            <span className="text-[10px] uppercase font-bold tracking-wider">Equipes Ativas</span>
+            <Layers className="w-4 h-4 text-amber-600" />
           </div>
           <strong className="text-xl font-black text-amber-700 font-mono block">
-            {totalMateriais.toLocaleString('pt-BR')}
+            {teams.length} equipes
           </strong>
           <span className="text-[10px] text-amber-600 font-medium block mt-0.5">
-            Santinhos + adesivos
+            Mobilização em campo
           </span>
         </div>
 
@@ -225,7 +221,7 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
 
       </div>
 
-      {/* 2. GRÁFICOS GERAIS DE PRODUTIVIDADE & COMPOSIÇÃO DE MATERIAIS */}
+      {/* 2. GRÁFICOS GERAIS DE PRODUTIVIDADE & ATUAÇÃO POR EQUIPES */}
       <div id="general-dashboard-charts" className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Gráfico 1: Produtividade por Militante (Ruas vs Abordagens) */}
@@ -281,15 +277,15 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
           </div>
         </div>
 
-        {/* Gráfico 2: Composição de Materiais Distribuídos */}
+        {/* Gráfico 2: Distribuição por Equipes */}
         <div className="lg:col-span-4 p-4 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col justify-between space-y-3">
           <div className="border-b border-slate-100 pb-2">
             <span className="text-xs font-bold text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
               <PieChartIcon className="w-4 h-4 text-indigo-600" />
-              Distribuição de Materiais Entregues
+              Distribuição por Equipes
             </span>
             <p className="text-[11px] text-slate-500">
-              Total consolidado: <strong>{totalMateriais.toLocaleString('pt-BR')}</strong> unidades
+              Total consolidado: <strong>{totalRuas}</strong> ruas auditadas
             </p>
           </div>
 
@@ -297,7 +293,7 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={materialsPieData}
+                  data={teamDistributionPieData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
@@ -306,12 +302,12 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
                   outerRadius={60}
                   paddingAngle={3}
                 >
-                  {materialsPieData.map((entry, index) => (
+                  {teamDistributionPieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <RechartsTooltip
-                  formatter={(val: any, name: any) => [`${val.toLocaleString('pt-BR')} unid.`, name]}
+                  formatter={(val: any, name: any) => [`${val} ruas`, name]}
                   contentStyle={{ backgroundColor: '#0f172a', borderRadius: '8px', color: '#fff', fontSize: '11px' }}
                 />
               </PieChart>
@@ -319,13 +315,13 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
           </div>
 
           <div className="space-y-1.5 pt-2 border-t border-slate-100 text-xs">
-            {materialsPieData.map(item => (
+            {teamDistributionPieData.map(item => (
               <div key={item.name} className="flex items-center justify-between text-[11px]">
                 <span className="flex items-center gap-1.5 text-slate-600">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                   {item.name}:
                 </span>
-                <strong className="font-mono text-slate-900">{item.value.toLocaleString('pt-BR')}</strong>
+                <strong className="font-mono text-slate-900">{item.value} ruas</strong>
               </div>
             ))}
           </div>
@@ -355,8 +351,7 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
                 <th className="py-2.5 px-2 text-center">Ruas</th>
                 <th className="py-2.5 px-2 text-center text-purple-700">Pessoas Abordadas</th>
                 <th className="py-2.5 px-2 text-center text-emerald-700">Comércios</th>
-                <th className="py-2.5 px-2 text-center text-blue-700">Santinhos</th>
-                <th className="py-2.5 px-2 text-center">Total Materiais</th>
+                <th className="py-2.5 px-2 text-center text-blue-700">Fotos Anexadas</th>
                 <th className="py-2.5 px-3 text-center">Progresso da Meta</th>
               </tr>
             </thead>
@@ -372,8 +367,7 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
                   <td className="py-2 px-2 text-center font-bold text-slate-900 font-mono">{d.streetsCount}</td>
                   <td className="py-2 px-2 text-center font-bold text-purple-800 font-mono">{d.abordagens}</td>
                   <td className="py-2 px-2 text-center font-bold text-emerald-800 font-mono">{d.comercios}</td>
-                  <td className="py-2 px-2 text-center font-bold text-blue-800 font-mono">{d.santinhos.toLocaleString('pt-BR')}</td>
-                  <td className="py-2 px-2 text-center font-bold text-slate-900 font-mono">{d.totalMat.toLocaleString('pt-BR')}</td>
+                  <td className="py-2 px-2 text-center font-bold text-blue-800 font-mono">{d.photosCount || 0}</td>
                   <td className="py-2 px-3 text-center">
                     <div className="flex items-center gap-1.5 justify-center">
                       <div className="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden">
