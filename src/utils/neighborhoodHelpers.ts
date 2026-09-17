@@ -74,16 +74,7 @@ export function getAllPhotosForCheckIn(chk: StreetCheckIn): string[] {
     }
   } catch {}
 
-  // Se após filtros não sobrou nenhuma (ou eram fotos unsplash padrão), verifica se tem alguma foto mesmo com unsplash
-  if (photos.length === 0 && Array.isArray(chk.photos)) {
-    chk.photos.forEach(p => {
-      if (typeof p === 'string' && p.trim() && p.trim() !== '[vault_photo]' && !seen.has(p.trim())) {
-        seen.add(p.trim());
-        photos.push(p.trim());
-      }
-    });
-  }
-
+  // Retorna apenas fotos que foram feitas upload (nunca fotos genéricas ou unsplash)
   return photos;
 }
 
