@@ -219,6 +219,7 @@ export default function App() {
             currentUser={currentUser}
             militants={militants}
             neighborhoods={neighborhoods}
+            teams={teams}
             isOffline={isOffline}
             onCheckInCreated={reloadData}
           />

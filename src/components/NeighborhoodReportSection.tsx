@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ResponsiveContainer,
   PieChart,
@@ -6,7 +6,8 @@ import {
   Cell,
   Tooltip as RechartsTooltip
 } from 'recharts';
-import { Neighborhood, StreetCheckIn, Militant, Team } from '../types';
+import { Neighborhood, StreetCheckIn, Militant, Team, BairroAction } from '../types';
+import { StorageService } from '../services/storageService';
 import {
   getQualifyingNeighborhoods,
   doesNeighborhoodQualify,
@@ -23,6 +24,7 @@ import {
 } from './UnifiedNeighborhoodAudit';
 import { GeneralReportDashboard } from './GeneralReportDashboard';
 import { StreetAuditRowWithGallery } from './StreetAuditRowWithGallery';
+import { NeighborhoodActionsReportCard } from './NeighborhoodActionsReportCard';
 import {
   Building2,
   Compass,
@@ -57,6 +59,18 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
 }) => {
   const [internalBairroId, setInternalBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
   const selectedBairroId = externalBairroId || internalBairroId;
+
+  const [allBairroActions, setAllBairroActions] = useState<BairroAction[]>(() => StorageService.getBairroActions());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setAllBairroActions(StorageService.getBairroActions());
+    };
+    window.addEventListener('militancia_data_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('militancia_data_updated', handleUpdate);
+    };
+  }, []);
 
   const handleSelectBairro = (newId: string) => {
     setInternalBairroId(newId);
@@ -425,6 +439,14 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                         teams
                       );
 
+                      const bActions = allBairroActions.filter(a => {
+                        const aId = (a.neighborhoodId || '').toLowerCase().trim();
+                        const aName = (a.neighborhoodName || '').toLowerCase().trim();
+                        const cleanId = (bairro.id || '').toLowerCase().trim();
+                        const cleanName = (bairro.name || '').toLowerCase().trim();
+                        return aId === cleanId || aName === cleanName || aId.includes(cleanId) || cleanId.includes(aId);
+                      });
+
                       return (
                         <div className="space-y-6">
                           {/* 1. MAPA DO BAIRRO */}
@@ -437,7 +459,14 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                             height="380px"
                           />
 
-                          {/* 2. DASHBOARD GERAL CONSOLIDADO PÓS-MAPAS */}
+                          {/* 2. AÇÕES NO BAIRRO & GALERIA DE FOTOS */}
+                          <NeighborhoodActionsReportCard
+                            bairro={bairro}
+                            actions={bActions}
+                            onZoomPhoto={onZoomPhoto}
+                          />
+
+                          {/* 3. DASHBOARD GERAL CONSOLIDADO PÓS-MAPAS */}
                           <GeneralReportDashboard
                             checkIns={nCheckIns}
                             militants={militants}
@@ -613,7 +642,26 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             </div>
           </div>
 
-          {/* 2. DASHBOARD GERAL CONSOLIDADO PÓS-MAPAS */}
+          {/* 2. AÇÕES NO BAIRRO & GALERIA DE FOTOS */}
+          {(() => {
+            const singleBairroActions = allBairroActions.filter(a => {
+              const aId = (a.neighborhoodId || '').toLowerCase().trim();
+              const aName = (a.neighborhoodName || '').toLowerCase().trim();
+              const cleanId = (currentBairro.id || '').toLowerCase().trim();
+              const cleanName = (currentBairro.name || '').toLowerCase().trim();
+              return aId === cleanId || aName === cleanName || aId.includes(cleanId) || cleanId.includes(aId);
+            });
+
+            return (
+              <NeighborhoodActionsReportCard
+                bairro={currentBairro}
+                actions={singleBairroActions}
+                onZoomPhoto={onZoomPhoto}
+              />
+            );
+          })()}
+
+          {/* 3. DASHBOARD GERAL CONSOLIDADO PÓS-MAPAS */}
           <GeneralReportDashboard
             checkIns={bairroCheckIns}
             militants={militants}

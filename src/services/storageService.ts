@@ -18,7 +18,8 @@ import {
   CheckInSyncResult,
   HostingerConnectionStatus,
   DatabaseBackupPackage,
-  DatabaseBackupMetadata
+  DatabaseBackupMetadata,
+  BairroAction
 } from '../types';
 import {
   INITIAL_NEIGHBORHOODS,
@@ -35,6 +36,7 @@ import {
   INITIAL_ADMINS,
   INITIAL_PAYROLLS
 } from '../data/saoJoseData';
+import { INITIAL_BAIRRO_ACTIONS } from '../data/initialBairroActions';
 import { isCoordinateInsideSaoJose, resolveExactStreetCoordinates } from '../utils/saoJoseStreetsGeo';
 import { vaultStorage, VaultSnapshot } from '../utils/vaultStorage';
 
@@ -56,7 +58,8 @@ const STORAGE_KEYS = {
   CALENDAR: 'militancia_calendar_v1',
   HOSTINGER_CONFIG: 'militancia_hostinger_cfg_v1',
   PAYROLLS: 'militancia_payrolls_v1',
-  ADMINS: 'militancia_admins_v1'
+  ADMINS: 'militancia_admins_v1',
+  BAIRRO_ACTIONS: 'militancia_bairro_actions_v1'
 };
 
 /**
@@ -1610,6 +1613,94 @@ export class StorageService {
       `Rua/Check-in ${target?.streetName || idStr} (${target?.neighborhoodName || 'São José'}) registrado por ${target?.militantName || 'Militante'} foi excluído definitivamente pelo coordenador.`
     );
 
+    return true;
+  }
+
+  // ==========================================
+  // AÇÕES NO BAIRRO (CAMPANHA TERRITORIAL)
+  // ==========================================
+
+  static getBairroActions(): BairroAction[] {
+    const fromLocal = this.get<BairroAction[]>(STORAGE_KEYS.BAIRRO_ACTIONS, INITIAL_BAIRRO_ACTIONS);
+    if (!Array.isArray(fromLocal) || fromLocal.length === 0) {
+      this.safeLocalStorageSet(STORAGE_KEYS.BAIRRO_ACTIONS, INITIAL_BAIRRO_ACTIONS);
+      return INITIAL_BAIRRO_ACTIONS;
+    }
+    return fromLocal;
+  }
+
+  static getBairroActionsByNeighborhood(neighborhoodId: string): BairroAction[] {
+    const all = this.getBairroActions();
+    const clean = (neighborhoodId || '').toLowerCase().trim();
+    return all.filter(a => {
+      const aId = (a.neighborhoodId || '').toLowerCase().trim();
+      const aName = (a.neighborhoodName || '').toLowerCase().trim();
+      return aId === clean || aName === clean || clean.includes(aId) || aId.includes(clean);
+    });
+  }
+
+  static saveBairroAction(action: BairroAction): BairroAction {
+    const all = this.getBairroActions();
+    const index = all.findIndex(a => a.id === action.id);
+    let updated: BairroAction[];
+    if (index >= 0) {
+      updated = [...all];
+      updated[index] = action;
+    } else {
+      updated = [action, ...all];
+    }
+
+    this.set(STORAGE_KEYS.BAIRRO_ACTIONS, updated, true);
+    this.safeLocalStorageSet('militancia_bairro_actions_v1', updated);
+
+    if (typeof window !== 'undefined') {
+      try {
+        vaultStorage.setItem(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
+      } catch {}
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
+
+    const user = this.getCurrentUser();
+    this.logAudit(
+      user,
+      'ACAO_NO_BAIRRO_REGISTRADA',
+      'CHECKIN_RUA',
+      `Nova Ação no Bairro (${action.actionType}) realizada em ${action.locationName} (${action.neighborhoodName}) por ${
+        action.scope === 'individual'
+          ? action.militantName || 'Militante'
+          : action.scope === 'grupo'
+          ? 'Grupo (' + (action.militantNames?.join(', ') || 'Militantes') + ')'
+          : action.teamName || 'Toda a Equipe'
+      }.`
+    );
+
+    return action;
+  }
+
+  static deleteBairroAction(actionId: string): boolean {
+    const all = this.getBairroActions();
+    const target = all.find(a => a.id === actionId);
+    const updated = all.filter(a => a.id !== actionId);
+
+    this.set(STORAGE_KEYS.BAIRRO_ACTIONS, updated, true);
+    this.safeLocalStorageSet('militancia_bairro_actions_v1', updated);
+
+    if (typeof window !== 'undefined') {
+      try {
+        vaultStorage.setItem(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
+      } catch {}
+      window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+    }
+
+    if (target) {
+      const user = this.getCurrentUser();
+      this.logAudit(
+        user,
+        'ACAO_NO_BAIRRO_EXCLUIDA',
+        'CHECKIN_RUA',
+        `Ação "${target.title || target.locationName}" no bairro ${target.neighborhoodName} foi excluída.`
+      );
+    }
     return true;
   }
 

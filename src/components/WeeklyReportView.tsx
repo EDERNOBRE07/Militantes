@@ -19,11 +19,13 @@ import {
   Militant,
   Team,
   StreetCheckIn,
-  Neighborhood
+  Neighborhood,
+  BairroAction
 } from '../types';
 import { formatDateTimeBR } from '../utils/formatters';
 import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
 import { NeighborhoodReportSection } from './NeighborhoodReportSection';
+import { BairroActionsView } from './BairroActionsView';
 import { groupCheckInsByMilitant } from './MilitantAuditSection';
 import { StorageService } from '../services/storageService';
 import { EditStreetModal } from './EditStreetModal';
@@ -92,7 +94,19 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
   const [selectedTeamId, setSelectedTeamId] = useState<string>('todos');
   const [selectedWeek, setSelectedWeek] = useState<string>('todas');
   const [selectedPhotoZoom, setSelectedPhotoZoom] = useState<string | null>(null);
-  const [viewGrouping, setViewGrouping] = useState<'por_militante' | 'tabela_geral' | 'tabela_produtividade' | 'por_bairro'>('por_militante');
+  const [viewGrouping, setViewGrouping] = useState<'por_militante' | 'tabela_geral' | 'tabela_produtividade' | 'por_bairro' | 'acoes_bairro'>('por_militante');
+  const [bairroActionsCount, setBairroActionsCount] = useState<number>(() => StorageService.getBairroActions().length);
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      setBairroActionsCount(StorageService.getBairroActions().length);
+    };
+    window.addEventListener('militancia_data_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('militancia_data_updated', handleUpdate);
+    };
+  }, []);
+
   const [selectedBairroId, setSelectedBairroId] = useState<string>(neighborhoods[0]?.id || 'kobrasol');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
@@ -373,6 +387,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         return `Relatório Oficial de Produtividade & Metas de Campo`;
       case 'tabela_geral':
         return `Relatório Consolidado Compilado Geral de Todos os Relatórios`;
+      case 'acoes_bairro':
+        return `Relatório Especial de Ações no Bairro (Praças, Escolas, Mercados e Eventos)`;
       default:
         return `Relatório Semanal de Desempenho & Auditoria de Campo`;
     }
@@ -391,6 +407,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         return `Ranking consolidado de rendimento por equipe, controle de metas semanais e estimativa de folha de diárias a pagar.`;
       case 'tabela_geral':
         return `Compilado integral e consolidado de toda a campanha: Resumo Executivo, Produtividade, Metas, Auditoria Territorial por Bairros e Tabela Geral de Ruas.`;
+      case 'acoes_bairro':
+        return `Registro minucioso de ações no território: eventos em praças, escolas, feiras, caminhadas, comícios e supermercados com fotos e georreferenciamento.`;
       default:
         return `Consolidado com gráficos de produtividade, tabela de metas, ruas percorridas, comprovantes fotográficos e assinatura oficial.`;
     }
@@ -409,6 +427,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         return `Exportar PDF (Tabela de Produtividade)`;
       case 'tabela_geral':
         return `Exportar PDF (Compilado Geral Completo)`;
+      case 'acoes_bairro':
+        return `Exportar PDF (Ações no Bairro)`;
       default:
         return `Exportar PDF`;
     }
@@ -1884,6 +1904,81 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               }
             }
           }
+
+          // REGISTRO DE AÇÕES NO BAIRRO (PRAÇAS, ESCOLAS, SUPERMERCADOS, BANDEIRAÇOS)
+          const bActions = StorageService.getBairroActionsByNeighborhood(bairro.id);
+          if (bActions.length > 0) {
+            setExportFeedback(`Exportando Ações no Bairro ${bairro.name} (${bActions.length} ações)...`);
+            doc.addPage('a4', 'landscape');
+            noHeaderFooterPages.add(doc.getNumberOfPages());
+
+            doc.setFillColor(30, 58, 138); // Blue 900
+            doc.roundedRect(10, 8, 277, 10, 1.5, 1.5, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(255, 255, 255);
+            doc.text(`AÇÕES NO BAIRRO: PRAÇAS, ESCOLAS, EVENTOS E COMÉRCIOS • ${bairro.name.toUpperCase()} (${bActions.length} ${bActions.length === 1 ? 'AÇÃO' : 'AÇÕES'})`, 15, 14.5);
+
+            const actionRows = bActions.map((a, i) => [
+              `#${i + 1}`,
+              a.locationName,
+              a.actionType.replace('_', ' ').toUpperCase(),
+              a.scope === 'individual' ? `Individual (${a.militantName || 'Militante'})` : a.scope === 'grupo' ? `Grupo (${a.militantNames?.join(', ') || ''})` : (a.teamName || 'Toda Equipe'),
+              a.timestamp,
+              a.hasGps && a.latitude ? `${a.latitude.toFixed(4)}, ${a.longitude?.toFixed(4)}` : 'Presencial',
+              a.estimatedPeople ? `~${a.estimatedPeople}` : '-',
+              `${a.photos?.length || 0} fotos`
+            ]);
+
+            autoTable(doc, {
+              head: [['#', 'Local da Ação', 'Tipo de Ação', 'Formato / Participantes', 'Data / Hora', 'Geolocalização', 'Público', 'Fotos']],
+              body: actionRows,
+              startY: 21,
+              margin: { left: 10, right: 10 },
+              theme: 'grid',
+              headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+              styles: { fontSize: 7.5, cellPadding: 2 }
+            });
+
+            const actPhotos: { photo: string; place: string }[] = [];
+            bActions.forEach(a => {
+              (a.photos || []).forEach(p => {
+                actPhotos.push({ photo: p, place: a.locationName });
+              });
+            });
+
+            if (actPhotos.length > 0) {
+              const lastY = (doc as any).lastAutoTable ? (doc as any).lastAutoTable.finalY + 6 : 75;
+              if (lastY < 135) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8.5);
+                doc.setTextColor(30, 41, 59);
+                doc.text(`COMPROVANTES FOTOGRÁFICOS DAS AÇÕES EM ${bairro.name.toUpperCase()}`, 10, lastY);
+
+                const maxP = Math.min(actPhotos.length, 5);
+                const pW = 52;
+                const pH = 35;
+                const pY = lastY + 3;
+
+                for (let pi = 0; pi < maxP; pi++) {
+                  const item = actPhotos[pi];
+                  const pX = 10 + pi * (pW + 4);
+                  try {
+                    const b64 = await loadBase64Image(item.photo);
+                    if (b64) {
+                      doc.addImage(b64, 'JPEG', pX, pY, pW, pH);
+                    }
+                  } catch {}
+                  doc.setFillColor(15, 23, 42);
+                  doc.roundedRect(pX, pY + pH - 5.5, pW, 5.5, 0.5, 0.5, 'F');
+                  doc.setFont('helvetica', 'bold');
+                  doc.setFontSize(6);
+                  doc.setTextColor(255, 255, 255);
+                  doc.text(item.place.substring(0, 24), pX + 2, pY + pH - 1.8);
+                }
+              }
+            }
+          }
         }
 
         // Global pagination pass for All Pages (apenas páginas sem noHeaderFooterPages)
@@ -2776,6 +2871,15 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               >
                 <span>🗺️</span> Por Região & Mapas
               </button>
+              <button
+                type="button"
+                onClick={() => setViewGrouping('acoes_bairro')}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                  viewGrouping === 'acoes_bairro' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>✨</span> Ações no Bairro ({bairroActionsCount})
+              </button>
             </div>
 
             <button
@@ -3417,6 +3521,33 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
               onSelectBairro={(bId) => setSelectedBairroId(bId)}
               onZoomPhoto={(p) => setSelectedPhotoZoom(p)}
               onEditStreet={(chk) => setEditingCheckIn(chk)}
+            />
+          </div>
+        )}
+
+        {/* SECTION: AÇÕES NO BAIRRO (PRAÇAS, ESCOLAS, MERCADOS, BANDEIRAÇOS, ETC.) */}
+        {viewGrouping === 'acoes_bairro' && (
+          <div className="pt-1">
+            <BairroActionsView
+              currentUser={{
+                id: 'admin-coord',
+                name: 'Coordenação Geral de Campanha',
+                email: 'coordenacao@campanhasj.com.br',
+                role: 'admin',
+                avatar: '',
+                phone: '',
+                matricula: 'COORD-01',
+                lgpdConsent: true,
+                lgpdConsentDate: ''
+              }}
+              neighborhoods={neighborhoods}
+              militants={militants}
+              teams={teams}
+              onActionCreated={() => {
+                if (onCheckInUpdated) onCheckInUpdated();
+                setBairroActionsCount(StorageService.getBairroActions().length);
+              }}
+              onZoomPhoto={(p) => setSelectedPhotoZoom(p)}
             />
           </div>
         )}

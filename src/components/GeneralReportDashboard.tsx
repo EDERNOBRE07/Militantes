@@ -12,7 +12,8 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { StreetCheckIn, Militant, Team, Neighborhood } from '../types';
+import { StreetCheckIn, Militant, Team, Neighborhood, BairroAction } from '../types';
+import { StorageService } from '../services/storageService';
 import {
   BarChart3,
   Users,
@@ -24,7 +25,16 @@ import {
   Award,
   Sparkles,
   Camera,
-  Layers
+  Layers,
+  GraduationCap,
+  ShoppingBag,
+  Navigation,
+  Clock,
+  ExternalLink,
+  Eye,
+  User as UserIcon,
+  Flag,
+  X
 } from 'lucide-react';
 
 interface GeneralReportDashboardProps {
@@ -35,6 +45,7 @@ interface GeneralReportDashboardProps {
   productivityData?: any[];
   title?: string;
   subtitle?: string;
+  onZoomPhoto?: (photo: string) => void;
 }
 
 export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
@@ -44,8 +55,69 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
   neighborhoods,
   productivityData: externalProductivityData,
   title = "Dashboard Geral Consolidado pós-Mapeamento",
-  subtitle = "Visão executiva agregada • Pessoas abordadas, ruas percorridas e auditoria de campo"
+  subtitle = "Visão executiva agregada • Pessoas abordadas, ruas percorridas e auditoria de campo",
+  onZoomPhoto
 }) => {
+  const [localZoomPhoto, setLocalZoomPhoto] = React.useState<string | null>(null);
+
+  const handleZoom = (photo: string) => {
+    if (onZoomPhoto) {
+      onZoomPhoto(photo);
+    } else {
+      setLocalZoomPhoto(photo);
+    }
+  };
+
+  // Carrega e agrupa as Ações no Bairro por Bairro participante
+  const actionsByNeighborhood = useMemo(() => {
+    const allActions = StorageService.getBairroActions();
+    
+    // Se o dashboard for de um único bairro (ex: dentro de um bairro isolado), filtra por aquele bairro
+    const uniqueBairroIdsInCheckIns = Array.from(new Set(checkIns.map(c => c.neighborhoodId)));
+    const isSingleBairro = uniqueBairroIdsInCheckIns.length === 1 && uniqueBairroIdsInCheckIns[0];
+
+    const targetActions = isSingleBairro
+      ? allActions.filter(a => {
+          const aId = (a.neighborhoodId || '').toLowerCase().trim();
+          const singleId = (uniqueBairroIdsInCheckIns[0] || '').toLowerCase().trim();
+          return aId === singleId || aId.includes(singleId) || singleId.includes(aId);
+        })
+      : allActions;
+
+    // Agrupa por bairro onde houver ocorrência de ações
+    const groups: { [key: string]: { bairro: Neighborhood; actions: BairroAction[] } } = {};
+    
+    targetActions.forEach(act => {
+      const bKey = (act.neighborhoodId || act.neighborhoodName || 'geral').toLowerCase().trim();
+      if (!groups[bKey]) {
+        const found = neighborhoods.find(n => 
+          n.id.toLowerCase() === bKey || 
+          n.name.toLowerCase() === (act.neighborhoodName || '').toLowerCase()
+        );
+        const bObj: Neighborhood = found || {
+          id: act.neighborhoodId || bKey,
+          name: act.neighborhoodName || 'São José',
+          zone: 'São José',
+          population: 0,
+          households: 0,
+          votersEstimated: 0,
+          totalStreets: 0,
+          completedStreets: 0,
+          lat: act.latitude || -27.5958,
+          lng: act.longitude || -48.6185,
+          polygon: [],
+          priority: 'Média',
+          targetMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 },
+          deliveredMaterials: { santinhos: 0, adesivos: 0, adesivo_bola: 0, adesivo_parachoque: 0, colinhas: 0 }
+        };
+        groups[bKey] = { bairro: bObj, actions: [] };
+      }
+      groups[bKey].actions.push(act);
+    });
+
+    return Object.values(groups);
+  }, [checkIns, neighborhoods]);
+
   // Totais Gerais
   const totalRuas = checkIns.length;
   const totalAbordagens = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
@@ -393,6 +465,197 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
           </table>
         </div>
       </div>
+
+      {/* 4. AÇÕES NOS BAIRROS REGISTRADAS POR LOCALIDADE (CONFORME REQUISITO DO USUÁRIO) */}
+      {actionsByNeighborhood.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs space-y-0">
+          <div className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                  Ações no Bairro Registradas por Localidade
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 font-mono">
+                    {actionsByNeighborhood.reduce((acc, g) => acc + g.actions.length, 0)} Ações Totais
+                  </span>
+                </h4>
+                <p className="text-slate-300 text-xs mt-0.5">
+                  Eventos em praças, escolas, supermercados, feiras, caminhadas e comícios nos bairros de São José
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-emerald-300 font-bold border border-white/10">
+                📷 {actionsByNeighborhood.reduce((acc, g) => acc + g.actions.reduce((a, act) => a + (act.photos?.length || 0), 0), 0)} fotos
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-purple-300 font-bold border border-white/10">
+                👥 ~{actionsByNeighborhood.reduce((acc, g) => acc + g.actions.reduce((a, act) => a + (act.estimatedPeople || 0), 0), 0).toLocaleString('pt-BR')} pessoas
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 space-y-6">
+            {actionsByNeighborhood.map((group, gIdx) => (
+              <div
+                key={gIdx}
+                className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-3.5 shadow-2xs"
+              >
+                {/* Bairro Sub-Header */}
+                <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-blue-600" />
+                    <strong className="text-sm font-bold text-slate-900">
+                      Bairro {group.bairro.name}
+                    </strong>
+                    <span className="text-[11px] text-slate-500 font-medium">({group.bairro.zone})</span>
+                  </div>
+
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                    {group.actions.length} {group.actions.length === 1 ? 'Ação Registrada' : 'Ações Registradas'}
+                  </span>
+                </div>
+
+                {/* Grid of Actions in this neighborhood */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  {group.actions.map(action => (
+                    <div
+                      key={action.id}
+                      className="rounded-xl border border-slate-200 bg-white p-3.5 flex flex-col justify-between space-y-2.5 shadow-2xs"
+                    >
+                      <div>
+                        {/* Scope & Type Badges */}
+                        <div className="flex items-center justify-between gap-1.5 mb-1.5 flex-wrap">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            {action.actionType.replace('_', ' ').toUpperCase()}
+                          </span>
+
+                          {action.scope === 'individual' && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                              <UserIcon className="w-3 h-3 text-purple-600" />
+                              Individual ({action.militantName || 'Militante'})
+                            </span>
+                          )}
+                          {action.scope === 'grupo' && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                              <Users className="w-3 h-3 text-amber-600" />
+                              Grupo ({action.militantNames?.length || 'Vários'} militantes)
+                            </span>
+                          )}
+                          {action.scope === 'toda_equipe' && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                              <Flag className="w-3 h-3 text-emerald-600" />
+                              {action.teamName || 'Toda a Equipe'}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title & Place */}
+                        <h5 className="font-bold text-xs sm:text-sm text-slate-900 leading-snug">
+                          {action.title || action.locationName}
+                        </h5>
+
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-700 font-medium">
+                          <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span>{action.locationName}</span>
+                        </div>
+
+                        {/* Timestamp & GPS */}
+                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-slate-500 flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            {action.timestamp}
+                          </span>
+
+                          {action.hasGps && action.latitude && action.longitude ? (
+                            <a
+                              href={`https://www.google.com/maps?q=${action.latitude},${action.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-blue-600 hover:underline font-mono"
+                            >
+                              {action.latitude.toFixed(4)}, {action.longitude.toFixed(4)}
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          ) : (
+                            <span className="text-slate-400">Sem GPS</span>
+                          )}
+
+                          {action.estimatedPeople && (
+                            <span className="font-semibold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">
+                              👥 ~{action.estimatedPeople} pessoas
+                            </span>
+                          )}
+                        </div>
+
+                        {action.observations && (
+                          <p className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
+                            "{action.observations}"
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Photo Gallery for action */}
+                      {action.photos && action.photos.length > 0 && (
+                        <div className="pt-2 border-t border-slate-100">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1 mb-1.5">
+                            <Camera className="w-3 h-3 text-blue-600" />
+                            Fotos ({action.photos.length})
+                          </span>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                            {action.photos.map((photo, pIdx) => (
+                              <div
+                                key={pIdx}
+                                onClick={() => handleZoom(photo)}
+                                className="relative aspect-4/3 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer group shadow-2xs hover:shadow-md transition"
+                              >
+                                <img
+                                  src={photo}
+                                  alt={`Foto ${pIdx + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Eye className="w-3.5 h-3.5 text-white drop-shadow" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Local Zoom Modal if no external modal handler passed */}
+      {localZoomPhoto && !onZoomPhoto && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-xs"
+          onClick={() => setLocalZoomPhoto(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+            <button
+              type="button"
+              onClick={() => setLocalZoomPhoto(null)}
+              className="absolute -top-10 right-0 text-white hover:text-slate-300 text-sm font-bold flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full cursor-pointer"
+            >
+              <X className="w-4 h-4" /> Fechar
+            </button>
+            <img
+              src={localZoomPhoto}
+              alt="Foto Ampliada"
+              className="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

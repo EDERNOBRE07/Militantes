@@ -4,12 +4,14 @@ import {
   Militant,
   User,
   StreetCheckIn,
-  MaterialCount
+  MaterialCount,
+  Team
 } from '../types';
 import { StorageService } from '../services/storageService';
 import { MilitantSummaryCard } from './MilitantSummaryCard';
 import { WhatsAppLocationInput } from './WhatsAppLocationInput';
 import { EditStreetModal } from './EditStreetModal';
+import { BairroActionsView } from './BairroActionsView';
 import { compressImageFile, compressBase64IfNeeded } from '../utils/imageCompressor';
 import {
   Camera,
@@ -61,6 +63,7 @@ interface FieldAppViewProps {
   currentUser: User;
   militants: Militant[];
   neighborhoods: Neighborhood[];
+  teams?: Team[];
   isOffline: boolean;
   onCheckInCreated: () => void;
 }
@@ -69,6 +72,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   currentUser,
   militants,
   neighborhoods,
+  teams = StorageService.getTeams(),
   isOffline,
   onCheckInCreated
 }) => {
@@ -76,16 +80,18 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
   const isCoordination = currentUser.role === 'admin' || currentUser.role === 'coordenador' || currentUser.role === 'lider';
 
   // Active Tab state
-  const [activeTab, setActiveTab] = useState<'dashboard_militantes' | 'novo_checkin' | 'meu_historico'>(
+  const [activeTab, setActiveTab] = useState<'dashboard_militantes' | 'novo_checkin' | 'acoes_bairro' | 'meu_historico'>(
     isCoordination ? 'dashboard_militantes' : 'novo_checkin'
   );
 
-  // Local check-ins state with real-time listener for instant re-renders
+  // Local check-ins and actions state with real-time listener for instant re-renders
   const [allCheckIns, setAllCheckIns] = useState<StreetCheckIn[]>(() => StorageService.getCheckIns());
+  const [bairroActionsCount, setBairroActionsCount] = useState<number>(() => StorageService.getBairroActions().length);
 
   useEffect(() => {
     const handleUpdate = () => {
       setAllCheckIns(StorageService.getCheckIns());
+      setBairroActionsCount(StorageService.getBairroActions().length);
     };
     window.addEventListener('militancia_data_updated', handleUpdate);
     return () => {
@@ -674,6 +680,20 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
           >
             <MapPin className="w-3.5 h-3.5" />
             {isCoordination ? 'Registrar Check-in' : 'Registrar Minha Rua'}
+          </button>
+
+          {/* Ações no Bairro (Praças, Escolas, Mercados, Bandeiraços, etc.) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('acoes_bairro')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === 'acoes_bairro'
+                ? 'bg-white text-blue-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            Ações no Bairro ({bairroActionsCount})
           </button>
 
           {/* Meu Histórico (Militant Only) */}
@@ -1399,6 +1419,24 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
           </form>
 
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB: AÇÕES NO BAIRRO (PRAÇAS, ESCOLAS, MERCADOS, BANDEIRAÇOS, ETC.)       */}
+      {/* ========================================================================= */}
+      {activeTab === 'acoes_bairro' && (
+        <BairroActionsView
+          currentUser={currentUser}
+          neighborhoods={neighborhoods}
+          militants={militants}
+          teams={teams}
+          isOffline={isOffline}
+          onActionCreated={() => {
+            onCheckInCreated();
+            setBairroActionsCount(StorageService.getBairroActions().length);
+          }}
+          onZoomPhoto={(photo) => setSelectedPhotoZoom(photo)}
+        />
       )}
 
       {/* ========================================================================= */}

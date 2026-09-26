@@ -131,6 +131,46 @@ export interface StreetCheckIn {
   synced?: boolean;
 }
 
+export type BairroActionScope = 'individual' | 'grupo' | 'toda_equipe';
+
+export interface BairroAction {
+  id: string;
+  neighborhoodId: string;
+  neighborhoodName: string;
+  locationType: 'praca' | 'escola' | 'mercado' | 'supermercado' | 'feira' | 'ponto_onibus' | 'estacao' | 'calcadao' | 'igreja' | 'posto_saude' | 'outro' | string;
+  locationName: string;
+  actionType: 'distribuicao_materiais' | 'abordagens' | 'caminhada' | 'bandeiraco' | 'comicio' | 'carreata' | 'panfletagem' | 'corpo_a_corpo' | 'outro' | string;
+  actionTypeCustom?: string;
+  title?: string;
+  scope: BairroActionScope;
+  militantId?: string;
+  militantName?: string;
+  militantIds?: string[];
+  militantNames?: string[];
+  teamId?: string;
+  teamName?: string;
+  hasGps: boolean;
+  latitude?: number;
+  longitude?: number;
+  accuracyMeters?: number;
+  address?: string;
+  timestamp: string;
+  photos: string[];
+  estimatedPeople?: number;
+  materialsDistributed?: {
+    santinhos?: number;
+    adesivos?: number;
+    adesivo_bola?: number;
+    panfletos?: number;
+    bandeiras?: number;
+  };
+  observations?: string;
+  status?: 'concluida' | 'em_andamento' | 'planejada';
+  createdBy?: string;
+  createdByName?: string;
+  createdAt: string;
+}
+
 export interface CampaignCalendarDay {
   id: string;
   date: string; // YYYY-MM-DD (e.g. '2026-08-26')
