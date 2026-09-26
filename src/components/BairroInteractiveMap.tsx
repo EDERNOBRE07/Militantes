@@ -1,16 +1,18 @@
-import React, { useEffect, useRef, useCallback } from 'react';
-import L from 'leaflet';
-import { Neighborhood, StreetCheckIn } from '../types';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
+import L from '../utils/leafletCluster';
+import { Neighborhood, StreetCheckIn, BairroAction } from '../types';
+import { StorageService } from '../services/storageService';
 import { formatDateTimeBR } from '../utils/formatters';
 import { getStreetRoadBedCoordinates } from '../utils/saoJoseStreetGeometries';
 import { OFFICIAL_SAO_JOSE_NEIGHBORHOODS } from '../data/officialSaoJoseNeighborhoods';
 import { getAllPhotosForCheckIn } from '../utils/neighborhoodHelpers';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Layers, Sparkles } from 'lucide-react';
 
 interface BairroInteractiveMapProps {
   mapId: string;
   bairro: Neighborhood;
   checkIns: StreetCheckIn[];
+  actions?: BairroAction[];
   pinMap?: Record<string, number>;
   isGeneralMap?: boolean;
   qualifyingNeighborhoods?: Neighborhood[];
@@ -22,6 +24,7 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
   mapId,
   bairro,
   checkIns,
+  actions,
   pinMap,
   isGeneralMap = false,
   qualifyingNeighborhoods = [],
@@ -33,6 +36,12 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const prevBairroIdRef = useRef<string | null>(null);
   const prevIsGeneralMapRef = useRef<boolean | null>(null);
+
+  // Controle de agrupamento de densidade com Leaflet MarkerCluster
+  const [useMarkerCluster, setUseMarkerCluster] = useState<boolean>(true);
+
+  // Ações do bairro (ou todas em mapa geral)
+  const bActions = actions || (isGeneralMap ? StorageService.getBairroActions() : StorageService.getBairroActionsByNeighborhood(bairro.id));
 
   // 1. Inicializa o mapa Leaflet UMA ÚNICA VEZ na montagem do contêiner
   useEffect(() => {
@@ -212,6 +221,47 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       }
     }
 
+    // Criação do grupo de agrupamento MarkerCluster para áreas densas
+    const clusterGroup = L.markerClusterGroup({
+      maxClusterRadius: 38,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      removeOutsideVisibleBounds: true,
+      animate: true,
+      iconCreateFunction: (cluster) => {
+        const childMarkers = cluster.getAllChildMarkers();
+        const count = cluster.getChildCount();
+        const hasActions = childMarkers.some(m => (m as any)._isAction);
+        const hasCheckins = childMarkers.some(m => !(m as any)._isAction);
+
+        let typeClass = 'cluster-small';
+        if (hasActions && !hasCheckins) {
+          typeClass = 'cluster-actions';
+        } else if (hasActions && hasCheckins) {
+          typeClass = 'cluster-mixed';
+        } else if (count >= 20) {
+          typeClass = 'cluster-large';
+        } else if (count >= 8) {
+          typeClass = 'cluster-medium';
+        }
+
+        const size = count >= 20 ? 44 : (count >= 8 ? 38 : 34);
+
+        return L.divIcon({
+          html: `
+            <div class="custom-cluster-badge ${typeClass}" style="width: ${size}px; height: ${size}px;">
+              <span class="cluster-count">${count}</span>
+              <span class="cluster-sub">${hasActions && !hasCheckins ? 'ações' : (hasActions ? 'itens' : 'ruas')}</span>
+            </div>
+          `,
+          className: 'custom-leaflet-cluster-wrap',
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2]
+        });
+      }
+    });
+
     // Desenha as ruas sinalizadas e pintadas em vermelho brilhante sobre o leito viário (100% de todas as ruas sinalizadas)
     checkIns.forEach((chk, index) => {
       const streetCoords = getStreetRoadBedCoordinates(
@@ -274,11 +324,65 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
         });
 
         const marker = L.marker([chk.latitude, chk.longitude], { icon: pinIcon });
+        (marker as any)._isAction = false;
         marker.bindPopup(popupContent, { maxWidth: 280 });
         marker.bindTooltip(`<strong>#${pinNumber}</strong> ${chk.streetName}`, { sticky: true, className: 'text-xs' });
-        layerGroup.addLayer(marker);
+
+        if (useMarkerCluster) {
+          clusterGroup.addLayer(marker);
+        } else {
+          layerGroup.addLayer(marker);
+        }
       }
     });
+
+    // Renderiza ações do bairro no mapa (praças, feiras, caminhadas)
+    bActions.forEach((act) => {
+      const actLat = act.latitude || (bairro.lat ? bairro.lat + (Math.sin(act.id.charCodeAt(0) || 1) * 0.003) : -27.5962);
+      const actLng = act.longitude || (bairro.lng ? bairro.lng + (Math.cos(act.id.charCodeAt(1) || 2) * 0.003) : -48.6190);
+
+      const actionIcon = L.divIcon({
+        className: 'custom-action-report-pin',
+        html: `
+          <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef); color: #ffffff; font-weight: 900; font-size: 11px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(99,102,241,0.5); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            ✨
+          </div>
+        `,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      });
+
+      const actionPopup = `
+        <div class="p-2.5 text-slate-800 space-y-1.5 max-w-[260px] font-sans">
+          <div class="flex items-center justify-between border-b border-indigo-100 pb-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
+            <span class="text-[10px] font-bold uppercase text-indigo-700">✨ Ação no Bairro</span>
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800">Concluída</span>
+          </div>
+          <h4 class="font-bold text-sm text-slate-900">${act.locationName || 'Mobilização Comunitária'}</h4>
+          <p class="text-xs text-slate-600">Bairro: <strong class="text-indigo-700">${act.neighborhoodName}</strong></p>
+          <div class="text-xs text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-200 space-y-0.5">
+            <p>👥 <strong>Pessoas estimadas:</strong> ${act.estimatedPeople || 0}</p>
+            ${act.materialsDistributed?.santinhos ? `<p>📦 <strong>Santinhos:</strong> ${act.materialsDistributed.santinhos}</p>` : ''}
+            ${act.address ? `<p class="truncate">📍 ${act.address}</p>` : ''}
+          </div>
+        </div>
+      `;
+
+      const actMarker = L.marker([actLat, actLng], { icon: actionIcon });
+      (actMarker as any)._isAction = true;
+      actMarker.bindPopup(actionPopup, { maxWidth: 280 });
+      actMarker.bindTooltip(`<strong>✨ ${act.locationName || act.neighborhoodName}</strong>`, { sticky: true, className: 'text-xs' });
+
+      if (useMarkerCluster) {
+        clusterGroup.addLayer(actMarker);
+      } else {
+        layerGroup.addLayer(actMarker);
+      }
+    });
+
+    if (useMarkerCluster) {
+      layerGroup.addLayer(clusterGroup);
+    }
 
     // REGRA DE OURO PARA ZOOM ESTÁVEL:
     // Apenas ajusta o enquadramento (fitBounds) se o bairro mudou, se o modo mudou ou na 1ª vez!
@@ -293,12 +397,12 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       prevIsGeneralMapRef.current = isGeneralMap;
       fitMapToBounds();
     }
-  }, [bairro.id, checkIns, pinMap, isGeneralMap, qualifyingNeighborhoods, fitMapToBounds]);
+  }, [bairro.id, checkIns, bActions, useMarkerCluster, pinMap, isGeneralMap, qualifyingNeighborhoods, fitMapToBounds]);
 
   return (
     <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 shadow-2xs bg-white">
       {title && (
-        <div className="bg-white px-3.5 py-2.5 border-b border-slate-200 flex items-center justify-between">
+        <div className="bg-white px-3.5 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" />
             <h4 className="font-bold text-xs text-slate-800 uppercase tracking-wide">
@@ -306,6 +410,21 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
             </h4>
           </div>
           <div className="flex items-center gap-2">
+            {/* Toggle Leaflet MarkerCluster */}
+            <button
+              type="button"
+              onClick={() => setUseMarkerCluster(!useMarkerCluster)}
+              title="Alternar Agrupamento Inteligente de Marcadores (Leaflet MarkerCluster)"
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold transition shadow-2xs cursor-pointer ${
+                useMarkerCluster
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300'
+              }`}
+            >
+              <Layers className={`w-3.5 h-3.5 ${useMarkerCluster ? 'text-amber-600' : 'text-slate-400'}`} />
+              <span>{useMarkerCluster ? 'Cluster Ativo' : 'Pins Individuais'}</span>
+            </button>
+
             <button
               onClick={fitMapToBounds}
               title="Centralizar mapa no bairro"
@@ -315,7 +434,7 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
               <span>Centralizar</span>
             </button>
             <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
-              {checkIns.length} ruas sinalizadas e pintadas
+              {checkIns.length} ruas sinalizadas
             </span>
           </div>
         </div>
@@ -326,21 +445,39 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
         style={{ height }}
         className="w-full z-0"
       />
-      {/* Botão flutuante de Centralização no canto superior direito do mapa (se não houver barra de título) */}
+      {/* Botões flutuantes no canto superior direito do mapa (se não houver barra de título) */}
       {!title && (
-        <button
-          onClick={fitMapToBounds}
-          title="Centralizar enquadramento no bairro"
-          className="absolute top-2.5 right-2.5 z-[1000] inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/95 hover:bg-white text-slate-800 border border-slate-200 shadow-md text-xs font-bold transition cursor-pointer hover:shadow-lg"
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
-          <span>Centralizar Bairro</span>
-        </button>
+        <div className="absolute top-2.5 right-2.5 z-[1000] flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setUseMarkerCluster(!useMarkerCluster)}
+            title="Alternar Agrupamento MarkerCluster"
+            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border shadow-md text-xs font-bold transition cursor-pointer ${
+              useMarkerCluster
+                ? 'bg-amber-50 text-amber-900 border-amber-300'
+                : 'bg-white/95 text-slate-700 border-slate-200'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-amber-600" />
+            <span>{useMarkerCluster ? 'Cluster' : 'Pins'}</span>
+          </button>
+          <button
+            onClick={fitMapToBounds}
+            title="Centralizar enquadramento no bairro"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/95 hover:bg-white text-slate-800 border border-slate-200 shadow-md text-xs font-bold transition cursor-pointer hover:shadow-lg"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+            <span>Centralizar</span>
+          </button>
+        </div>
       )}
       {/* Legenda de Mapa Sobreposta */}
-      <div className="absolute bottom-2.5 left-2.5 z-[1000] bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] shadow-sm text-slate-700 space-y-0.5 pointer-events-none">
+      <div className="absolute bottom-2.5 left-2.5 z-[1000] bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] shadow-sm text-slate-700 flex items-center gap-3 pointer-events-none">
         <div className="flex items-center gap-1.5 font-bold text-rose-700">
-          <span className="w-3 h-1 bg-red-600 rounded-sm"></span> Ruas Auditadas (Linha Vermelha)
+          <span className="w-3 h-1 bg-red-600 rounded-sm"></span> Ruas Auditadas
+        </div>
+        <div className="flex items-center gap-1.5 font-bold text-indigo-700">
+          <span className="w-2 h-2 rounded-full bg-indigo-600"></span> Ações ({bActions.length})
         </div>
       </div>
     </div>

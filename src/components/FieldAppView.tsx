@@ -137,6 +137,17 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
     accuracy: 4.2
   });
 
+  // Data & Horário do Registro de Rua (com suporte a inclusão retroativa)
+  const getTodayDateString = () => new Date().toISOString().substring(0, 10);
+  const getCurrentTimeString = () => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+
+  const [entryDate, setEntryDate] = useState<string>(getTodayDateString());
+  const [entryTime, setEntryTime] = useState<string>(getCurrentTimeString());
+  const [keepRetroactiveDate, setKeepRetroactiveDate] = useState<boolean>(false);
+
   // Material & Action Counters (Including Abordagens and Materiais no Comércio) - Initialized at 0
   const [materials, setMaterials] = useState<MaterialCount>({
     santinhos: 0,
@@ -477,6 +488,12 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       comercio: 0
     });
 
+    // Se o usuário não marcou para manter a data retroativa, restaura para a data/hora atual
+    if (!keepRetroactiveDate) {
+      setEntryDate(getTodayDateString());
+      setEntryTime(getCurrentTimeString());
+    }
+
     onCheckInCreated();
 
     setTimeout(() => {
@@ -518,6 +535,9 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       photos.map(p => compressBase64IfNeeded(p, 1080, 0.75))
     );
 
+    // Constrói o timestamp a partir da data e horário selecionados (com suporte a datas retroativas)
+    const formattedTimestamp = `${entryDate} ${entryTime || '12:00'}:00`;
+
     const newCheckIn: StreetCheckIn = {
       id: `chk-${Date.now()}-${Math.random().toString(36).substring(2, 7)}-${(activeMilitant.id || 'm').replace(/[^a-zA-Z0-9]/g, '')}`,
       militantId: activeMilitant.id,
@@ -527,7 +547,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       neighborhoodName: selectedNeighborhood.name,
       streetName: `${streetName.trim()} (nº ${houseNumberRange || 'Trecho Geral'})`,
       houseNumberRange: houseNumberRange || 'Trecho Geral',
-      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      timestamp: formattedTimestamp,
       latitude: gpsCoords.lat,
       longitude: gpsCoords.lng,
       accuracyMeters: gpsCoords.accuracy,
@@ -545,7 +565,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
     // se não for, validar o lançamento no banco de dados,
     // se houver duplicidade de lançamentos, emitir um alerta e pedir para confirmar o lançamento ou descarta."
     const candidateStreetClean = normalizeStreetForCheck(streetName);
-    const todayDatePrefix = newCheckIn.timestamp.substring(0, 10); // 'YYYY-MM-DD'
+    const candidateDatePrefix = entryDate; // Usa a data selecionada (seja retroativa ou tempo real)
 
     // Verifica nos check-ins existentes se já há registro desta rua no mesmo bairro
     const existingCheckInsForStreet = allCheckIns.filter(c => {
@@ -563,7 +583,7 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
       // Confere se a data é a mesma E se é o mesmo militante
       const duplicateMatch = existingCheckInsForStreet.find(c => {
         const cDatePrefix = (c.timestamp || '').substring(0, 10);
-        const isSameDate = cDatePrefix === todayDatePrefix;
+        const isSameDate = cDatePrefix === candidateDatePrefix;
         const isSameMilitant = c.militantId === activeMilitant.id ||
           (c.militantName && c.militantName.toLowerCase().trim() === activeMilitant.name.toLowerCase().trim());
 
@@ -1021,6 +1041,126 @@ export const FieldAppView: React.FC<FieldAppViewProps> = ({
                 onApplyLocation={handleApplyWhatsAppLocation}
               />
             )}
+
+            {/* Campo de Data & Horário do Registro (com suporte a inclusão de datas retroativas) */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  Data do Registro de Rua (Inclusão Retroativa ou Atual) *
+                </label>
+                
+                {/* Status da Data */}
+                {entryDate < getTodayDateString() ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                    <Clock className="w-3.5 h-3.5 text-amber-700" />
+                    Data Retroativa: {entryDate.split('-').reverse().join('/')}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Tempo Real (Hoje)
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Data da Distribuição / Atividade *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={entryDate}
+                    max={getTodayDateString()}
+                    onChange={(e) => setEntryDate(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    Horário da Execução
+                  </label>
+                  <input
+                    type="time"
+                    value={entryTime}
+                    onChange={(e) => setEntryTime(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 font-semibold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Atalhos Rápidos e Opção de Manter Data em Lote */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-200/80 text-xs">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-slate-500 font-medium">Atalhos:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEntryDate(getTodayDateString());
+                      setEntryTime(getCurrentTimeString());
+                    }}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border transition ${
+                      entryDate === getTodayDateString()
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-300'
+                    }`}
+                  >
+                    Hoje
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() - 1);
+                      setEntryDate(d.toISOString().substring(0, 10));
+                    }}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border transition ${
+                      (() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - 1);
+                        return entryDate === d.toISOString().substring(0, 10);
+                      })()
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-300'
+                    }`}
+                  >
+                    Ontem
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() - 2);
+                      setEntryDate(d.toISOString().substring(0, 10));
+                    }}
+                    className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border transition ${
+                      (() => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - 2);
+                        return entryDate === d.toISOString().substring(0, 10);
+                      })()
+                        ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
+                        : 'bg-white text-slate-700 hover:bg-slate-100 border-slate-300'
+                    }`}
+                  >
+                    Anteontem
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-1.5 cursor-pointer text-[11px] font-medium text-slate-700 select-none">
+                  <input
+                    type="checkbox"
+                    checked={keepRetroactiveDate}
+                    onChange={(e) => setKeepRetroactiveDate(e.target.checked)}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>Manter data para os próximos registros retroativos em lote</span>
+                </label>
+              </div>
+            </div>
 
             {/* Bairro & Trecho */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

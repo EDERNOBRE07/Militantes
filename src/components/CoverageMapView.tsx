@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import { Neighborhood, Militant, Van, StreetCheckIn } from '../types';
+import L from '../utils/leafletCluster';
+import { Neighborhood, Militant, Van, StreetCheckIn, BairroAction } from '../types';
 import { SAO_JOSE_CENTER } from '../data/saoJoseData';
 import { formatDateTimeBR } from '../utils/formatters';
 import { getCalibratedCheckInPosition, resolveExactStreetCoordinates } from '../utils/saoJoseStreetsGeo';
@@ -68,10 +68,23 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
   const [showVans, setShowVans] = useState<boolean>(true);
   const [showMilitants, setShowMilitants] = useState<boolean>(true);
   const [showCheckins, setShowCheckins] = useState<boolean>(true);
+  const [showBairroActions, setShowBairroActions] = useState<boolean>(true);
+  const [useMarkerCluster, setUseMarkerCluster] = useState<boolean>(true);
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [selectedBairroFilter, setSelectedBairroFilter] = useState<string>('todos');
   const prevSelectedFilterRef = useRef<string>(selectedBairroFilter);
   const [inspectedBairro, setInspectedBairro] = useState<Neighborhood | null>(null);
+
+  // Ações de Bairro em tempo real
+  const [bairroActions, setBairroActions] = useState<BairroAction[]>(() => StorageService.getBairroActions());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setBairroActions(StorageService.getBairroActions());
+    };
+    window.addEventListener('militancia_data_updated', handleUpdate);
+    return () => window.removeEventListener('militancia_data_updated', handleUpdate);
+  }, []);
 
   // Selected check-in for detailed drawer / full multi-photo view
   const [inspectedCheckIn, setInspectedCheckIn] = useState<StreetCheckIn | null>(null);
@@ -646,14 +659,53 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
     }
 
     // =========================================================================
-    // 4. RENDER PRECISE STREET PINS (Posicionado exatamente na Rua cadastrada)
+    // 4. RENDER PRECISE STREET PINS & ACTIONS WITH LEAFLET MARKERCLUSTER
     // =========================================================================
+    const clusterGroup = L.markerClusterGroup({
+      maxClusterRadius: 42,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      removeOutsideVisibleBounds: true,
+      animate: true,
+      iconCreateFunction: (cluster) => {
+        const childMarkers = cluster.getAllChildMarkers();
+        const count = cluster.getChildCount();
+        const hasActions = childMarkers.some(m => (m as any)._isAction);
+        const hasCheckins = childMarkers.some(m => !(m as any)._isAction);
+        
+        let typeClass = 'cluster-small';
+        if (hasActions && !hasCheckins) {
+          typeClass = 'cluster-actions';
+        } else if (hasActions && hasCheckins) {
+          typeClass = 'cluster-mixed';
+        } else if (count >= 25) {
+          typeClass = 'cluster-large';
+        } else if (count >= 10) {
+          typeClass = 'cluster-medium';
+        }
+
+        const size = count >= 30 ? 46 : (count >= 10 ? 40 : 36);
+
+        return L.divIcon({
+          html: `
+            <div class="custom-cluster-badge ${typeClass}" style="width: ${size}px; height: ${size}px;">
+              <span class="cluster-count">${count}</span>
+              <span class="cluster-sub">${hasActions && !hasCheckins ? 'ações' : (hasActions && hasCheckins ? 'itens' : 'ruas')}</span>
+            </div>
+          `,
+          className: 'custom-leaflet-cluster-wrap',
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2]
+        });
+      }
+    });
+
     if (showCheckins) {
       const activeCheckIns = selectedBairroFilter === 'todos'
         ? checkIns
         : checkIns.filter(chk => chk.neighborhoodId === selectedBairroFilter);
 
-      const drawnRoads = new Set<string>();
       activeCheckIns.forEach((chk) => {
         // Calibrate precise position on the registered street
         const pos = getCalibratedCheckInPosition(chk, neighborhoods);
@@ -836,6 +888,7 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
         }
 
         const marker = L.marker([pinLat, pinLng], { icon: streetPinIcon });
+        (marker as any)._isAction = false;
         marker.bindPopup(popupHtml, { maxWidth: 290 });
         marker.bindTooltip(`<b>Rua:</b> ${chk.streetName} (${chk.neighborhoodName})`, { sticky: true });
         
@@ -845,11 +898,79 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
           setActivePhotoIndex(0);
         });
 
-        layerGroup.addLayer(marker);
+        if (useMarkerCluster) {
+          clusterGroup.addLayer(marker);
+        } else {
+          layerGroup.addLayer(marker);
+        }
       });
     }
 
-  }, [neighborhoods, militants, vans, checkIns, layerMode, heatMetric, showVans, showMilitants, showCheckins, showLabels, selectedBairroFilter, onSelectNeighborhood]);
+    // =========================================================================
+    // 5. RENDER BAIRRO ACTIONS (Praças, Feiras, Caminhadas, etc.)
+    // =========================================================================
+    if (showBairroActions) {
+      const activeActions = selectedBairroFilter === 'todos'
+        ? bairroActions
+        : bairroActions.filter(a => a.neighborhoodId === selectedBairroFilter);
+
+      activeActions.forEach((act) => {
+        const actBairro = neighborhoods.find(n => n.id === act.neighborhoodId);
+        const lat = act.latitude || (actBairro ? actBairro.lat : -27.5962);
+        const lng = act.longitude || (actBairro ? actBairro.lng : -48.6190);
+
+        const actionIcon = L.divIcon({
+          className: 'custom-action-cluster-pin',
+          html: `
+            <div class="relative group cursor-pointer flex flex-col items-center w-8 h-[38px]">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-fuchsia-600 text-white shadow-xl ring-2 ring-white hover:scale-125 transition-all">
+                <span class="text-xs">✨</span>
+              </div>
+              <div class="w-1.5 h-2 bg-gradient-to-b from-purple-600 to-indigo-800 mx-auto -mt-0.5 rounded-b-full"></div>
+              <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-7 bg-slate-900/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap pointer-events-none shadow-md z-50">
+                ${act.locationName || 'Ação no Bairro'}
+              </div>
+            </div>
+          `,
+          iconSize: [32, 38],
+          iconAnchor: [16, 36]
+        });
+
+        const actionPopup = `
+          <div class="p-2.5 text-slate-800 space-y-1.5 max-w-[260px] font-sans">
+            <div class="flex items-center justify-between border-b border-indigo-100 pb-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
+              <span class="text-[10px] font-bold uppercase text-indigo-700">✨ Ação no Bairro</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800">Concluída</span>
+            </div>
+            <h4 class="font-bold text-sm text-slate-900">${act.locationName || 'Ação de Mobilização'}</h4>
+            <p class="text-xs text-slate-600">Bairro: <strong class="text-indigo-700">${act.neighborhoodName}</strong></p>
+            <div class="text-xs text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-200">
+              <p>👥 <strong>Pessoas estimadas:</strong> ${act.estimatedPeople || 0}</p>
+              ${act.materialsDistributed?.santinhos ? `<p>📦 <strong>Santinhos:</strong> ${act.materialsDistributed.santinhos}</p>` : ''}
+              ${act.address ? `<p class="truncate">📍 ${act.address}</p>` : ''}
+            </div>
+          </div>
+        `;
+
+        const actMarker = L.marker([lat, lng], { icon: actionIcon });
+        (actMarker as any)._isAction = true;
+        actMarker.bindPopup(actionPopup, { maxWidth: 280 });
+        actMarker.bindTooltip(`<b>Ação:</b> ${act.locationName || act.neighborhoodName}`, { sticky: true });
+
+        if (useMarkerCluster) {
+          clusterGroup.addLayer(actMarker);
+        } else {
+          layerGroup.addLayer(actMarker);
+        }
+      });
+    }
+
+    // Add marker cluster group to map layer group
+    if (useMarkerCluster) {
+      layerGroup.addLayer(clusterGroup);
+    }
+
+  }, [neighborhoods, militants, vans, checkIns, bairroActions, layerMode, heatMetric, showVans, showMilitants, showCheckins, showBairroActions, useMarkerCluster, showLabels, selectedBairroFilter, onSelectNeighborhood]);
 
   const zoomToSaoJose = () => {
     setSelectedBairroFilter('todos');
@@ -1077,6 +1198,34 @@ export const CoverageMapView: React.FC<CoverageMapViewProps> = ({
           >
             <MapPin className="w-3.5 h-3.5 text-rose-600" />
             <span className="hidden sm:inline">PINs de Ruas ({checkIns.length})</span>
+          </button>
+
+          {/* Leaflet MarkerCluster Toggle */}
+          <button
+            type="button"
+            onClick={() => setUseMarkerCluster(!useMarkerCluster)}
+            className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg font-medium transition ${
+              useMarkerCluster
+                ? 'bg-amber-50 text-amber-800 border border-amber-300 font-bold shadow-2xs'
+                : 'text-slate-500 hover:bg-slate-50 border border-transparent'
+            }`}
+            title="Agrupar múltiplos check-ins e ações em áreas densas com Leaflet MarkerCluster"
+          >
+            <Layers className={`w-3.5 h-3.5 ${useMarkerCluster ? 'text-amber-600' : 'text-slate-400'}`} />
+            <span>{useMarkerCluster ? 'Cluster Ativo' : 'Sem Agrupamento'}</span>
+          </button>
+
+          {/* Bairro Actions Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowBairroActions(!showBairroActions)}
+            className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg font-medium transition ${
+              showBairroActions ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'text-slate-500 hover:bg-slate-50'
+            }`}
+            title="Exibir Ações nos Bairros (Praças, Feiras, Caminhadas)"
+          >
+            <span className="text-xs">✨</span>
+            <span className="hidden sm:inline">Ações ({bairroActions.length})</span>
           </button>
 
           <button
