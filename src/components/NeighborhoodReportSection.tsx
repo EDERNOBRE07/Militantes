@@ -531,7 +531,7 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
                   </h4>
                 </div>
                 <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
-                  {bairroCheckIns.length} ruas sinalizadas
+                  {bairroCheckIns.length} ruas sinalizadas e pintadas
                 </span>
               </div>
 

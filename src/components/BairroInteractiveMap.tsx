@@ -212,73 +212,71 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
       }
     }
 
-    // Desenha as ruas sinalizadas e pintadas em vermelho brilhante sobre o leito viário (SOMENTE UMA VEZ POR RUA)
-    const drawnStreetLines = new Set<string>();
-    const seenMarkerCoords = new Map<string, number>();
+    // Desenha as ruas sinalizadas e pintadas em vermelho brilhante sobre o leito viário (100% de todas as ruas sinalizadas)
+    checkIns.forEach((chk, index) => {
+      const streetCoords = getStreetRoadBedCoordinates(
+        chk.id,
+        chk.streetName,
+        chk.latitude,
+        chk.longitude
+      );
 
-    checkIns.forEach(chk => {
-      const cleanStreetKey = (chk.streetName || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\(nº.*?\)/gi, '')
-        .replace(/\(.*?\)/g, '')
-        .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
-        .replace(/[^a-z0-9]/g, '')
-        .trim();
+      const glowLine = L.polyline(streetCoords, {
+        color: '#ef4444',
+        weight: 8,
+        opacity: 0.55,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
 
-      // Pinta o leito viário da rua em vermelho SOMENTE UMA VEZ
-      if (cleanStreetKey && !drawnStreetLines.has(cleanStreetKey)) {
-        drawnStreetLines.add(cleanStreetKey);
+      const coreLine = L.polyline(streetCoords, {
+        color: '#dc2626',
+        weight: 4.5,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });
 
-        const streetCoords = getStreetRoadBedCoordinates(
-          chk.id,
-          chk.streetName,
-          chk.latitude,
-          chk.longitude
-        );
+      const photos = getAllPhotosForCheckIn(chk);
+      const firstPhoto = photos.length > 0 ? photos[0] : null;
+      const pinNumber = (pinMap && pinMap[chk.id]) ? pinMap[chk.id] : (index + 1);
 
-        const glowLine = L.polyline(streetCoords, {
-          color: '#ef4444',
-          weight: 8,
-          opacity: 0.55,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-
-        const coreLine = L.polyline(streetCoords, {
-          color: '#dc2626',
-          weight: 4.5,
-          opacity: 0.95,
-          lineCap: 'round',
-          lineJoin: 'round'
-        });
-
-        const photos = getAllPhotosForCheckIn(chk);
-        const firstPhoto = photos.length > 0 ? photos[0] : null;
-
-        const popupContent = `
-          <div class="p-2.5 text-slate-800 space-y-2 max-w-[260px] font-sans">
-            <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
-              <span class="text-[10px] font-bold uppercase text-red-700">📍 ${chk.neighborhoodName || bairro.name}</span>
-              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Validado</span>
-            </div>
-            <h4 class="font-black text-sm text-slate-900 leading-tight">🛣️ ${chk.streetName}</h4>
-            ${firstPhoto ? `<img src="${firstPhoto}" class="w-full h-24 object-cover rounded-lg border border-slate-200 mt-1 shadow-2xs" />` : ''}
-            <div class="p-1.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-0.5">
-              <p><strong>Militante:</strong> ${chk.militantName}</p>
-              <p><strong>Data:</strong> ${formatDateTimeBR(chk.timestamp).split(' ')[0]}</p>
-              <p><strong>Abordagens:</strong> ${chk.materialsDelivered.abordagens || 0} pessoas</p>
-              <p class="text-[10px] text-blue-700 font-semibold">📷 ${photos.length} foto(s) anexada(s)</p>
-            </div>
+      const popupContent = `
+        <div class="p-2.5 text-slate-800 space-y-2 max-w-[260px] font-sans">
+          <div class="flex items-center justify-between border-b border-rose-100 pb-1.5 bg-gradient-to-r from-rose-50 to-red-50 -mx-2.5 -mt-2.5 p-2 rounded-t">
+            <span class="text-[10px] font-bold uppercase text-red-700">📍 #${pinNumber} • ${chk.neighborhoodName || bairro.name}</span>
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">✓ Validado</span>
           </div>
-        `;
+          <h4 class="font-black text-sm text-slate-900 leading-tight">🛣️ ${chk.streetName}</h4>
+          ${firstPhoto ? `<img src="${firstPhoto}" class="w-full h-24 object-cover rounded-lg border border-slate-200 mt-1 shadow-2xs" />` : ''}
+          <div class="p-1.5 rounded bg-slate-50 border border-slate-200 text-xs space-y-0.5">
+            <p><strong>Militante:</strong> ${chk.militantName}</p>
+            <p><strong>Data:</strong> ${formatDateTimeBR(chk.timestamp).split(' ')[0]}</p>
+            <p><strong>Abordagens:</strong> ${chk.materialsDelivered.abordagens || 0} pessoas</p>
+            <p class="text-[10px] text-blue-700 font-semibold">📷 ${photos.length} foto(s) anexada(s)</p>
+          </div>
+        </div>
+      `;
 
-        coreLine.bindPopup(popupContent, { maxWidth: 280 });
-        glowLine.bindPopup(popupContent, { maxWidth: 280 });
+      coreLine.bindPopup(popupContent, { maxWidth: 280 });
+      glowLine.bindPopup(popupContent, { maxWidth: 280 });
 
-        layerGroup.addLayer(glowLine);
-        layerGroup.addLayer(coreLine);
+      layerGroup.addLayer(glowLine);
+      layerGroup.addLayer(coreLine);
+
+      // Pino sequencial numerado no ponto exato do check-in
+      if (chk.latitude && chk.longitude) {
+        const pinIcon = L.divIcon({
+          className: 'custom-militancia-pin',
+          html: `<div style="background: linear-gradient(135deg, #ef4444, #b91c1c); color: #ffffff; font-weight: 900; font-size: 11px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ffffff; box-shadow: 0 2px 5px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont;">${pinNumber}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        const marker = L.marker([chk.latitude, chk.longitude], { icon: pinIcon });
+        marker.bindPopup(popupContent, { maxWidth: 280 });
+        marker.bindTooltip(`<strong>#${pinNumber}</strong> ${chk.streetName}`, { sticky: true, className: 'text-xs' });
+        layerGroup.addLayer(marker);
       }
     });
 
@@ -317,7 +315,7 @@ export const BairroInteractiveMap: React.FC<BairroInteractiveMapProps> = ({
               <span>Centralizar</span>
             </button>
             <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">
-              {checkIns.length} ruas sinalizadas
+              {checkIns.length} ruas sinalizadas e pintadas
             </span>
           </div>
         </div>

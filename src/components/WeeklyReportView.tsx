@@ -646,27 +646,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
       ctx.restore();
     }
 
-    // 1. Draw Registered Streets in Vibrant RED exactly on the road bed (sem tags de nomes de ruas, conforme solicitado)
-    // REGRA DO USUÁRIO: se houver 2 lançamentos da mesma rua, pintar de vermelho no mapa do bairro somente uma vez
-    const drawnStreetRoadBeds = new Set<string>();
+    // 1. Draw Registered Streets in Vibrant RED exactly on the road bed (100% das vias sinalizadas)
     bCheckIns.forEach(chk => {
-      const cleanStreetKey = (chk.streetName || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\(nº.*?\)/gi, '')
-        .replace(/\(.*?\)/g, '')
-        .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
-        .replace(/[^a-z0-9]/g, '')
-        .trim();
-
-      if (cleanStreetKey && drawnStreetRoadBeds.has(cleanStreetKey)) {
-        return; // Pinta no leito viário somente uma vez
-      }
-      if (cleanStreetKey) {
-        drawnStreetRoadBeds.add(cleanStreetKey);
-      }
-
       const roadBedCoords = getStreetRoadBedCoordinates(chk.id, chk.streetName, chk.latitude, chk.longitude);
       const points = roadBedCoords.map(([lat, lng]) => ({
         x: toX(lng, lat),
@@ -836,19 +817,7 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
         vCtx.restore();
       }
 
-      const drawnStreets = new Set<string>();
       bCheckIns.forEach(c => {
-        const sKey = (c.streetName || '')
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/\(nº.*?\)/gi, '')
-          .replace(/\(.*?\)/g, '')
-          .replace(/\b(rua|r\.|avenida|av\.|travessa|tv\.|alameda|al\.|rodovia|rod\.|servidao|serv\.)\b/gi, '')
-          .replace(/[^a-z0-9]/g, '')
-          .trim();
-        if (sKey && drawnStreets.has(sKey)) return;
-        if (sKey) drawnStreets.add(sKey);
         const roadPoints = getStreetRoadBedCoordinates(c.id, c.streetName, c.latitude, c.longitude);
         if (roadPoints && roadPoints.length >= 2) {
           vCtx.save();
