@@ -343,6 +343,7 @@ export class StorageService {
           [STORAGE_KEYS.NOTIFICATIONS]: this.getNotifications(),
           [STORAGE_KEYS.AUDIT_LOGS]: this.getAuditLogs(),
           [STORAGE_KEYS.ADMINS]: this.getAdmins(),
+          [STORAGE_KEYS.BAIRRO_ACTIONS]: this.getBairroActions(),
           militantes_data: this.getMilitants(),
           vans_data: this.getVans()
         }
@@ -464,7 +465,8 @@ export class StorageService {
           STORAGE_KEYS.PAYROLLS,
           STORAGE_KEYS.NOTIFICATIONS,
           STORAGE_KEYS.AUDIT_LOGS,
-          STORAGE_KEYS.ADMINS
+          STORAGE_KEYS.ADMINS,
+          STORAGE_KEYS.BAIRRO_ACTIONS
         ];
 
         for (const k of otherKeys) {
@@ -1642,16 +1644,39 @@ export class StorageService {
   static saveBairroAction(action: BairroAction): BairroAction {
     const all = this.getBairroActions();
     const index = all.findIndex(a => a.id === action.id);
+    const isEditing = index >= 0;
+
+    // Normaliza abordagens se houver participantes com contagem individual
+    let totalApproaches = action.totalApproaches || 0;
+    if (Array.isArray(action.militantParticipations) && action.militantParticipations.length > 0) {
+      totalApproaches = action.militantParticipations.reduce((sum, p) => sum + (Number(p.approachesCount) || 0), 0);
+    }
+
+    const normalizedAction: BairroAction = {
+      ...action,
+      totalApproaches,
+      materialsDistributed: {
+        ...(action.materialsDistributed || {}),
+        abordagens: totalApproaches || action.materialsDistributed?.abordagens || 0
+      },
+      updatedAt: new Date().toISOString()
+    };
+
     let updated: BairroAction[];
-    if (index >= 0) {
+    if (isEditing) {
       updated = [...all];
-      updated[index] = action;
+      updated[index] = normalizedAction;
     } else {
-      updated = [action, ...all];
+      updated = [normalizedAction, ...all];
     }
 
     this.set(STORAGE_KEYS.BAIRRO_ACTIONS, updated, true);
     this.safeLocalStorageSet('militancia_bairro_actions_v1', updated);
+
+    // Registra fotos no cache dedicado de alta resolução e no cofre
+    if (Array.isArray(normalizedAction.photos) && normalizedAction.photos.length > 0) {
+      this.photoVaultCache.set(String(normalizedAction.id), normalizedAction.photos);
+    }
 
     if (typeof window !== 'undefined') {
       try {
@@ -1660,21 +1685,18 @@ export class StorageService {
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));
     }
 
+    // Persiste e sincroniza imediatamente com servidor MySQL Hostinger e cofre
+    this.pushEntityToRemote(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
+
     const user = this.getCurrentUser();
     this.logAudit(
       user,
-      'ACAO_NO_BAIRRO_REGISTRADA',
+      isEditing ? 'ACAO_NO_BAIRRO_EDITADA' : 'ACAO_NO_BAIRRO_REGISTRADA',
       'CHECKIN_RUA',
-      `Nova Ação no Bairro (${action.actionType}) realizada em ${action.locationName} (${action.neighborhoodName}) por ${
-        action.scope === 'individual'
-          ? action.militantName || 'Militante'
-          : action.scope === 'grupo'
-          ? 'Grupo (' + (action.militantNames?.join(', ') || 'Militantes') + ')'
-          : action.teamName || 'Toda a Equipe'
-      }.`
+      `Ação no Bairro (${normalizedAction.actionType}) realizada em ${normalizedAction.locationName} (${normalizedAction.neighborhoodName}) ${isEditing ? 'atualizada' : 'cadastrada'} com sucesso.`
     );
 
-    return action;
+    return normalizedAction;
   }
 
   static deleteBairroAction(actionId: string): boolean {
@@ -1691,6 +1713,8 @@ export class StorageService {
       } catch {}
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));
     }
+
+    this.pushEntityToRemote(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
 
     if (target) {
       const user = this.getCurrentUser();
@@ -3088,6 +3112,7 @@ export class StorageService {
     const admins = this.getAdmins();
     const auditLogs = this.getAuditLogs();
     const notifications = this.getNotifications();
+    const bairroActions = this.getBairroActions();
 
     const counts = {
       militants: militants.length,
@@ -3095,6 +3120,7 @@ export class StorageService {
       vans: vans.length,
       neighborhoods: neighborhoods.length,
       checkins: checkins.length,
+      bairroActions: bairroActions.length,
       stockItems: stock.length,
       stockTransactions: stockTransactions.length,
       payrolls: payrolls.length,
@@ -3132,6 +3158,7 @@ export class StorageService {
         [STORAGE_KEYS.ADMINS]: admins,
         [STORAGE_KEYS.AUDIT_LOGS]: auditLogs,
         [STORAGE_KEYS.NOTIFICATIONS]: notifications,
+        [STORAGE_KEYS.BAIRRO_ACTIONS]: bairroActions,
         users,
         neighborhoods,
         militants,
@@ -3144,7 +3171,8 @@ export class StorageService {
         payrolls,
         admins,
         auditLogs,
-        notifications
+        notifications,
+        bairroActions
       }
     };
 
@@ -3187,6 +3215,7 @@ export class StorageService {
       const incomingAdmins: AdminUser[] = data[STORAGE_KEYS.ADMINS] || data.admins || [];
       const incomingAuditLogs: ActivityAuditLog[] = data[STORAGE_KEYS.AUDIT_LOGS] || data.auditLogs || [];
       const incomingNotifications: PushNotification[] = data[STORAGE_KEYS.NOTIFICATIONS] || data.notifications || [];
+      const incomingBairroActions: BairroAction[] = data[STORAGE_KEYS.BAIRRO_ACTIONS] || data.bairroActions || [];
 
       // Validate that at least some core collections exist
       const hasCoreData =
@@ -3220,6 +3249,7 @@ export class StorageService {
         if (incomingAdmins.length > 0) this.set(STORAGE_KEYS.ADMINS, incomingAdmins, false);
         if (incomingNotifications.length > 0) this.set(STORAGE_KEYS.NOTIFICATIONS, incomingNotifications, false);
         if (incomingAuditLogs.length > 0) this.set(STORAGE_KEYS.AUDIT_LOGS, incomingAuditLogs, false);
+        if (incomingBairroActions.length > 0) this.set(STORAGE_KEYS.BAIRRO_ACTIONS, incomingBairroActions, false);
       } else {
         // Merge mode: combine without duplicating IDs
         const mergeById = <T extends { id: string }>(current: T[], incoming: T[]): T[] => {
@@ -3241,6 +3271,7 @@ export class StorageService {
         if (incomingPayrolls.length > 0) this.set(STORAGE_KEYS.PAYROLLS, mergeById(this.getPayrolls(), incomingPayrolls), false);
         if (incomingAdmins.length > 0) this.set(STORAGE_KEYS.ADMINS, mergeById(this.getAdmins(), incomingAdmins), false);
         if (incomingNotifications.length > 0) this.set(STORAGE_KEYS.NOTIFICATIONS, mergeById(this.getNotifications(), incomingNotifications), false);
+        if (incomingBairroActions.length > 0) this.set(STORAGE_KEYS.BAIRRO_ACTIONS, mergeById(this.getBairroActions(), incomingBairroActions), false);
       }
 
       // Log the restore event

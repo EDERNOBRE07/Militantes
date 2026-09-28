@@ -133,6 +133,15 @@ export interface StreetCheckIn {
 
 export type BairroActionScope = 'individual' | 'grupo' | 'toda_equipe';
 
+export interface BairroActionMilitantParticipation {
+  militantId: string;
+  militantName: string;
+  matricula?: string;
+  teamId?: string;
+  teamName?: string;
+  approachesCount: number; // quantidade de abordagens feita pelo militante
+}
+
 export interface BairroAction {
   id: string;
   neighborhoodId: string;
@@ -147,6 +156,8 @@ export interface BairroAction {
   militantName?: string;
   militantIds?: string[];
   militantNames?: string[];
+  militantParticipations?: BairroActionMilitantParticipation[]; // Militantes participantes com a quantidade de abordagens de cada um
+  totalApproaches?: number; // Total somado de abordagens de todos os militantes
   teamId?: string;
   teamName?: string;
   hasGps: boolean;
@@ -163,12 +174,14 @@ export interface BairroAction {
     adesivo_bola?: number;
     panfletos?: number;
     bandeiras?: number;
+    abordagens?: number;
   };
   observations?: string;
   status?: 'concluida' | 'em_andamento' | 'planejada';
   createdBy?: string;
   createdByName?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CampaignCalendarDay {
@@ -399,6 +412,7 @@ export interface DatabaseBackupMetadata {
     calendarDays: number;
     notifications: number;
     users: number;
+    bairroActions?: number;
   };
 }
 
@@ -419,6 +433,7 @@ export interface DatabaseBackupPackage {
     militancia_admins_v1?: AdminUser[];
     militancia_audit_logs_v1?: ActivityAuditLog[];
     militancia_notifications_v1?: PushNotification[];
+    militancia_bairro_actions_v1?: BairroAction[];
     users?: User[];
     neighborhoods?: Neighborhood[];
     militants?: Militant[];
@@ -432,6 +447,7 @@ export interface DatabaseBackupPackage {
     admins?: AdminUser[];
     auditLogs?: ActivityAuditLog[];
     notifications?: PushNotification[];
+    bairroActions?: BairroAction[];
   };
 }
 

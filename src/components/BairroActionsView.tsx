@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   BairroAction,
   BairroActionScope,
+  BairroActionMilitantParticipation,
   Neighborhood,
   Militant,
   Team,
@@ -35,7 +36,10 @@ import {
   Clock,
   Compass,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Edit3,
+  Pencil,
+  ImageIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -85,6 +89,9 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
   const [formScope, setFormScope] = useState<BairroActionScope>('toda_equipe');
   const [formMilitantId, setFormMilitantId] = useState<string>(militants[0]?.id || '');
   const [formSelectedMilitantIds, setFormSelectedMilitantIds] = useState<string[]>([]);
+  // Mapa de abordagens por militante participante: militantId -> quantidade de abordagens
+  const [participatingApproaches, setParticipatingApproaches] = useState<Map<string, number>>(new Map());
+  const [militantSearchFilter, setMilitantSearchFilter] = useState<string>('');
   const [formTeamId, setFormTeamId] = useState<string>(teams[0]?.id || 'team-alpha');
   
   // GPS fields
@@ -123,7 +130,15 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
     setFormTitle('');
     setFormScope('toda_equipe');
     setFormMilitantId(militants[0]?.id || '');
-    setFormSelectedMilitantIds([militants[0]?.id, militants[1]?.id].filter(Boolean) as string[]);
+
+    // Inicializa seleção padrão com militantes iniciais e abordagem padrão
+    const defaultIds = [militants[0]?.id, militants[1]?.id].filter(Boolean) as string[];
+    setFormSelectedMilitantIds(defaultIds);
+    const map = new Map<string, number>();
+    defaultIds.forEach(id => map.set(id, 15));
+    setParticipatingApproaches(map);
+    setMilitantSearchFilter('');
+
     setFormTeamId(teams[0]?.id || 'team-alpha');
     setFormUseGps(true);
     setFormLatitude(String(targetBairro.lat || -27.5958));
@@ -135,6 +150,108 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
     setFormEstimatedPeople(150);
     setFormObservations('');
     setIsModalOpen(true);
+  };
+
+  const handleEditAction = (action: BairroAction) => {
+    setEditingActionId(action.id);
+    setFormNeighborhoodId(action.neighborhoodId);
+    setFormLocationType(action.locationType || 'praca');
+    setFormLocationName(action.locationName || '');
+    setFormActionType(action.actionType || 'distribuicao_materiais');
+    setFormActionCustom(action.actionTypeCustom || '');
+    setFormTitle(action.title || '');
+    setFormScope(action.scope || 'toda_equipe');
+    setFormMilitantId(action.militantId || militants[0]?.id || '');
+
+    // Reconstrói a lista e contagem de abordagens de cada militante participante
+    const map = new Map<string, number>();
+    let selectedIds: string[] = [];
+
+    if (action.militantParticipations && action.militantParticipations.length > 0) {
+      action.militantParticipations.forEach(p => {
+        map.set(p.militantId, Number(p.approachesCount) || 0);
+        selectedIds.push(p.militantId);
+      });
+    } else if (action.militantIds && action.militantIds.length > 0) {
+      selectedIds = [...action.militantIds];
+      const avg = action.materialsDistributed?.abordagens 
+        ? Math.round(action.materialsDistributed.abordagens / action.militantIds.length) 
+        : 10;
+      selectedIds.forEach(id => map.set(id, avg));
+    } else if (action.militantId) {
+      selectedIds = [action.militantId];
+      map.set(action.militantId, action.materialsDistributed?.abordagens || 15);
+    }
+
+    setFormSelectedMilitantIds(selectedIds);
+    setParticipatingApproaches(map);
+    setMilitantSearchFilter('');
+
+    setFormTeamId(action.teamId || teams[0]?.id || 'team-alpha');
+    setFormUseGps(action.hasGps);
+    setFormLatitude(action.latitude ? String(action.latitude) : '-27.5958');
+    setFormLongitude(action.longitude ? String(action.longitude) : '-48.6185');
+    setFormAccuracy(action.accuracyMeters || 3.5);
+    setFormAddress(action.address || '');
+    setFormTimestamp(action.timestamp ? action.timestamp.replace(' ', 'T').substring(0, 16) : new Date().toISOString().substring(0, 16));
+    setFormPhotos(action.photos || []);
+    setFormEstimatedPeople(action.estimatedPeople || 100);
+    setFormObservations(action.observations || '');
+    setIsModalOpen(true);
+  };
+
+  const handleToggleMilitant = (militantId: string) => {
+    setFormSelectedMilitantIds(prev => {
+      if (prev.includes(militantId)) {
+        return prev.filter(id => id !== militantId);
+      } else {
+        setParticipatingApproaches(map => {
+          const next = new Map(map);
+          if (!next.has(militantId)) {
+            next.set(militantId, 10);
+          }
+          return next;
+        });
+        return [...prev, militantId];
+      }
+    });
+  };
+
+  const handleUpdateApproaches = (militantId: string, count: number) => {
+    setParticipatingApproaches(map => {
+      const next = new Map(map);
+      next.set(militantId, Math.max(0, count));
+      return next;
+    });
+  };
+
+  const handleSelectAllMilitants = () => {
+    const allIds = militants.map(m => m.id);
+    setFormSelectedMilitantIds(allIds);
+    setParticipatingApproaches(map => {
+      const next = new Map(map);
+      allIds.forEach(id => {
+        if (!next.has(id)) next.set(id, 10);
+      });
+      return next;
+    });
+  };
+
+  const handleClearMilitants = () => {
+    setFormSelectedMilitantIds([]);
+  };
+
+  const handleSelectTeamMilitants = (teamId: string) => {
+    const teamMils = militants.filter(m => m.teamId === teamId);
+    const teamMilIds = teamMils.map(m => m.id);
+    setFormSelectedMilitantIds(teamMilIds);
+    setParticipatingApproaches(map => {
+      const next = new Map(map);
+      teamMilIds.forEach(id => {
+        if (!next.has(id)) next.set(id, 15);
+      });
+      return next;
+    });
   };
 
   const handleCaptureGps = () => {
@@ -196,6 +313,22 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
     const targetMilitant = militants.find(m => m.id === formMilitantId);
     const selectedMilitantObjects = militants.filter(m => formSelectedMilitantIds.includes(m.id));
 
+    // Constrói lista detalhada de militantes com quantidade individual de abordagens
+    const participations: BairroActionMilitantParticipation[] = formSelectedMilitantIds.map(mId => {
+      const mil = militants.find(m => m.id === mId);
+      const teamObj = teams.find(t => t.id === mil?.teamId);
+      return {
+        militantId: mId,
+        militantName: mil?.name || 'Militante',
+        matricula: mil?.matricula,
+        teamId: mil?.teamId,
+        teamName: teamObj?.name,
+        approachesCount: participatingApproaches.get(mId) || 0
+      };
+    });
+
+    const totalApproaches = participations.reduce((sum, p) => sum + (p.approachesCount || 0), 0);
+
     const actionToSave: BairroAction = {
       id: editingActionId || `act-${formNeighborhoodId}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       neighborhoodId: targetBairro.id,
@@ -206,10 +339,12 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
       actionTypeCustom: formActionType === 'outro' ? formActionCustom.trim() : undefined,
       title: formTitle.trim() || `${getActionTypeLabel(formActionType)} em ${formLocationName.trim()}`,
       scope: formScope,
-      militantId: formScope === 'individual' ? targetMilitant?.id : undefined,
-      militantName: formScope === 'individual' ? targetMilitant?.name : undefined,
-      militantIds: formScope === 'grupo' ? selectedMilitantObjects.map(m => m.id) : undefined,
-      militantNames: formScope === 'grupo' ? selectedMilitantObjects.map(m => m.name) : undefined,
+      militantId: formScope === 'individual' ? (targetMilitant?.id || formSelectedMilitantIds[0]) : undefined,
+      militantName: formScope === 'individual' ? (targetMilitant?.name || selectedMilitantObjects[0]?.name) : undefined,
+      militantIds: formSelectedMilitantIds,
+      militantNames: selectedMilitantObjects.map(m => m.name),
+      militantParticipations: participations,
+      totalApproaches,
       teamId: formScope === 'toda_equipe' ? targetTeam?.id : undefined,
       teamName: formScope === 'toda_equipe' ? (targetTeam?.name || 'Toda a Equipe') : undefined,
       hasGps: formUseGps,
@@ -220,11 +355,22 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
       timestamp: formTimestamp.replace('T', ' ') + (formTimestamp.length === 16 ? ':00' : ''),
       photos: formPhotos,
       estimatedPeople: formEstimatedPeople > 0 ? formEstimatedPeople : undefined,
+      materialsDistributed: {
+        santinhos: Math.max(50, Math.round(totalApproaches * 3)),
+        adesivos: Math.max(20, Math.round(totalApproaches * 1.5)),
+        adesivo_bola: Math.max(10, Math.round(totalApproaches * 0.8)),
+        panfletos: Math.max(30, Math.round(totalApproaches * 2)),
+        bandeiras: 4,
+        abordagens: totalApproaches
+      },
       observations: formObservations.trim() || undefined,
       status: 'concluida',
       createdBy: currentUser.id,
       createdByName: currentUser.name,
-      createdAt: new Date().toISOString()
+      createdAt: editingActionId 
+        ? (actions.find(a => a.id === editingActionId)?.createdAt || new Date().toISOString()) 
+        : new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     StorageService.saveBairroAction(actionToSave);
@@ -240,7 +386,9 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
     } catch {}
 
     setFeedbackMsg({
-      text: `✓ Ação no Bairro "${actionToSave.title}" registrada com sucesso em ${targetBairro.name}!`
+      text: editingActionId
+        ? `✓ Ação no Bairro "${actionToSave.title}" atualizada com sucesso em ${targetBairro.name}!`
+        : `✓ Ação no Bairro "${actionToSave.title}" registrada com sucesso em ${targetBairro.name}!`
     });
     setIsModalOpen(false);
 
@@ -516,11 +664,21 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                         </span>
                       )}
 
+                      <button
+                        type="button"
+                        onClick={() => handleEditAction(action)}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200 cursor-pointer shadow-2xs"
+                        title="Editar ação"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Editar</span>
+                      </button>
+
                       {isCoordination && (
                         <button
                           type="button"
                           onClick={() => handleDeleteAction(action.id, action.title)}
-                          className="p-1 rounded text-slate-400 hover:text-rose-600 transition"
+                          className="p-1 rounded text-slate-400 hover:text-rose-600 transition cursor-pointer"
                           title="Excluir ação"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -578,25 +736,73 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                     )}
                   </div>
 
-                  {/* Participants details */}
-                  {action.scope === 'individual' && action.militantName && (
-                    <div className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 flex items-center gap-1.5">
-                      <UserIcon className="w-3 h-3 text-purple-600 shrink-0" />
-                      <span>Militante responsável: <strong>{action.militantName}</strong></span>
-                    </div>
-                  )}
-
-                  {action.scope === 'grupo' && action.militantNames && action.militantNames.length > 0 && (
-                    <div className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 space-y-1">
-                      <span className="font-semibold text-slate-700 block">Militantes no grupo ({action.militantNames.length}):</span>
-                      <div className="flex flex-wrap gap-1">
-                        {action.militantNames.map((name, i) => (
-                          <span key={i} className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] text-slate-700">
-                            {name}
-                          </span>
+                  {/* Participants details with Individual Approach Counts */}
+                  {action.militantParticipations && action.militantParticipations.length > 0 ? (
+                    <div className="mt-2.5 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                        <span className="flex items-center gap-1.5 text-blue-800">
+                          <Users className="w-3.5 h-3.5 text-blue-600" />
+                          Militantes Participantes ({action.militantParticipations.length}):
+                        </span>
+                        <span className="text-purple-700 font-mono font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                          Total: {action.totalApproaches || action.militantParticipations.reduce((sum, p) => sum + (p.approachesCount || 0), 0)} abordagens
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {action.militantParticipations.map(p => (
+                          <div
+                            key={p.militantId}
+                            className="flex items-center justify-between px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 text-[11px] shadow-2xs"
+                          >
+                            <div className="truncate mr-2">
+                              <span className="text-slate-800 font-semibold block truncate">{p.militantName}</span>
+                              {p.matricula && (
+                                <span className="text-[10px] text-slate-400 font-mono block">Matrícula: {p.matricula}</span>
+                              )}
+                            </div>
+                            <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold font-mono text-[10px] shrink-0 border border-purple-200">
+                              {p.approachesCount} {p.approachesCount === 1 ? 'abordagem' : 'abordagens'}
+                            </span>
+                          </div>
                         ))}
                       </div>
                     </div>
+                  ) : (
+                    <>
+                      {action.scope === 'individual' && action.militantName && (
+                        <div className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <UserIcon className="w-3 h-3 text-purple-600 shrink-0" />
+                            <span>Militante responsável: <strong>{action.militantName}</strong></span>
+                          </div>
+                          {action.materialsDistributed?.abordagens !== undefined && action.materialsDistributed.abordagens > 0 && (
+                            <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-mono font-bold text-[10px]">
+                              {action.materialsDistributed.abordagens} abordagens
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {action.scope === 'grupo' && action.militantNames && action.militantNames.length > 0 && (
+                        <div className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-slate-700 block">Militantes no grupo ({action.militantNames.length}):</span>
+                            {action.materialsDistributed?.abordagens !== undefined && action.materialsDistributed.abordagens > 0 && (
+                              <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-mono font-bold text-[10px]">
+                                Total: {action.materialsDistributed.abordagens} abordagens
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {action.militantNames.map((name, i) => (
+                              <span key={i} className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] text-slate-700">
+                                {name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {action.observations && (
@@ -656,17 +862,23 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
             <div className="p-4 sm:p-5 bg-gradient-to-r from-blue-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300">
-                  <Plus className="w-5 h-5 stroke-[3]" />
+                  {editingActionId ? <Edit3 className="w-5 h-5 stroke-[2.5]" /> : <Plus className="w-5 h-5 stroke-[3]" />}
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-white">Cadastrar Ação no Bairro</h3>
-                  <p className="text-slate-300 text-xs">Praças, escolas, mercados, caminhadas e comícios</p>
+                  <h3 className="font-bold text-base text-white">
+                    {editingActionId ? 'Editar Ação no Bairro' : 'Cadastrar Ação no Bairro'}
+                  </h3>
+                  <p className="text-slate-300 text-xs">
+                    {editingActionId 
+                      ? 'Atualize militantes, abordagens individuais, fotos e dados da ação' 
+                      : 'Praças, escolas, mercados, caminhadas e comícios'}
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -757,7 +969,7 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                       key={item.id}
                       type="button"
                       onClick={() => setFormActionType(item.id)}
-                      className={`p-2 rounded-lg text-xs font-bold border transition text-left ${
+                      className={`p-2 rounded-lg text-xs font-bold border transition text-left cursor-pointer ${
                         formActionType === item.id
                           ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-2xs'
                           : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -769,122 +981,228 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                 </div>
               </div>
 
-              {/* 4. Formato da Ação: Individual, Grupo ou Equipe */}
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
-                  4. Formato da Ação
-                </label>
-                
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormScope('individual')}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
-                      formScope === 'individual'
-                        ? 'bg-purple-600 text-white border-purple-700 shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <UserIcon className="w-3.5 h-3.5" />
-                    Individual (1 Militante)
-                  </button>
+              {/* 4. Formato & Participação de Militantes com Caixa de Seleção e Quantidade de Abordagens */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-blue-600" />
+                      4. Militantes Participantes & Quantidade de Abordagens
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Marque com a caixa de seleção os militantes que participaram e defina a quantidade de abordagens de cada um.
+                    </p>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setFormScope('grupo')}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
-                      formScope === 'grupo'
-                        ? 'bg-amber-600 text-white border-amber-700 shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Users className="w-3.5 h-3.5" />
-                    Em Grupo (Vários)
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormScope('toda_equipe')}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
-                      formScope === 'toda_equipe'
-                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    <Flag className="w-3.5 h-3.5" />
-                    Por Toda a Equipe
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200 font-mono">
+                      {formSelectedMilitantIds.length} {formSelectedMilitantIds.length === 1 ? 'militante' : 'militantes'}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 font-mono">
+                      {Array.from(participatingApproaches.entries())
+                        .filter(([id]) => formSelectedMilitantIds.includes(id))
+                        .reduce((sum, [, count]) => sum + count, 0)} abordagens
+                    </span>
+                  </div>
                 </div>
 
-                {/* Sub-form based on scope */}
-                {formScope === 'individual' && (
-                  <div className="pt-2">
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Selecione o Militante:
-                    </label>
-                    <select
-                      value={formMilitantId}
-                      onChange={(e) => setFormMilitantId(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs text-slate-800"
+                {/* Formato de Ação (Presets rápidos) */}
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-600 block mb-1.5">
+                    Formato da Ação:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormScope('individual');
+                        const defaultId = militants[0]?.id;
+                        if (defaultId) {
+                          setFormSelectedMilitantIds([defaultId]);
+                          setFormMilitantId(defaultId);
+                        }
+                      }}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        formScope === 'individual'
+                          ? 'bg-purple-600 text-white border-purple-700 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                     >
-                      {militants.map(m => (
-                        <option key={m.id} value={m.id}>{m.name} ({m.matricula})</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                      <UserIcon className="w-3.5 h-3.5" />
+                      Individual
+                    </button>
 
-                {formScope === 'grupo' && (
-                  <div className="pt-2 space-y-2">
-                    <label className="block text-[11px] font-semibold text-slate-600">
-                      Selecione os Militantes do Grupo ({formSelectedMilitantIds.length} selecionados):
-                    </label>
-                    <div className="max-h-36 overflow-y-auto p-2 rounded-lg bg-white border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {militants.map(m => {
-                        const isSelected = formSelectedMilitantIds.includes(m.id);
-                        return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            onClick={() => {
-                              if (isSelected) {
-                                setFormSelectedMilitantIds(prev => prev.filter(id => id !== m.id));
-                              } else {
-                                setFormSelectedMilitantIds(prev => [...prev, m.id]);
-                              }
-                            }}
-                            className={`p-1.5 rounded text-left text-xs flex items-center justify-between border transition ${
-                              isSelected
-                                ? 'bg-amber-50 border-amber-400 text-amber-900 font-bold'
-                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                            }`}
-                          >
-                            <span className="truncate">{m.name}</span>
-                            <span className="text-[10px] font-mono">{m.matricula}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {formScope === 'toda_equipe' && (
-                  <div className="pt-2">
-                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-                      Selecione a Equipe Responsável:
-                    </label>
-                    <select
-                      value={formTeamId}
-                      onChange={(e) => setFormTeamId(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 text-xs text-slate-800"
+                    <button
+                      type="button"
+                      onClick={() => setFormScope('grupo')}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        formScope === 'grupo'
+                          ? 'bg-amber-600 text-white border-amber-700 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                     >
-                      {teams.map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
-                      <option value="equipe-geral">Toda a Mobilização / Todas as Equipes</option>
-                    </select>
+                      <Users className="w-3.5 h-3.5" />
+                      Em Grupo
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormScope('toda_equipe');
+                        handleSelectAllMilitants();
+                      }}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        formScope === 'toda_equipe'
+                          ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Flag className="w-3.5 h-3.5" />
+                      Toda a Equipe
+                    </button>
                   </div>
-                )}
+                </div>
+
+                {/* Filtro e Botões de Ação Rápida */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                  <div className="relative flex-1">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Buscar militante por nome ou matrícula..."
+                      value={militantSearchFilter}
+                      onChange={(e) => setMilitantSearchFilter(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {teams.map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => handleSelectTeamMilitants(t.id)}
+                        className="px-2 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold transition cursor-pointer"
+                        title={`Selecionar todos da equipe ${t.name}`}
+                      >
+                        {t.name.split('-')[0].trim()}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleSelectAllMilitants}
+                      className="px-2.5 py-1.5 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 text-[11px] font-bold transition cursor-pointer"
+                    >
+                      Marcar Todos
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearMilitants}
+                      className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold transition cursor-pointer"
+                    >
+                      Limpar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lista com Caixas de Seleção dos Militantes */}
+                <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1 border border-slate-200 rounded-xl p-2 bg-white">
+                  {militants
+                    .filter(m => {
+                      if (!militantSearchFilter.trim()) return true;
+                      const term = militantSearchFilter.toLowerCase();
+                      return m.name.toLowerCase().includes(term) || (m.matricula && m.matricula.toLowerCase().includes(term));
+                    })
+                    .map(m => {
+                      const isSelected = formSelectedMilitantIds.includes(m.id);
+                      const approaches = participatingApproaches.get(m.id) || 0;
+                      const teamObj = teams.find(t => t.id === m.teamId);
+
+                      return (
+                        <div
+                          key={m.id}
+                          className={`p-2 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                            isSelected
+                              ? 'bg-blue-50/70 border-blue-300 shadow-2xs'
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          {/* Caixa de Seleção + Nome e Matrícula */}
+                          <label className="flex items-center gap-2.5 cursor-pointer select-none flex-1">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleMilitant(m.id)}
+                              className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`text-xs font-bold truncate ${isSelected ? 'text-blue-900' : 'text-slate-800'}`}>
+                                  {m.name}
+                                </span>
+                                {m.matricula && (
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                                    {m.matricula}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-slate-500 block truncate">
+                                {teamObj?.name || 'Equipe Geral'} • {m.phone || 'Sem telefone'}
+                              </span>
+                            </div>
+                          </label>
+
+                          {/* Contador de Abordagens por Militante */}
+                          {isSelected ? (
+                            <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-lg border border-blue-200 self-end sm:self-auto shrink-0">
+                              <span className="text-[11px] font-bold text-slate-700">Abordagens:</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateApproaches(m.id, Math.max(0, approaches - 1))}
+                                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center transition cursor-pointer"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={approaches}
+                                  onChange={(e) => handleUpdateApproaches(m.id, Math.max(0, parseInt(e.target.value) || 0))}
+                                  className="w-14 text-center px-1 py-0.5 rounded border border-slate-300 font-mono font-bold text-xs text-purple-700 bg-purple-50/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateApproaches(m.id, approaches + 1)}
+                                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center transition cursor-pointer"
+                                >
+                                  +
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateApproaches(m.id, approaches + 5)}
+                                  className="px-1.5 py-0.5 rounded bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold text-[10px] transition cursor-pointer"
+                                  title="Adicionar +5"
+                                >
+                                  +5
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateApproaches(m.id, approaches + 10)}
+                                  className="px-1.5 py-0.5 rounded bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold text-[10px] transition cursor-pointer"
+                                  title="Adicionar +10"
+                                >
+                                  +10
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">Não selecionado</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
 
               {/* 5. Geolocalização (Opcional, que poderá ser usada ou não) */}
@@ -899,7 +1217,7 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                       type="checkbox"
                       checked={formUseGps}
                       onChange={(e) => setFormUseGps(e.target.checked)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                     <span>Ativar GPS</span>
                   </label>
@@ -912,7 +1230,7 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                         type="button"
                         onClick={handleCaptureGps}
                         disabled={isCapturingGps}
-                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition disabled:opacity-50"
+                        className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
                       >
                         <Navigation className={`w-3.5 h-3.5 ${isCapturingGps ? 'animate-spin' : ''}`} />
                         <span>{isCapturingGps ? 'Capturando Satélites...' : 'Capturar Meu GPS Atual'}</span>
@@ -961,44 +1279,62 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                 </div>
               </div>
 
-              {/* 6. Galeria de Fotos e Local Específico para Upload */}
+              {/* 6. Galeria de Fotos e Upload Incluído no Banco de Dados */}
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <Camera className="w-4 h-4 text-emerald-600" />
-                    6. Galeria de Fotos da Ação ({formPhotos.length})
+                    6. Upload de Fotos no Banco de Dados ({formPhotos.length})
                   </label>
-                  <span className="text-[11px] text-slate-500">Múltiplas fotos permitidas</span>
+                  <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    ✓ Salvas no Banco e no Cofre
+                  </span>
                 </div>
 
-                {/* Upload Box */}
-                <div className="p-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 transition text-center relative cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handlePhotoUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                  <div className="flex flex-col items-center justify-center gap-1">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                      <Upload className="w-5 h-5" />
+                {/* Botões Duplos: Câmera Direta e Galeria */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <label className="flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-blue-400 bg-blue-50/70 hover:bg-blue-100/70 cursor-pointer transition text-center shadow-2xs">
+                    <Camera className="w-5 h-5 text-blue-600 shrink-0" />
+                    <div className="text-left">
+                      <span className="text-xs font-bold text-blue-900 block">Tirar Foto na Câmera</span>
+                      <span className="text-[10px] text-blue-600 font-medium">Captura direta do celular</span>
                     </div>
-                    <span className="text-xs font-bold text-blue-900">Clique para selecionar ou arraste fotos aqui</span>
-                    <span className="text-[10px] text-slate-500">Comprovantes, fotos com eleitores, praças e materiais</span>
-                  </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-indigo-400 bg-indigo-50/70 hover:bg-indigo-100/70 cursor-pointer transition text-center shadow-2xs">
+                    <ImageIcon className="w-5 h-5 text-indigo-600 shrink-0" />
+                    <div className="text-left">
+                      <span className="text-xs font-bold text-indigo-900 block">Carregar da Galeria</span>
+                      <span className="text-[10px] text-indigo-600 font-medium">Múltiplas fotos com eleitores</span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
 
                 {/* Preview Grid */}
                 {formPhotos.length > 0 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1">
                     {formPhotos.map((photo, pIdx) => (
-                      <div key={pIdx} className="relative aspect-4/3 rounded-lg overflow-hidden border border-slate-200 group">
+                      <div key={pIdx} className="relative aspect-4/3 rounded-lg overflow-hidden border border-slate-200 group bg-slate-100">
                         <img src={photo} alt="Preview" className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => handleRemovePhoto(pIdx)}
-                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md hover:bg-rose-700 transition"
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md hover:bg-rose-700 transition cursor-pointer"
+                          title="Remover foto"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -1054,16 +1390,17 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 transition"
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                 >
-                  Salvar Ação no Bairro
+                  <CheckCircle2 className="w-4 h-4" />
+                  {editingActionId ? 'Salvar Alterações da Ação' : 'Salvar Ação no Bairro'}
                 </button>
               </div>
 

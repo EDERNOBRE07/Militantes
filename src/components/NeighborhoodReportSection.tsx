@@ -123,9 +123,38 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   }, [isAllBairros, qualifyingNeighborhoods, currentBairro, checkIns]);
 
   // Estatísticas agregadas
-  const totalAbordagens = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+  const totalAbordagensRuas = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
   const totalComercios = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-  const totalPhotosCount = bairroCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+  const totalPhotosCountRuas = bairroCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+
+  const relevantBairroActions = useMemo(() => {
+    if (isAllBairros) return allBairroActions;
+    if (!currentBairro) return [];
+    return allBairroActions.filter(a => {
+      const aId = (a.neighborhoodId || '').toLowerCase().trim();
+      const aName = (a.neighborhoodName || '').toLowerCase().trim();
+      const cleanId = (currentBairro.id || '').toLowerCase().trim();
+      const cleanName = (currentBairro.name || '').toLowerCase().trim();
+      return aId === cleanId || aName === cleanName || aId.includes(cleanId) || cleanId.includes(aId);
+    });
+  }, [isAllBairros, allBairroActions, currentBairro]);
+
+  const totalActionAbordagens = useMemo(() => {
+    return relevantBairroActions.reduce((acc, a) => {
+      if (a.totalApproaches) return acc + a.totalApproaches;
+      if (a.militantParticipations && a.militantParticipations.length > 0) {
+        return acc + a.militantParticipations.reduce((s, p) => s + (p.approachesCount || 0), 0);
+      }
+      return acc + (a.materialsDistributed?.abordagens || 0);
+    }, 0);
+  }, [relevantBairroActions]);
+
+  const totalActionPhotos = useMemo(() => {
+    return relevantBairroActions.reduce((acc, a) => acc + (a.photos?.length || 0), 0);
+  }, [relevantBairroActions]);
+
+  const totalAbordagens = totalAbordagensRuas + totalActionAbordagens;
+  const totalPhotosCount = totalPhotosCountRuas + totalActionPhotos;
 
   const coveragePercent = Math.min(
     Math.round((bairroCheckIns.length / Math.max(currentBairro.totalStreets, 1)) * 100),
@@ -287,13 +316,17 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
               <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
                 <span className="text-[10px] uppercase font-semibold text-slate-500 block">Abordagens Diretas</span>
                 <strong className="text-lg font-bold text-purple-700 font-mono">{totalAbordagens} eleitores</strong>
-                <span className="text-[10px] text-purple-600 block mt-0.5">{totalComercios} comércios visitados</span>
+                <span className="text-[10px] text-purple-600 block mt-0.5">
+                  {totalActionAbordagens > 0 ? `${totalAbordagensRuas} ruas + ${totalActionAbordagens} ações` : `${totalComercios} comércios visitados`}
+                </span>
               </div>
 
               <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
                 <span className="text-[10px] uppercase font-semibold text-slate-500 block">Comprovantes Fotográficos</span>
                 <strong className="text-lg font-bold text-emerald-700 font-mono">{totalPhotosCount} fotos</strong>
-                <span className="text-[10px] text-emerald-600 block mt-0.5">Auditoria georreferenciada</span>
+                <span className="text-[10px] text-emerald-600 block mt-0.5">
+                  {totalActionPhotos > 0 ? `${totalPhotosCountRuas} ruas + ${totalActionPhotos} ações` : 'Auditoria georreferenciada'}
+                </span>
               </div>
             </div>
 
@@ -632,13 +665,17 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
             <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
               <span className="text-[10px] uppercase font-semibold text-slate-500 block">Abordagens Diretas</span>
               <strong className="text-base font-bold text-purple-700 font-mono">{totalAbordagens} eleitores</strong>
-              <span className="text-[10px] text-purple-600 block mt-0.5">{totalComercios} comércios</span>
+              <span className="text-[10px] text-purple-600 block mt-0.5">
+                {totalActionAbordagens > 0 ? `${totalAbordagensRuas} ruas + ${totalActionAbordagens} ações` : `${totalComercios} comércios`}
+              </span>
             </div>
 
             <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs col-span-2 sm:col-span-1">
               <span className="text-[10px] uppercase font-semibold text-slate-500 block">Comprovantes Fotográficos</span>
               <strong className="text-base font-bold text-emerald-700 font-mono">{totalPhotosCount} fotos</strong>
-              <span className="text-[10px] text-emerald-600 block mt-0.5">Auditoria georreferenciada</span>
+              <span className="text-[10px] text-emerald-600 block mt-0.5">
+                {totalActionPhotos > 0 ? `${totalPhotosCountRuas} ruas + ${totalActionPhotos} ações` : 'Auditoria georreferenciada'}
+              </span>
             </div>
           </div>
 

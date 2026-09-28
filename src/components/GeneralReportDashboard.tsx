@@ -59,6 +59,17 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
   onZoomPhoto
 }) => {
   const [localZoomPhoto, setLocalZoomPhoto] = React.useState<string | null>(null);
+  const [allActions, setAllActions] = React.useState<BairroAction[]>(() => StorageService.getBairroActions());
+
+  React.useEffect(() => {
+    const handleUpdate = () => {
+      setAllActions(StorageService.getBairroActions());
+    };
+    window.addEventListener('militancia_data_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('militancia_data_updated', handleUpdate);
+    };
+  }, []);
 
   const handleZoom = (photo: string) => {
     if (onZoomPhoto) {
@@ -68,22 +79,24 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
     }
   };
 
-  // Carrega e agrupa as Ações no Bairro por Bairro participante
-  const actionsByNeighborhood = useMemo(() => {
-    const allActions = StorageService.getBairroActions();
-    
-    // Se o dashboard for de um único bairro (ex: dentro de um bairro isolado), filtra por aquele bairro
-    const uniqueBairroIdsInCheckIns = Array.from(new Set(checkIns.map(c => c.neighborhoodId)));
-    const isSingleBairro = uniqueBairroIdsInCheckIns.length === 1 && uniqueBairroIdsInCheckIns[0];
+  // Se o dashboard for de um único bairro (ex: dentro de um bairro isolado), filtra por aquele bairro
+  const uniqueBairroIdsInCheckIns = useMemo(() => {
+    return Array.from(new Set(checkIns.map(c => c.neighborhoodId)));
+  }, [checkIns]);
+  const isSingleBairro = uniqueBairroIdsInCheckIns.length === 1 && uniqueBairroIdsInCheckIns[0];
 
-    const targetActions = isSingleBairro
+  const targetActions = useMemo(() => {
+    return isSingleBairro
       ? allActions.filter(a => {
           const aId = (a.neighborhoodId || '').toLowerCase().trim();
           const singleId = (uniqueBairroIdsInCheckIns[0] || '').toLowerCase().trim();
           return aId === singleId || aId.includes(singleId) || singleId.includes(aId);
         })
       : allActions;
+  }, [allActions, isSingleBairro, uniqueBairroIdsInCheckIns]);
 
+  // Carrega e agrupa as Ações no Bairro por Bairro participante
+  const actionsByNeighborhood = useMemo(() => {
     // Agrupa por bairro onde houver ocorrência de ações
     const groups: { [key: string]: { bairro: Neighborhood; actions: BairroAction[] } } = {};
     
@@ -116,13 +129,31 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
     });
 
     return Object.values(groups);
-  }, [checkIns, neighborhoods]);
+  }, [targetActions, neighborhoods]);
+
+  // Total de abordagens acumuladas em Ações no Bairro
+  const totalAbordagensAcoes = useMemo(() => {
+    return targetActions.reduce((acc, act) => {
+      if (act.totalApproaches) return acc + act.totalApproaches;
+      if (act.militantParticipations && act.militantParticipations.length > 0) {
+        return acc + act.militantParticipations.reduce((s, p) => s + (p.approachesCount || 0), 0);
+      }
+      return acc + (act.materialsDistributed?.abordagens || 0);
+    }, 0);
+  }, [targetActions]);
+
+  // Total de fotos nas Ações no Bairro
+  const totalPhotosAcoes = useMemo(() => {
+    return targetActions.reduce((acc, act) => acc + (act.photos?.length || 0), 0);
+  }, [targetActions]);
 
   // Totais Gerais
   const totalRuas = checkIns.length;
-  const totalAbordagens = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+  const totalAbordagensRuas = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+  const totalAbordagens = totalAbordagensRuas + totalAbordagensAcoes;
   const totalComercios = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-  const totalPhotos = checkIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+  const totalPhotosRuas = checkIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+  const totalPhotos = totalPhotosRuas + totalPhotosAcoes;
 
   // Militantes Ativos e cálculo de produtividade consolidada se não passado via prop
   const computedProductivityData = useMemo(() => {
@@ -133,9 +164,31 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
     return militants.map(mil => {
       const milCheckIns = checkIns.filter(c => c.militantId === mil.id || c.militantName === mil.name);
       const streetsCount = milCheckIns.length;
-      const abordagens = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+      const abordagensRuas = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
       const comercios = milCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-      const photosCount = milCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+      const photosCountRuas = milCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+
+      // Abordagens individuais deste militante em Ações no Bairro
+      const abordagensAcoes = targetActions.reduce((acc, act) => {
+        if (act.militantParticipations && act.militantParticipations.length > 0) {
+          const part = act.militantParticipations.find(p => p.militantId === mil.id || p.militantName === mil.name);
+          return acc + (part?.approachesCount || 0);
+        }
+        if (act.scope === 'individual' && (act.militantId === mil.id || act.militantName === mil.name)) {
+          return acc + (act.totalApproaches || act.materialsDistributed?.abordagens || 0);
+        }
+        return acc;
+      }, 0);
+
+      // Fotos das ações vinculadas ao militante
+      const photosAcoes = targetActions.reduce((acc, act) => {
+        const isParticipant = (act.militantParticipations && act.militantParticipations.some(p => p.militantId === mil.id || p.militantName === mil.name)) ||
+          act.militantId === mil.id || act.militantName === mil.name || act.createdBy === mil.id;
+        return acc + (isParticipant ? (act.photos?.length || 0) : 0);
+      }, 0);
+
+      const totalMilAbordagens = abordagensRuas + abordagensAcoes;
+      const totalMilPhotos = photosCountRuas + photosAcoes;
 
       const weeklyGoal = 25;
       const completionRate = Math.min(Math.round((streetsCount / weeklyGoal) * 100), 200);
@@ -148,14 +201,18 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
         matricula: mil.matricula,
         teamName: teamObj?.name || 'Geral',
         streetsCount,
-        abordagens,
+        abordagens: totalMilAbordagens,
+        abordagensRuas,
+        abordagensAcoes,
         comercios,
-        photosCount,
+        photosCount: totalMilPhotos,
+        photosCountRuas,
+        photosAcoes,
         completionRate,
         weeklyGoal
       };
-    }).sort((a, b) => b.streetsCount - a.streetsCount);
-  }, [militants, checkIns, teams, externalProductivityData]);
+    }).sort((a, b) => b.streetsCount - a.streetsCount || b.abordagens - a.abordagens);
+  }, [militants, checkIns, teams, targetActions, externalProductivityData]);
 
   // Gráfico de Pizza por Equipes
   const teamDistributionPieData = useMemo(() => {
@@ -217,7 +274,11 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
             {totalAbordagens}
           </strong>
           <span className="text-[10px] text-purple-600 font-medium block mt-0.5">
-            Média: {avgAbordagensPerStreet} / rua
+            {totalAbordagensAcoes > 0 ? (
+              <span>{totalAbordagensRuas} ruas + {totalAbordagensAcoes} ações</span>
+            ) : (
+              <span>Média: {avgAbordagensPerStreet} / rua</span>
+            )}
           </span>
         </div>
 
@@ -259,7 +320,11 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
             {totalPhotos}
           </strong>
           <span className="text-[10px] text-blue-600 font-medium block mt-0.5">
-            Comprovações auditadas
+            {totalPhotosAcoes > 0 ? (
+              <span>{totalPhotosRuas} ruas + {totalPhotosAcoes} ações</span>
+            ) : (
+              <span>Comprovações auditadas</span>
+            )}
           </span>
         </div>
 
@@ -437,9 +502,23 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
                   </td>
                   <td className="py-2 px-3 text-slate-600">{d.teamName}</td>
                   <td className="py-2 px-2 text-center font-bold text-slate-900 font-mono">{d.streetsCount}</td>
-                  <td className="py-2 px-2 text-center font-bold text-purple-800 font-mono">{d.abordagens}</td>
+                  <td className="py-2 px-2 text-center font-bold text-purple-800 font-mono">
+                    <div>{d.abordagens}</div>
+                    {d.abordagensAcoes > 0 && (
+                      <span className="text-[9px] text-purple-600 font-medium block">
+                        ({d.abordagensRuas} ruas + {d.abordagensAcoes} ações)
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2 px-2 text-center font-bold text-emerald-800 font-mono">{d.comercios}</td>
-                  <td className="py-2 px-2 text-center font-bold text-blue-800 font-mono">{d.photosCount || 0}</td>
+                  <td className="py-2 px-2 text-center font-bold text-blue-800 font-mono">
+                    <div>{d.photosCount || 0}</div>
+                    {d.photosAcoes > 0 && (
+                      <span className="text-[9px] text-blue-600 font-medium block">
+                        ({d.photosCountRuas} ruas + {d.photosAcoes} ações)
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2 px-3 text-center">
                     <div className="flex items-center gap-1.5 justify-center">
                       <div className="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden">
@@ -487,11 +566,16 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2 text-xs flex-wrap">
+              {totalAbordagensAcoes > 0 && (
+                <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
+                  🗣️ {totalAbordagensAcoes} abordagens
+                </span>
+              )}
               <span className="px-2.5 py-1 rounded-lg bg-white/10 text-emerald-300 font-bold border border-white/10">
                 📷 {actionsByNeighborhood.reduce((acc, g) => acc + g.actions.reduce((a, act) => a + (act.photos?.length || 0), 0), 0)} fotos
               </span>
-              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-purple-300 font-bold border border-white/10">
+              <span className="px-2.5 py-1 rounded-lg bg-white/10 text-blue-300 font-bold border border-white/10">
                 👥 ~{actionsByNeighborhood.reduce((acc, g) => acc + g.actions.reduce((a, act) => a + (act.estimatedPeople || 0), 0), 0).toLocaleString('pt-BR')} pessoas
               </span>
             </div>
@@ -589,6 +673,54 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
                             </span>
                           )}
                         </div>
+
+                        {/* Militantes Participantes e Abordagens Individuais */}
+                        {action.militantParticipations && action.militantParticipations.length > 0 ? (
+                          <div className="mt-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
+                            <div className="flex items-center justify-between text-[11px] font-bold">
+                              <span className="flex items-center gap-1.5 text-blue-800">
+                                <Users className="w-3.5 h-3.5 text-blue-600" />
+                                Militantes Participantes ({action.militantParticipations.length}):
+                              </span>
+                              <span className="text-purple-700 font-mono font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                                Total: {action.totalApproaches || action.militantParticipations.reduce((sum, p) => sum + (p.approachesCount || 0), 0)} abordagens
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                              {action.militantParticipations.map(p => (
+                                <div
+                                  key={p.militantId}
+                                  className="flex items-center justify-between px-2 py-1 bg-white rounded border border-slate-200 text-[11px]"
+                                >
+                                  <span className="text-slate-800 font-medium truncate mr-1.5">{p.militantName}</span>
+                                  <span className="px-1.5 py-0.5 rounded bg-purple-100/70 text-purple-800 font-bold font-mono text-[10px] shrink-0">
+                                    {p.approachesCount} {p.approachesCount === 1 ? 'abordagem' : 'abordagens'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          action.scope === 'individual' && action.militantName ? (
+                            <div className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 flex items-center justify-between">
+                              <span>Militante responsável: <strong>{action.militantName}</strong></span>
+                              {action.materialsDistributed?.abordagens ? (
+                                <span className="font-mono text-purple-700 font-bold">{action.materialsDistributed.abordagens} abordagens</span>
+                              ) : null}
+                            </div>
+                          ) : action.scope === 'grupo' && action.militantNames && action.militantNames.length > 0 ? (
+                            <div className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 space-y-1">
+                              <span className="font-semibold text-slate-700 block">Militantes no grupo ({action.militantNames.length}):</span>
+                              <div className="flex flex-wrap gap-1">
+                                {action.militantNames.map((name, i) => (
+                                  <span key={i} className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-[10px] text-slate-700">
+                                    {name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null
+                        )}
 
                         {action.observations && (
                           <p className="mt-2 text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">

@@ -207,6 +207,20 @@ async function startServer() {
                   status: incomingItem.status || existingItem.status || 'validado',
                   synced: true
                 };
+              } else if (key === 'militancia_bairro_actions_v1') {
+                const existingPhotos = Array.isArray(existingItem.photos) ? existingItem.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
+                const incomingPhotos = Array.isArray(incomingItem.photos) ? incomingItem.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
+                const finalPhotos = incomingPhotos.length > 0 ? incomingPhotos : existingPhotos;
+
+                merged = {
+                  ...existingItem,
+                  ...incomingItem,
+                  photos: finalPhotos,
+                  militantParticipations: incomingItem.militantParticipations || existingItem.militantParticipations || [],
+                  totalApproaches: incomingItem.totalApproaches ?? existingItem.totalApproaches ?? 0,
+                  materialsDistributed: incomingItem.materialsDistributed || existingItem.materialsDistributed || {},
+                  updatedAt: new Date().toISOString()
+                };
               }
 
               itemMap.set(idStr, merged);
@@ -214,12 +228,12 @@ async function startServer() {
           }
         });
 
-        // Convert map back to array and preserve newest first for checkins/logs
+        // Convert map back to array and preserve newest first for checkins/logs/actions
         const mergedList = Array.from(itemMap.values());
-        if (key === 'militancia_checkins_v1' || key === 'militancia_audit_logs_v1' || key === 'militancia_notifications_v1') {
+        if (key === 'militancia_checkins_v1' || key === 'militancia_audit_logs_v1' || key === 'militancia_notifications_v1' || key === 'militancia_bairro_actions_v1') {
           mergedList.sort((a, b) => {
-            const timeA = new Date(a.timestamp || a.timestamp_checkin || a.created_at || 0).getTime();
-            const timeB = new Date(b.timestamp || b.timestamp_checkin || b.created_at || 0).getTime();
+            const timeA = new Date(a.timestamp || a.timestamp_checkin || a.createdAt || a.created_at || 0).getTime();
+            const timeB = new Date(b.timestamp || b.timestamp_checkin || b.createdAt || b.created_at || 0).getTime();
             return timeB - timeA;
           });
         }

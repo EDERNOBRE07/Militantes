@@ -2518,12 +2518,34 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
           `Cobertura Territorial, População IBGE, Eleitores e Ruas Registradas em São José - SC | Período: ${selectedWeekLabel}`
         );
 
+        const allBairroActions = StorageService.getBairroActions();
+
         const bairrosConsolidatedRows = neighborhoods.map((n, idx) => {
           const nCheckIns = filteredCheckIns.filter(c => c.neighborhoodId === n.id || c.neighborhoodName.toLowerCase().includes(n.name.toLowerCase()));
           const nStreets = nCheckIns.length;
           const nCoverage = Math.min(Math.round((nStreets / Math.max(n.totalStreets, 1)) * 100), 100);
-          const nAbord = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
-          const nPhotos = nCheckIns.reduce((acc, c) => acc + getAllPhotosForCheckIn(c).length, 0);
+          const nAbordRuas = nCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
+          const nPhotosRuas = nCheckIns.reduce((acc, c) => acc + getAllPhotosForCheckIn(c).length, 0);
+
+          const nActions = allBairroActions.filter(a => {
+            const aId = (a.neighborhoodId || '').toLowerCase().trim();
+            const aName = (a.neighborhoodName || '').toLowerCase().trim();
+            const cleanId = (n.id || '').toLowerCase().trim();
+            const cleanName = (n.name || '').toLowerCase().trim();
+            return aId === cleanId || aName === cleanName || aId.includes(cleanId) || cleanId.includes(aId);
+          });
+          const nActionAbord = nActions.reduce((acc, a) => {
+            if (a.totalApproaches) return acc + a.totalApproaches;
+            if (a.militantParticipations && a.militantParticipations.length > 0) {
+              return acc + a.militantParticipations.reduce((s, p) => s + (p.approachesCount || 0), 0);
+            }
+            return acc + (a.materialsDistributed?.abordagens || 0);
+          }, 0);
+          const nActionPhotos = nActions.reduce((acc, a) => acc + (a.photos?.length || 0), 0);
+
+          const totalBairroAbord = nAbordRuas + nActionAbord;
+          const totalBairroPhotos = nPhotosRuas + nActionPhotos;
+
           let nStatus = 'Planejado';
           if (nCoverage >= 70) nStatus = 'Alta Cobertura';
           else if (nCoverage >= 30) nStatus = 'Em Andamento';
@@ -2538,8 +2560,8 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             `${n.totalStreets}`,
             `${nStreets}`,
             `${nCoverage}%`,
-            `${nAbord}`,
-            `${nPhotos}`,
+            nActionAbord > 0 ? `${totalBairroAbord} (${nAbordRuas}+${nActionAbord} ac.)` : `${totalBairroAbord}`,
+            nActionPhotos > 0 ? `${totalBairroPhotos} (${nPhotosRuas}+${nActionPhotos} ac.)` : `${totalBairroPhotos}`,
             nStatus
           ];
         });
@@ -2664,6 +2686,83 @@ export const WeeklyReportView: React.FC<WeeklyReportViewProps> = ({
             drawFooter(data.pageNumber);
           }
         });
+
+        // PAGE 6: SEÇÃO 5 DO COMPILADO - AÇÕES ESPECÍFICAS NOS BAIRROS
+        if (allBairroActions.length > 0) {
+          doc.addPage('a4', 'landscape');
+          drawHeaderBanner(
+            'COMPILADO GERAL (SEÇÃO 5/5) - AÇÕES ESPECÍFICAS NOS BAIRROS',
+            `Eventos em Praças, Mercados, Comícios, Militantes Participantes e Abordagens Individuais | Período: ${selectedWeekLabel}`
+          );
+
+          const actionsRows = allBairroActions.map((act, actIdx) => {
+            const participantsSummary = act.militantParticipations && act.militantParticipations.length > 0
+              ? act.militantParticipations.map(p => `${p.militantName} (${p.approachesCount} ab.)`).join(', ')
+              : (act.militantName ? `${act.militantName} (${act.materialsDistributed?.abordagens || 0} ab.)` : (act.militantNames?.join(', ') || '-'));
+
+            const totalActAbordagens = act.totalApproaches ||
+              (act.militantParticipations ? act.militantParticipations.reduce((s, p) => s + (p.approachesCount || 0), 0) : (act.materialsDistributed?.abordagens || 0));
+
+            return [
+              `#${actIdx + 1}`,
+              act.timestamp,
+              act.neighborhoodName,
+              act.locationName || act.title || '-',
+              act.actionType.replace(/_/g, ' ').toUpperCase(),
+              `${totalActAbordagens}`,
+              participantsSummary,
+              `${act.photos?.length || 0} foto(s)`,
+              act.estimatedPeople ? `~${act.estimatedPeople}` : '-'
+            ];
+          });
+
+          autoTable(doc, {
+            head: [[
+              '#',
+              'Data / Hora',
+              'Bairro',
+              'Local / Evento',
+              'Tipo de Ação',
+              'Abordagens',
+              'Militantes Participantes & Quantidade de Abordagens',
+              'Fotos',
+              'Pessoas'
+            ]],
+            body: actionsRows,
+            startY: 28,
+            margin: { left: 14, right: 14, bottom: 28 },
+            styles: {
+              fontSize: 7,
+              cellPadding: 2,
+              textColor: [30, 41, 59],
+              lineColor: [226, 232, 240],
+              lineWidth: 0.1
+            },
+            headStyles: {
+              fillColor: [241, 245, 249],
+              textColor: [15, 23, 42],
+              fontStyle: 'bold',
+              fontSize: 7.5
+            },
+            alternateRowStyles: {
+              fillColor: [248, 250, 252]
+            },
+            columnStyles: {
+              0: { cellWidth: 10, halign: 'center' },
+              1: { cellWidth: 26 },
+              2: { cellWidth: 30, fontStyle: 'bold' },
+              3: { cellWidth: 38 },
+              4: { cellWidth: 26 },
+              5: { cellWidth: 18, halign: 'center', fontStyle: 'bold' },
+              6: { cellWidth: 75 },
+              7: { cellWidth: 22, halign: 'center' },
+              8: { cellWidth: 24, halign: 'center' }
+            },
+            didDrawPage: (data) => {
+              drawFooter(data.pageNumber);
+            }
+          });
+        }
 
         const sanitizedWeek = selectedWeek.replace(/[^a-zA-Z0-9_-]/g, '_');
         const reportFileName = `relatorio_compilado_geral_completo_${sanitizedWeek}.pdf`;

@@ -64,6 +64,13 @@ export const NeighborhoodActionsReportCard: React.FC<NeighborhoodActionsReportCa
 
   const totalPhotos = actions.reduce((acc, a) => acc + (a.photos?.length || 0), 0);
   const totalPeople = actions.reduce((acc, a) => acc + (a.estimatedPeople || 0), 0);
+  const totalAbordagensAcoes = actions.reduce((acc, a) => {
+    if (a.totalApproaches) return acc + a.totalApproaches;
+    if (a.militantParticipations && a.militantParticipations.length > 0) {
+      return acc + a.militantParticipations.reduce((s, p) => s + (p.approachesCount || 0), 0);
+    }
+    return acc + (a.materialsDistributed?.abordagens || 0);
+  }, 0);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs space-y-0">
@@ -90,12 +97,17 @@ export const NeighborhoodActionsReportCard: React.FC<NeighborhoodActionsReportCa
 
         <div className="flex items-center gap-2">
           {actions.length > 0 && (
-            <div className="flex items-center gap-2 text-[11px] text-slate-300 pr-1">
-              <span className="px-2 py-0.5 rounded bg-white/10 text-emerald-300 font-bold">
+            <div className="flex items-center gap-2 text-[11px] text-slate-300 pr-1 flex-wrap">
+              {totalAbordagensAcoes > 0 && (
+                <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
+                  🗣️ {totalAbordagensAcoes} abordagens
+                </span>
+              )}
+              <span className="px-2 py-0.5 rounded bg-white/10 text-emerald-300 font-bold border border-white/10">
                 📷 {totalPhotos} fotos
               </span>
               {totalPeople > 0 && (
-                <span className="px-2 py-0.5 rounded bg-white/10 text-purple-300 font-bold">
+                <span className="px-2 py-0.5 rounded bg-white/10 text-blue-300 font-bold border border-white/10">
                   👥 ~{totalPeople} pessoas
                 </span>
               )}
@@ -209,6 +221,54 @@ export const NeighborhoodActionsReportCard: React.FC<NeighborhoodActionsReportCa
                       </span>
                     )}
                   </div>
+
+                  {/* Militantes Participantes e Abordagens Individuais */}
+                  {act.militantParticipations && act.militantParticipations.length > 0 ? (
+                    <div className="mt-2.5 p-2.5 rounded-xl bg-white border border-slate-200 space-y-1.5 shadow-2xs">
+                      <div className="flex items-center justify-between text-[11px] font-bold">
+                        <span className="flex items-center gap-1.5 text-blue-800">
+                          <Users className="w-3.5 h-3.5 text-blue-600" />
+                          Militantes Participantes ({act.militantParticipations.length}):
+                        </span>
+                        <span className="text-purple-700 font-mono font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                          Total: {act.totalApproaches || act.militantParticipations.reduce((sum, p) => sum + (p.approachesCount || 0), 0)} abordagens
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                        {act.militantParticipations.map(p => (
+                          <div
+                            key={p.militantId}
+                            className="flex items-center justify-between px-2 py-1 bg-slate-50 rounded border border-slate-200 text-[11px]"
+                          >
+                            <span className="text-slate-800 font-medium truncate mr-1.5">{p.militantName}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-purple-100/70 text-purple-800 font-bold font-mono text-[10px] shrink-0">
+                              {p.approachesCount} {p.approachesCount === 1 ? 'abordagem' : 'abordagens'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    act.scope === 'individual' && act.militantName ? (
+                      <div className="mt-2 text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-200 flex items-center justify-between">
+                        <span>Militante responsável: <strong>{act.militantName}</strong></span>
+                        {act.materialsDistributed?.abordagens ? (
+                          <span className="font-mono text-purple-700 font-bold">{act.materialsDistributed.abordagens} abordagens</span>
+                        ) : null}
+                      </div>
+                    ) : act.scope === 'grupo' && act.militantNames && act.militantNames.length > 0 ? (
+                      <div className="mt-2 text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-200 space-y-1">
+                        <span className="font-semibold text-slate-700 block">Militantes no grupo ({act.militantNames.length}):</span>
+                        <div className="flex flex-wrap gap-1">
+                          {act.militantNames.map((name, i) => (
+                            <span key={i} className="px-1.5 py-0.5 rounded bg-slate-100 text-[10px] text-slate-700">
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null
+                  )}
 
                   {act.observations && (
                     <p className="mt-2 text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-200 italic">
