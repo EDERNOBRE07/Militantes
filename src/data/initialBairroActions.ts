@@ -10,8 +10,8 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     locationName: 'Praça Eugênio Raulino Koerich',
     actionType: 'bandeiraco',
     scope: 'toda_equipe',
-    teamId: 'team-alpha',
-    teamName: 'Equipe Alpha',
+    teamId: 'team-1787840837258',
+    teamName: 'Equipe Daniel Freitas - São José',
     hasGps: true,
     latitude: -27.5958,
     longitude: -48.6185,
@@ -19,23 +19,64 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     address: 'Rua Koesa c/ Rua Adhemar da Silva, Kobrasol',
     timestamp: '2026-09-24 10:30:00',
     photos: [
-      'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=900&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=900&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=900&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=75'
     ],
     estimatedPeople: 380,
+    militantIds: [
+      'mil-1787842489241', 'mil-1787842613622', 'mil-1787842774685', 'mil-1787842879496',
+      'mil-1787842912688', 'mil-1787842976552', 'mil-1787843082113', 'mil-1787843172481',
+      'mil-1787843294191', 'mil-1787848020226'
+    ],
+    militantNames: [
+      'Beatriz', 'Daiana', 'Gustavo', 'Jessica', 'Juliana',
+      'Juliane', 'Kayla', 'Merilyn', 'Nathalia', 'Raissa'
+    ],
+    militantParticipations: [
+      { militantId: 'mil-1787842489241', militantName: 'Beatriz', matricula: 'Mil002', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 25 },
+      { militantId: 'mil-1787842613622', militantName: 'Daiana', matricula: 'Mil-DAI', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 20 },
+      { militantId: 'mil-1787842774685', militantName: 'Gustavo', matricula: 'Mil007', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 22 },
+      { militantId: 'mil-1787842879496', militantName: 'Jessica', matricula: 'Mil010', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 18 },
+      { militantId: 'mil-1787842912688', militantName: 'Juliana', matricula: 'Mil011', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 24 },
+      { militantId: 'mil-1787842976552', militantName: 'Juliane', matricula: 'Mil012', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 21 },
+      { militantId: 'mil-1787843082113', militantName: 'Kayla', matricula: 'Mil013', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 19 },
+      { militantId: 'mil-1787843172481', militantName: 'Merilyn', matricula: 'Mil014', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 26 },
+      { militantId: 'mil-1787843294191', militantName: 'Nathalia', matricula: 'Mil015', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 23 },
+      { militantId: 'mil-1787848020226', militantName: 'Raissa', matricula: 'Mil016', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 20 }
+    ],
+    totalApproaches: 218,
     materialsDistributed: {
       santinhos: 650,
       adesivos: 180,
       adesivo_bola: 95,
       panfletos: 400,
-      bandeiras: 25
+      bandeiras: 25,
+      abordagens: 218
     },
     observations: 'Ação com toda a equipe reunida na praça central do Kobrasol. Grande receptividade dos pedestres e comerciantes locais.',
     status: 'concluida',
-    createdBy: 'mil-01',
-    createdByName: 'Militante 01',
-    createdAt: '2026-09-24 10:30:00'
+    createdBy: 'user-coord-geral',
+    createdByName: 'Pedro da Silva Rosa',
+    createdAt: '2026-09-24 10:30:00',
+    updatedAt: '2026-09-28 10:00:00'
   },
   {
     id: 'act-kobrasol-mercado-02',
@@ -46,10 +87,17 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     locationName: 'Supermercado Imperatriz Kobrasol',
     actionType: 'abordagens',
     scope: 'grupo',
-    militantIds: ['mil-01', 'mil-02', 'mil-03'],
-    militantNames: ['Militante 01', 'Militante 02', 'Militante 03'],
-    teamId: 'team-alpha',
-    teamName: 'Equipe Alpha',
+    militantIds: ['mil-1787842489241', 'mil-1787842613622', 'mil-1787842774685', 'mil-1787842879496'],
+    militantNames: ['Beatriz', 'Daiana', 'Gustavo', 'Jessica'],
+    militantParticipations: [
+      { militantId: 'mil-1787842489241', militantName: 'Beatriz', matricula: 'Mil002', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 30 },
+      { militantId: 'mil-1787842613622', militantName: 'Daiana', matricula: 'Mil-DAI', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 28 },
+      { militantId: 'mil-1787842774685', militantName: 'Gustavo', matricula: 'Mil007', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 25 },
+      { militantId: 'mil-1787842879496', militantName: 'Jessica', matricula: 'Mil010', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 32 }
+    ],
+    totalApproaches: 115,
+    teamId: 'team-1787840837258',
+    teamName: 'Equipe Daniel Freitas - São José',
     hasGps: true,
     latitude: -27.5942,
     longitude: -48.6198,
@@ -57,21 +105,41 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     address: 'Av. Lédio João Martins, 800, Kobrasol',
     timestamp: '2026-09-25 15:45:00',
     photos: [
-      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=900&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=900&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=75'
     ],
     estimatedPeople: 210,
     materialsDistributed: {
       santinhos: 320,
       adesivos: 75,
       adesivo_bola: 40,
-      panfletos: 150
+      panfletos: 150,
+      abordagens: 115
     },
-    observations: 'Grupo de 3 militantes atuando na entrada e estacionamento externo do supermercado, conversando com famílias e consumidores.',
+    observations: 'Grupo atuando na entrada e estacionamento externo do supermercado, conversando com famílias e consumidores.',
     status: 'concluida',
-    createdBy: 'mil-02',
-    createdByName: 'Militante 02',
-    createdAt: '2026-09-25 15:45:00'
+    createdBy: 'mil-1787842489241',
+    createdByName: 'Beatriz',
+    createdAt: '2026-09-25 15:45:00',
+    updatedAt: '2026-09-28 10:00:00'
   },
   {
     id: 'act-campinas-calcadao-01',
@@ -82,8 +150,8 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     locationName: 'Calçadão Comercial de Campinas / Av. Central',
     actionType: 'caminhada',
     scope: 'toda_equipe',
-    teamId: 'team-alpha',
-    teamName: 'Equipe Alpha',
+    teamId: 'team-1787840837258',
+    teamName: 'Equipe Daniel Freitas - São José',
     hasGps: true,
     latitude: -27.5991,
     longitude: -48.6163,
@@ -91,22 +159,64 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     address: 'Av. Central de Campinas, São José',
     timestamp: '2026-09-23 11:15:00',
     photos: [
-      'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=900&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=900&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=75'
     ],
     estimatedPeople: 450,
+    militantIds: [
+      'mil-1787842489241', 'mil-1787842613622', 'mil-1787842774685', 'mil-1787842879496',
+      'mil-1787842912688', 'mil-1787842976552', 'mil-1787843082113', 'mil-1787843172481',
+      'mil-1787843294191', 'mil-1787848020226'
+    ],
+    militantNames: [
+      'Beatriz', 'Daiana', 'Gustavo', 'Jessica', 'Juliana',
+      'Juliane', 'Kayla', 'Merilyn', 'Nathalia', 'Raissa'
+    ],
+    militantParticipations: [
+      { militantId: 'mil-1787842489241', militantName: 'Beatriz', matricula: 'Mil002', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 28 },
+      { militantId: 'mil-1787842613622', militantName: 'Daiana', matricula: 'Mil-DAI', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 30 },
+      { militantId: 'mil-1787842774685', militantName: 'Gustavo', matricula: 'Mil007', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 24 },
+      { militantId: 'mil-1787842879496', militantName: 'Jessica', matricula: 'Mil010', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 22 },
+      { militantId: 'mil-1787842912688', militantName: 'Juliana', matricula: 'Mil011', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 26 },
+      { militantId: 'mil-1787842976552', militantName: 'Juliane', matricula: 'Mil012', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 25 },
+      { militantId: 'mil-1787843082113', militantName: 'Kayla', matricula: 'Mil013', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 27 },
+      { militantId: 'mil-1787843172481', militantName: 'Merilyn', matricula: 'Mil014', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 29 },
+      { militantId: 'mil-1787843294191', militantName: 'Nathalia', matricula: 'Mil015', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 31 },
+      { militantId: 'mil-1787848020226', militantName: 'Raissa', matricula: 'Mil016', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 28 }
+    ],
+    totalApproaches: 270,
     materialsDistributed: {
       santinhos: 800,
       adesivos: 220,
       adesivo_bola: 110,
       panfletos: 500,
-      bandeiras: 18
+      bandeiras: 18,
+      abordagens: 270
     },
     observations: 'Caminhada geral pelo calçadão movimentado, com diálogos diretos com lojistas e pedestres.',
     status: 'concluida',
-    createdBy: 'mil-03',
-    createdByName: 'Militante 03',
-    createdAt: '2026-09-23 11:15:00'
+    createdBy: 'user-coord-geral',
+    createdByName: 'Pedro da Silva Rosa',
+    createdAt: '2026-09-23 11:15:00',
+    updatedAt: '2026-09-28 10:00:00'
   },
   {
     id: 'act-barreiros-escola-01',
@@ -117,10 +227,23 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     locationName: 'Escola Básica Municipal Altino Flores',
     actionType: 'distribuicao_materiais',
     scope: 'individual',
-    militantId: 'mil-05',
-    militantName: 'Militante 05',
-    teamId: 'team-bravo',
-    teamName: 'Equipe Bravo',
+    militantId: 'mil-1787842613622',
+    militantName: 'Daiana',
+    militantIds: ['mil-1787842613622'],
+    militantNames: ['Daiana'],
+    militantParticipations: [
+      {
+        militantId: 'mil-1787842613622',
+        militantName: 'Daiana',
+        matricula: 'Mil-DAI',
+        teamId: 'team-1787840837258',
+        teamName: 'Equipe Daniel Freitas - São José',
+        approachesCount: 42
+      }
+    ],
+    totalApproaches: 42,
+    teamId: 'team-1787840837258',
+    teamName: 'Equipe Daniel Freitas - São José',
     hasGps: true,
     latitude: -27.5768,
     longitude: -48.6254,
@@ -128,20 +251,40 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     address: 'Rua Eugênio Portela, Barreiros',
     timestamp: '2026-09-24 17:00:00',
     photos: [
-      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=900&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=900&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=75'
     ],
     estimatedPeople: 140,
     materialsDistributed: {
       santinhos: 180,
       adesivos: 40,
-      panfletos: 120
+      panfletos: 120,
+      abordagens: 42
     },
     observations: 'Ação no horário de saída escolar, conversando com pais e responsáveis sobre propostas para a educação.',
     status: 'concluida',
-    createdBy: 'mil-05',
-    createdByName: 'Militante 05',
-    createdAt: '2026-09-24 17:00:00'
+    createdBy: 'mil-1787842613622',
+    createdByName: 'Daiana',
+    createdAt: '2026-09-24 17:00:00',
+    updatedAt: '2026-09-28 10:00:00'
   },
   {
     id: 'act-forquilhinhas-feira-01',
@@ -152,28 +295,55 @@ export const INITIAL_BAIRRO_ACTIONS: BairroAction[] = [
     locationName: 'Feira Livre e Praça da Matriz de Forquilhinhas',
     actionType: 'corpo_a_corpo',
     scope: 'grupo',
-    militantIds: ['mil-08', 'mil-09', 'mil-10'],
-    militantNames: ['Militante 08', 'Militante 09', 'Militante 10'],
-    teamId: 'team-bravo',
-    teamName: 'Equipe Bravo',
-    hasGps: false, // exemplo de geolocalização não utilizada, conforme o requisito do usuário ("geolocalização, que poderá ser usada ou não")
+    militantIds: ['mil-1787842912688', 'mil-1787842976552', 'mil-1787843082113', 'mil-1787843172481'],
+    militantNames: ['Juliana', 'Juliane', 'Kayla', 'Merilyn'],
+    militantParticipations: [
+      { militantId: 'mil-1787842912688', militantName: 'Juliana', matricula: 'Mil011', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 35 },
+      { militantId: 'mil-1787842976552', militantName: 'Juliane', matricula: 'Mil012', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 30 },
+      { militantId: 'mil-1787843082113', militantName: 'Kayla', matricula: 'Mil013', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 28 },
+      { militantId: 'mil-1787843172481', militantName: 'Merilyn', matricula: 'Mil014', teamId: 'team-1787840837258', teamName: 'Equipe Daniel Freitas - São José', approachesCount: 33 }
+    ],
+    totalApproaches: 126,
+    teamId: 'team-1787840837258',
+    teamName: 'Equipe Daniel Freitas - São José',
+    hasGps: false,
     address: 'Rua Vereador Arthur Mariano, centro de Forquilhinhas',
     timestamp: '2026-09-25 09:00:00',
     photos: [
-      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=900&auto=format&fit=crop&q=80',
-      'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=900&auto=format&fit=crop&q=80'
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1540910419892-4a36d2c3266c?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=75',
+      'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=75'
     ],
     estimatedPeople: 320,
     materialsDistributed: {
       santinhos: 450,
       adesivos: 110,
       adesivo_bola: 60,
-      panfletos: 280
+      panfletos: 280,
+      abordagens: 126
     },
-    observations: 'Registro sem coordenadas GPS exatas, com foco nos feirantes e famílias na feira de sábado.',
+    observations: 'Registro com foco nos feirantes e famílias na feira livre e praça da matriz.',
     status: 'concluida',
-    createdBy: 'mil-08',
-    createdByName: 'Militante 08',
-    createdAt: '2026-09-25 09:00:00'
+    createdBy: 'mil-1787842912688',
+    createdByName: 'Juliana',
+    createdAt: '2026-09-25 09:00:00',
+    updatedAt: '2026-09-28 10:00:00'
   }
 ];

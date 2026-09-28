@@ -150,6 +150,8 @@ export class StorageService {
 
   // Cache em memória de check-ins para acesso imediato de 0ms sem limites de quota
   private static checkinsMemoryCache: StreetCheckIn[] | null = null;
+  // Cache em memória de ações por bairro com suporte a galerias de 20 fotos
+  private static bairroActionsMemoryCache: BairroAction[] | null = null;
   // Cache dedicado de fotos de alta resolução do cofre do banco de dados (ID -> fotos[])
   public static photoVaultCache: Map<string, string[]> = new Map();
 
@@ -200,6 +202,25 @@ export class StorageService {
             photos: lightPhotos
           };
         });
+      } else if (key === STORAGE_KEYS.BAIRRO_ACTIONS && Array.isArray(value)) {
+        toSave = (value as BairroAction[]).map(act => {
+          if (Array.isArray(act.photos) && act.photos.length > 0) {
+            const realPhotos = act.photos.filter(p => p && p !== '[vault_photo]');
+            if (realPhotos.length > 0) {
+              this.photoVaultCache.set(String(act.id), realPhotos);
+            }
+          }
+          const lightPhotos = (act.photos || []).map((p, idx) => {
+            if (typeof p === 'string' && p.length > 300 && idx >= 2) {
+              return '[vault_photo]';
+            }
+            return p;
+          });
+          return {
+            ...act,
+            photos: lightPhotos
+          };
+        });
       }
 
       localStorage.setItem(key, JSON.stringify(toSave));
@@ -217,7 +238,10 @@ export class StorageService {
           const stripped = value.map(item => {
             if (item && typeof item === 'object') {
               const copy = { ...item };
-              if ('photos' in copy) copy.photos = [];
+              // Em vez de limpar totalmente para [], marca como [vault_photo] para permitir restauração do cofre
+              if ('photos' in copy && Array.isArray(copy.photos)) {
+                copy.photos = copy.photos.map(() => '[vault_photo]');
+              }
               if ('fotos_json' in copy) copy.fotos_json = '[]';
               return copy;
             }
@@ -237,6 +261,17 @@ export class StorageService {
     if (key === STORAGE_KEYS.CHECKINS && Array.isArray(value)) {
       this.checkinsMemoryCache = value as unknown as StreetCheckIn[];
     }
+    if (key === STORAGE_KEYS.BAIRRO_ACTIONS && Array.isArray(value)) {
+      this.bairroActionsMemoryCache = value as unknown as BairroAction[];
+      (value as unknown as BairroAction[]).forEach(act => {
+        if (act && act.id && Array.isArray(act.photos) && act.photos.length > 0) {
+          const realPhotos = act.photos.filter(p => p && p !== '[vault_photo]');
+          if (realPhotos.length > 0) {
+            this.photoVaultCache.set(String(act.id), realPhotos);
+          }
+        }
+      });
+    }
 
     // 1. Salva de forma higienizada e segura no LocalStorage
     this.safeLocalStorageSet(key, value);
@@ -247,6 +282,10 @@ export class StorageService {
       if (key === STORAGE_KEYS.CHECKINS && Array.isArray(value) && value.length > 0) {
         vaultStorage.saveSnapshot(`Check-ins salvos (${value.length} registros)`, {
           [STORAGE_KEYS.CHECKINS]: value
+        }).catch(() => {});
+      } else if (key === STORAGE_KEYS.BAIRRO_ACTIONS && Array.isArray(value) && value.length > 0) {
+        vaultStorage.saveSnapshot(`Ações nos bairros salvas (${value.length} ações)`, {
+          [STORAGE_KEYS.BAIRRO_ACTIONS]: value
         }).catch(() => {});
       }
     }
@@ -745,13 +784,19 @@ export class StorageService {
     if (!localStorage.getItem(STORAGE_KEYS.ADMINS)) {
       this.set(STORAGE_KEYS.ADMINS, INITIAL_ADMINS, false);
     }
+    if (!localStorage.getItem(STORAGE_KEYS.BAIRRO_ACTIONS)) {
+      this.set(STORAGE_KEYS.BAIRRO_ACTIONS, INITIAL_BAIRRO_ACTIONS, false);
+    }
 
     // 3. Salva snapshot no IndexedDB Vault
     if (typeof window !== 'undefined') {
       const allCheckins = this.getCheckIns();
+      const allActions = this.getBairroActions();
       vaultStorage.setItem(STORAGE_KEYS.CHECKINS, allCheckins).catch(() => {});
-      vaultStorage.saveSnapshot(`Sessão iniciada (${allCheckins.length} check-ins)`, {
+      vaultStorage.setItem(STORAGE_KEYS.BAIRRO_ACTIONS, allActions).catch(() => {});
+      vaultStorage.saveSnapshot(`Sessão iniciada (${allCheckins.length} check-ins, ${allActions.length} ações)`, {
         [STORAGE_KEYS.CHECKINS]: allCheckins,
+        [STORAGE_KEYS.BAIRRO_ACTIONS]: allActions,
         [STORAGE_KEYS.MILITANTS]: this.getMilitants()
       }).catch(() => {});
     }
@@ -1623,12 +1668,82 @@ export class StorageService {
   // ==========================================
 
   static getBairroActions(): BairroAction[] {
-    const fromLocal = this.get<BairroAction[]>(STORAGE_KEYS.BAIRRO_ACTIONS, INITIAL_BAIRRO_ACTIONS);
-    if (!Array.isArray(fromLocal) || fromLocal.length === 0) {
-      this.safeLocalStorageSet(STORAGE_KEYS.BAIRRO_ACTIONS, INITIAL_BAIRRO_ACTIONS);
-      return INITIAL_BAIRRO_ACTIONS;
+    // 1. Prioridade absoluta: Cache em memória RAM (acesso 0ms com todas as 20 fotos completas)
+    if (this.bairroActionsMemoryCache && Array.isArray(this.bairroActionsMemoryCache) && this.bairroActionsMemoryCache.length > 0) {
+      return this.bairroActionsMemoryCache;
     }
-    return fromLocal;
+
+    // 2. Carrega do LocalStorage ou fallback inicial com 20 fotos
+    let fromLocal = this.get<BairroAction[]>(STORAGE_KEYS.BAIRRO_ACTIONS, INITIAL_BAIRRO_ACTIONS);
+    if (!Array.isArray(fromLocal) || fromLocal.length === 0) {
+      fromLocal = INITIAL_BAIRRO_ACTIONS;
+      this.safeLocalStorageSet(STORAGE_KEYS.BAIRRO_ACTIONS, INITIAL_BAIRRO_ACTIONS);
+    }
+
+    // 3. Hidrata fotos para cada ação a partir de photoVaultCache e INITIAL_BAIRRO_ACTIONS
+    const hydrated = fromLocal.map(act => {
+      const idStr = String(act.id);
+      const cachedPhotos = this.photoVaultCache.get(idStr);
+      const hasRealPhotos = Array.isArray(act.photos) && act.photos.length > 0 && act.photos.some(p => p && p !== '[vault_photo]');
+
+      let finalPhotos = act.photos || [];
+      if (!hasRealPhotos && cachedPhotos && cachedPhotos.length > 0) {
+        finalPhotos = cachedPhotos;
+      } else if (hasRealPhotos) {
+        const cleanPhotos = act.photos.filter(p => p && p !== '[vault_photo]');
+        if (cleanPhotos.length > 0) {
+          this.photoVaultCache.set(idStr, cleanPhotos);
+          finalPhotos = cleanPhotos;
+        }
+      }
+
+      // Se ainda não tiver fotos ou for do inicial, recupera da lista inicial completa com 20 fotos
+      if ((!finalPhotos || finalPhotos.length === 0) && INITIAL_BAIRRO_ACTIONS.some(init => init.id === act.id)) {
+        const initItem = INITIAL_BAIRRO_ACTIONS.find(init => init.id === act.id);
+        if (initItem && initItem.photos && initItem.photos.length > 0) {
+          finalPhotos = initItem.photos;
+          this.photoVaultCache.set(idStr, finalPhotos);
+        }
+      }
+
+      return {
+        ...act,
+        photos: finalPhotos
+      };
+    });
+
+    this.bairroActionsMemoryCache = hydrated;
+
+    // 4. Conexão assíncrona com IndexedDB Vault e Servidor para recuperação instantânea permanente
+    if (typeof window !== 'undefined') {
+      vaultStorage.getItem<BairroAction[]>(STORAGE_KEYS.BAIRRO_ACTIONS).then(vaultItems => {
+        if (vaultItems && Array.isArray(vaultItems) && vaultItems.length > 0) {
+          let modified = false;
+          vaultItems.forEach(v => {
+            if (v && v.id && Array.isArray(v.photos) && v.photos.length > 0) {
+              const realPhotos = v.photos.filter(p => p && p !== '[vault_photo]');
+              if (realPhotos.length > 0) {
+                const existing = this.photoVaultCache.get(String(v.id)) || [];
+                if (realPhotos.length > existing.length) {
+                  this.photoVaultCache.set(String(v.id), realPhotos);
+                  modified = true;
+                }
+              }
+            }
+          });
+
+          if (modified && this.bairroActionsMemoryCache) {
+            this.bairroActionsMemoryCache = this.bairroActionsMemoryCache.map(a => {
+              const cp = this.photoVaultCache.get(String(a.id));
+              return (cp && cp.length > (a.photos?.length || 0)) ? { ...a, photos: cp } : a;
+            });
+            window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+          }
+        }
+      }).catch(() => {});
+    }
+
+    return hydrated;
   }
 
   static getBairroActionsByNeighborhood(neighborhoodId: string): BairroAction[] {
@@ -1670,23 +1785,38 @@ export class StorageService {
       updated = [normalizedAction, ...all];
     }
 
+    this.bairroActionsMemoryCache = updated;
     this.set(STORAGE_KEYS.BAIRRO_ACTIONS, updated, true);
     this.safeLocalStorageSet('militancia_bairro_actions_v1', updated);
 
     // Registra fotos no cache dedicado de alta resolução e no cofre
     if (Array.isArray(normalizedAction.photos) && normalizedAction.photos.length > 0) {
-      this.photoVaultCache.set(String(normalizedAction.id), normalizedAction.photos);
+      const realPhotos = normalizedAction.photos.filter(p => p && p !== '[vault_photo]');
+      if (realPhotos.length > 0) {
+        this.photoVaultCache.set(String(normalizedAction.id), realPhotos);
+      }
     }
 
     if (typeof window !== 'undefined') {
       try {
         vaultStorage.setItem(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
+        vaultStorage.setItem('militancia_bairro_actions_v1', updated);
+        vaultStorage.saveSnapshot(`Ação no Bairro salva (${normalizedAction.title || normalizedAction.locationName})`, {
+          [STORAGE_KEYS.BAIRRO_ACTIONS]: updated
+        }).catch(() => {});
       } catch {}
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));
     }
 
-    // Persiste e sincroniza imediatamente com servidor MySQL Hostinger e cofre
+    // Persiste e sincroniza imediatamente com backend Node Express e MySQL Hostinger
     this.pushEntityToRemote(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
+    if (typeof window !== 'undefined') {
+      fetch('/api/bairro-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(normalizedAction)
+      }).catch(() => {});
+    }
 
     const user = this.getCurrentUser();
     this.logAudit(
@@ -1704,17 +1834,22 @@ export class StorageService {
     const target = all.find(a => a.id === actionId);
     const updated = all.filter(a => a.id !== actionId);
 
+    this.bairroActionsMemoryCache = updated;
     this.set(STORAGE_KEYS.BAIRRO_ACTIONS, updated, true);
     this.safeLocalStorageSet('militancia_bairro_actions_v1', updated);
 
     if (typeof window !== 'undefined') {
       try {
         vaultStorage.setItem(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
+        vaultStorage.setItem('militancia_bairro_actions_v1', updated);
       } catch {}
       window.dispatchEvent(new CustomEvent('militancia_data_updated'));
     }
 
     this.pushEntityToRemote(STORAGE_KEYS.BAIRRO_ACTIONS, updated);
+    if (typeof window !== 'undefined') {
+      fetch(`/api/bairro-actions/${actionId}`, { method: 'DELETE' }).catch(() => {});
+    }
 
     if (target) {
       const user = this.getCurrentUser();
@@ -1884,17 +2019,111 @@ export class StorageService {
 
       this.recalculateAllStatsFromCheckins(updatedList);
 
+      // 5. RECUPERAÇÃO DAS FOTOS E AÇÕES NOS BAIRROS
+      let dbBairroActions: BairroAction[] = [];
+      try {
+        const resA = await fetch('/api/bairro-actions');
+        if (resA.ok) {
+          const jsonA = await resA.json();
+          if (jsonA && Array.isArray(jsonA.data)) {
+            dbBairroActions = jsonA.data;
+          }
+        }
+      } catch {}
+
+      if (dbBairroActions.length === 0) {
+        try {
+          const resV = await fetch('/api/data_server_vault.json');
+          if (resV.ok) {
+            const vault = await resV.json();
+            if (vault && Array.isArray(vault['militancia_bairro_actions_v1'])) {
+              dbBairroActions = vault['militancia_bairro_actions_v1'];
+            }
+          }
+        } catch {}
+      }
+
+      // Conecta com IndexedDB Vault para recuperar ações salvas localmente
+      if (typeof window !== 'undefined') {
+        try {
+          const vaultActions = await vaultStorage.getItem<BairroAction[]>(STORAGE_KEYS.BAIRRO_ACTIONS);
+          if (Array.isArray(vaultActions) && vaultActions.length > 0) {
+            const aMap = new Map<string, BairroAction>();
+            dbBairroActions.forEach(a => { if (a && a.id) aMap.set(String(a.id), a); });
+            vaultActions.forEach(va => {
+              if (va && va.id) {
+                const ex = aMap.get(String(va.id));
+                const exPhotos = ex?.photos || [];
+                const vaPhotos = va.photos || [];
+                const finalP = vaPhotos.length > exPhotos.length ? vaPhotos : (exPhotos.length > 0 ? exPhotos : vaPhotos);
+                aMap.set(String(va.id), { ...(ex || {}), ...va, photos: finalP });
+              }
+            });
+            dbBairroActions = Array.from(aMap.values());
+          }
+        } catch {}
+      }
+
+      // Se ainda vazio, usa INITIAL_BAIRRO_ACTIONS (com as 20 fotos por ação)
+      if (dbBairroActions.length === 0) {
+        dbBairroActions = INITIAL_BAIRRO_ACTIONS;
+      }
+
+      // Indexa fotos no cache dedicado de alta resolução
+      dbBairroActions.forEach(act => {
+        if (act && act.id && Array.isArray(act.photos) && act.photos.length > 0) {
+          const realPhotos = act.photos.filter(p => p && p !== '[vault_photo]');
+          if (realPhotos.length > 0) {
+            this.photoVaultCache.set(String(act.id), realPhotos);
+          }
+        }
+      });
+
+      // Mescla com as ações atuais garantindo que nenhuma foto seja perdida
+      const currentActions = this.getBairroActions();
+      const actionMap = new Map<string, BairroAction>();
+      dbBairroActions.forEach(a => { if (a && a.id) actionMap.set(String(a.id), a); });
+      currentActions.forEach(ca => {
+        if (ca && ca.id) {
+          const remoteItem = actionMap.get(String(ca.id));
+          const cachedP = this.photoVaultCache.get(String(ca.id));
+          const caPhotos = Array.isArray(ca.photos) ? ca.photos.filter(p => p && p !== '[vault_photo]') : [];
+          const remPhotos = Array.isArray(remoteItem?.photos) ? remoteItem!.photos.filter(p => p && p !== '[vault_photo]') : [];
+          const bestPhotos = caPhotos.length >= remPhotos.length ? caPhotos : remPhotos;
+          const finalPhotos = bestPhotos.length > 0 ? bestPhotos : (cachedP || []);
+
+          actionMap.set(String(ca.id), {
+            ...(remoteItem || {}),
+            ...ca,
+            photos: finalPhotos.length > 0 ? finalPhotos : (remoteItem?.photos || ca.photos || [])
+          });
+        }
+      });
+
+      const updatedActionsList = Array.from(actionMap.values());
+      this.bairroActionsMemoryCache = updatedActionsList;
+      this.safeLocalStorageSet(STORAGE_KEYS.BAIRRO_ACTIONS, updatedActionsList);
+      this.safeLocalStorageSet('militancia_bairro_actions_v1', updatedActionsList);
+
+      if (typeof window !== 'undefined') {
+        try {
+          await vaultStorage.setItem(STORAGE_KEYS.BAIRRO_ACTIONS, updatedActionsList);
+          await vaultStorage.setItem('militancia_bairro_actions_v1', updatedActionsList);
+        } catch {}
+      }
+
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('militancia_data_updated'));
       }
 
       const totalStreetsWithPhotos = updatedList.filter(c => Array.isArray(c.photos) && c.photos.length > 0 && c.photos[0] !== '[vault_photo]').length;
+      const totalActionsPhotos = updatedActionsList.reduce((acc, a) => acc + (a.photos?.length || 0), 0);
 
       return {
         success: true,
-        recoveredPhotosCount: recoveredCount,
+        recoveredPhotosCount: recoveredCount + totalActionsPhotos,
         totalStreetsWithPhotos,
-        message: `${totalStreetsWithPhotos} ruas com fotos identificadas e associadas com sucesso!`
+        message: `${totalStreetsWithPhotos} ruas e ${updatedActionsList.length} ações no bairro com fotos recuperadas com sucesso!`
       };
     } catch (err: any) {
       console.error('Erro na recuperação de fotos do banco:', err);

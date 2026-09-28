@@ -6,10 +6,10 @@ import { GoogleGenAI } from '@google/genai';
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
-  app.use(express.json({ limit: '25mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   const VAULT_FILE_PATH = path.join(process.cwd(), 'data_server_vault.json');
 
@@ -950,12 +950,108 @@ async function startServer() {
         cleanVault[k] = cleanCheckins;
       });
 
+      cleanVault['militancia_bairro_actions_v1'] = cleanVault['militancia_bairro_actions_v1'] || serverVault['militancia_bairro_actions_v1'] || [];
+
       return res.json({ status: 'success', data: cleanVault, source: 'server_vault_fallback' });
     }
   };
 
   app.get('/api/sync', handleSyncGet);
   app.get('/api/sync.php', handleSyncGet);
+
+  // Dedicated endpoints for Bairro Actions permanent database integration
+  app.get('/api/bairro-actions', (req, res) => {
+    try {
+      const current = readServerVault();
+      const actions = current['militancia_bairro_actions_v1'] || [];
+      return res.json({ status: 'success', data: actions });
+    } catch (e) {
+      console.error('Error in GET /api/bairro-actions', e);
+      return res.status(500).json({ status: 'error', message: 'Erro ao buscar ações por bairro.' });
+    }
+  });
+
+  app.post('/api/bairro-actions', (req, res) => {
+    try {
+      const incoming = req.body;
+      const current = readServerVault();
+      const currentActions: any[] = current['militancia_bairro_actions_v1'] || [];
+
+      let updatedActions: any[];
+      if (Array.isArray(incoming)) {
+        // Replacing or bulk updating
+        updatedActions = incoming;
+      } else if (incoming && incoming.id) {
+        // Single action upsert
+        const index = currentActions.findIndex((a: any) => a.id === incoming.id);
+        if (index >= 0) {
+          const existing = currentActions[index];
+          const existingPhotos = Array.isArray(existing.photos) ? existing.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
+          const incomingPhotos = Array.isArray(incoming.photos) ? incoming.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
+          const finalPhotos = incomingPhotos.length > 0 ? incomingPhotos : existingPhotos;
+
+          currentActions[index] = {
+            ...existing,
+            ...incoming,
+            photos: finalPhotos,
+            updatedAt: new Date().toISOString()
+          };
+          updatedActions = [...currentActions];
+        } else {
+          updatedActions = [incoming, ...currentActions];
+        }
+      } else {
+        return res.status(400).json({ status: 'error', message: 'Dados inválidos para ação no bairro.' });
+      }
+
+      const updatedVault = {
+        ...current,
+        militancia_bairro_actions_v1: updatedActions,
+        _lastServerSavedAt: new Date().toISOString()
+      };
+      fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updatedVault, null, 2), 'utf-8');
+      try {
+        const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+        if (fs.existsSync(path.dirname(publicVaultPath))) {
+          fs.writeFileSync(publicVaultPath, JSON.stringify(updatedVault, null, 2), 'utf-8');
+        }
+      } catch {}
+
+      broadcastRealTimeUpdate('bairro_action_saved', { count: updatedActions.length });
+      return res.json({ status: 'success', data: updatedActions });
+    } catch (e) {
+      console.error('Error in POST /api/bairro-actions', e);
+      return res.status(500).json({ status: 'error', message: 'Erro ao salvar ação no bairro.' });
+    }
+  });
+
+  app.delete('/api/bairro-actions/:id', (req, res) => {
+    try {
+      const actionId = String(req.params.id);
+      const current = readServerVault();
+      const currentActions: any[] = current['militancia_bairro_actions_v1'] || [];
+      const updatedActions = currentActions.filter((a: any) => String(a.id) !== actionId);
+
+      const updatedVault = {
+        ...current,
+        militancia_bairro_actions_v1: updatedActions,
+        _lastServerSavedAt: new Date().toISOString()
+      };
+      fs.writeFileSync(VAULT_FILE_PATH, JSON.stringify(updatedVault, null, 2), 'utf-8');
+      try {
+        const publicVaultPath = path.join(process.cwd(), 'public', 'api', 'data_server_vault.json');
+        if (fs.existsSync(path.dirname(publicVaultPath))) {
+          fs.writeFileSync(publicVaultPath, JSON.stringify(updatedVault, null, 2), 'utf-8');
+        }
+      } catch {}
+
+      broadcastRealTimeUpdate('bairro_action_deleted', { actionId });
+      return res.json({ status: 'success', deletedActionId: actionId });
+    } catch (e) {
+      console.error('Error in DELETE /api/bairro-actions/:id', e);
+      return res.status(500).json({ status: 'error', message: 'Erro ao excluir ação no bairro.' });
+    }
+  });
 
   // Explicit endpoints for deleting a street check-in
   app.delete('/api/checkin/:id', async (req, res) => {

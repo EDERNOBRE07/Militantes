@@ -287,8 +287,12 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
     const fileList = Array.from(files);
     for (const file of fileList) {
       try {
-        const compressed = await compressImageFile(file, 1280, 0.75);
-        setFormPhotos(prev => [...prev, compressed]);
+        // Otimização para até 20 fotos no cofre: 800px x 0.70 preserva alta nitidez e gera fotos leves (~35KB)
+        const compressed = await compressImageFile(file, 800, 0.70);
+        setFormPhotos(prev => {
+          if (prev.length >= 20) return prev; // Limite de 20 fotos por ação
+          return [...prev, compressed];
+        });
       } catch (err) {
         console.error('Erro ao processar foto:', err);
       }
@@ -298,6 +302,27 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
 
   const handleRemovePhoto = (index: number) => {
     setFormPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleBulkSetApproaches = (amount: number) => {
+    setParticipatingApproaches(map => {
+      const next = new Map(map);
+      formSelectedMilitantIds.forEach(id => {
+        next.set(id, Math.max(0, amount));
+      });
+      return next;
+    });
+  };
+
+  const handleBulkAddApproaches = (delta: number) => {
+    setParticipatingApproaches(map => {
+      const next = new Map(map);
+      formSelectedMilitantIds.forEach(id => {
+        const current = next.get(id) || 0;
+        next.set(id, Math.max(0, current + delta));
+      });
+      return next;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -317,13 +342,15 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
     const participations: BairroActionMilitantParticipation[] = formSelectedMilitantIds.map(mId => {
       const mil = militants.find(m => m.id === mId);
       const teamObj = teams.find(t => t.id === mil?.teamId);
+      const userCount = participatingApproaches.get(mId);
+      const approachesCount = userCount !== undefined ? userCount : 10;
       return {
         militantId: mId,
         militantName: mil?.name || 'Militante',
         matricula: mil?.matricula,
         teamId: mil?.teamId,
         teamName: teamObj?.name,
-        approachesCount: participatingApproaches.get(mId) || 0
+        approachesCount: Math.max(0, approachesCount)
       };
     });
 
@@ -817,7 +844,7 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
                       <Camera className="w-3.5 h-3.5 text-blue-600" />
-                      Galeria de Fotos ({action.photos?.length || 0})
+                      Galeria de Fotos ({action.photos?.length || 0}/20 fotos)
                     </span>
                     <span className="text-[10px] text-slate-400">Clique para ampliar</span>
                   </div>
@@ -1097,6 +1124,22 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleBulkSetApproaches(15)}
+                      className="px-2 py-1.5 rounded-lg bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 text-[11px] font-bold transition cursor-pointer"
+                      title="Definir 15 abordagens para todos os militantes selecionados"
+                    >
+                      15 p/ todos
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleBulkAddApproaches(5)}
+                      className="px-2 py-1.5 rounded-lg bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 text-[11px] font-bold transition cursor-pointer"
+                      title="Somar +5 abordagens para todos os selecionados"
+                    >
+                      +5 p/ todos
+                    </button>
+                    <button
+                      type="button"
                       onClick={handleClearMilitants}
                       className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold transition cursor-pointer"
                     >
@@ -1284,10 +1327,14 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <Camera className="w-4 h-4 text-emerald-600" />
-                    6. Upload de Fotos no Banco de Dados ({formPhotos.length})
+                    6. Upload de Fotos no Banco de Dados ({formPhotos.length}/20 fotos)
                   </label>
-                  <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    ✓ Salvas no Banco e no Cofre
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                    formPhotos.length >= 20
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>
+                    {formPhotos.length >= 20 ? '✓ Galeria Completa (20/20)' : '✓ Salvas no Banco e no Cofre'}
                   </span>
                 </div>
 
