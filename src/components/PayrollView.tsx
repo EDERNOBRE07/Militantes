@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   User,
   WeeklyPayroll,
@@ -12,6 +14,7 @@ import {
   UserRole
 } from '../types';
 import { StorageService } from '../services/storageService';
+import { safeTriggerDownload, downloadOrOpenPdfInSafari } from '../utils/safariSierraPolyfills';
 import {
   Banknote,
   DollarSign,
@@ -41,7 +44,9 @@ import {
   Search,
   Filter,
   Eye,
-  X
+  X,
+  FileDown,
+  FileCheck
 } from 'lucide-react';
 
 interface PayrollViewProps {
