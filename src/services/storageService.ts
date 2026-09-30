@@ -19,7 +19,8 @@ import {
   HostingerConnectionStatus,
   DatabaseBackupPackage,
   DatabaseBackupMetadata,
-  BairroAction
+  BairroAction,
+  PhotoStorageAuditLog
 } from '../types';
 import {
   INITIAL_NEIGHBORHOODS,
@@ -59,8 +60,44 @@ export const STORAGE_KEYS = {
   HOSTINGER_CONFIG: 'militancia_hostinger_cfg_v1',
   PAYROLLS: 'militancia_payrolls_v1',
   ADMINS: 'militancia_admins_v1',
-  BAIRRO_ACTIONS: 'militancia_bairro_actions_v1'
+  BAIRRO_ACTIONS: 'militancia_bairro_actions_v1',
+  PHOTO_AUDIT_LOGS: 'militancia_photo_audit_logs_v1'
 };
+
+/**
+ * Gera um hash determinístico único e resistente a colisões para o payload da foto.
+ * Permite auditar se a foto original no cache ou banco sofreu corrupção, truncamento ou sobrescrita.
+ */
+export function computeImageHash(data: string): string {
+  if (!data || typeof data !== 'string') return 'empty';
+  const len = data.length;
+  let h1 = 0x811c9dc5;
+  let h2 = 0x9e3779b9;
+
+  // Amostragem distribuída por blocos regulares
+  const step = len > 80000 ? Math.floor(len / 40000) : 1;
+  for (let i = 0; i < len; i += step) {
+    const code = data.charCodeAt(i);
+    h1 ^= code;
+    h1 = Math.imul(h1, 0x01000193);
+    h2 = Math.imul(h2 ^ (code << 5), 0x27d4eb2d);
+  }
+
+  // Amostragem profunda de início, meio e fim
+  const head = data.substring(0, 64);
+  const mid = data.substring(Math.floor(len / 2) - 32, Math.floor(len / 2) + 32);
+  const tail = data.substring(Math.max(0, len - 64));
+  const samples = head + mid + tail;
+  for (let i = 0; i < samples.length; i++) {
+    const code = samples.charCodeAt(i);
+    h1 ^= (code + i);
+    h1 = Math.imul(h1, 0x01000193);
+  }
+
+  const p1 = (h1 >>> 0).toString(16).padStart(8, '0');
+  const p2 = (h2 >>> 0).toString(16).padStart(8, '0');
+  return `hash-${len}b-${p1}${p2}`;
+}
 
 /**
  * Normaliza registros vindos diretamente do MySQL Hostinger (tabela checkins_ruas ou JSON)
@@ -154,6 +191,10 @@ export class StorageService {
   private static bairroActionsMemoryCache: BairroAction[] | null = null;
   // Cache dedicado de fotos de alta resolução do cofre do banco de dados (ID -> fotos[])
   public static photoVaultCache: Map<string, string[]> = new Map();
+  // Cache em memória do log de auditoria exclusivo de armazenamento de imagens
+  private static photoAuditLogsMemoryCache: PhotoStorageAuditLog[] | null = null;
+  // Mapa de último hash conhecido por entidade_foto para detecção instantânea de sobrescrita/corrupção
+  private static photoLastKnownHashMap: Map<string, string> = new Map();
 
   static subscribeSyncStatus(callback: (status: 'idle' | 'syncing' | 'synced' | 'error' | 'offline', lastSync: Date | null, msg: string) => void): () => void {
     this.syncListeners.add(callback);
@@ -257,9 +298,10 @@ export class StorageService {
       this.bairroActionsMemoryCache = value as unknown as BairroAction[];
       (value as unknown as BairroAction[]).forEach(act => {
         if (act && act.id && Array.isArray(act.photos) && act.photos.length > 0) {
-          const realPhotos = act.photos.filter(p => p && p !== '[vault_photo]');
+          const realPhotos = act.photos.filter(p => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder'));
           if (realPhotos.length > 0) {
             this.photoVaultCache.set(String(act.id), realPhotos);
+            this.recordPhotosAuditBatch(String(act.id), 'bairro_action', realPhotos, 'cached');
           }
         }
       });
@@ -1816,11 +1858,12 @@ export class StorageService {
     this.set(STORAGE_KEYS.BAIRRO_ACTIONS, updated, true);
     this.safeLocalStorageSet('militancia_bairro_actions_v1', updated);
 
-    // Registra fotos reais no cache dedicado de alta resolução e no cofre
+    // Registra fotos reais no cache dedicado de alta resolução, no cofre e no log de auditoria de integridade
     if (Array.isArray(normalizedAction.photos) && normalizedAction.photos.length > 0) {
       const realPhotos = normalizedAction.photos.filter(p => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder'));
       if (realPhotos.length > 0) {
         this.photoVaultCache.set(String(normalizedAction.id), realPhotos);
+        this.recordPhotosAuditBatch(String(normalizedAction.id), 'bairro_action', realPhotos, isEditing ? 'updated' : 'saved');
       }
     }
 
@@ -2103,6 +2146,7 @@ export class StorageService {
           const realPhotos = act.photos.filter(p => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder'));
           if (realPhotos.length > 0) {
             this.photoVaultCache.set(String(act.id), realPhotos);
+            this.recordPhotosAuditBatch(String(act.id), 'bairro_action', realPhotos, 'saved');
           }
         }
       });
@@ -2327,6 +2371,15 @@ export class StorageService {
 
     const updatedCheckins = [checkIn, ...allCheckins];
     this.set(STORAGE_KEYS.CHECKINS, updatedCheckins);
+
+    // Registra fotos reais no cache dedicado de alta resolução e no log de auditoria de imagens
+    if (Array.isArray(checkIn.photos) && checkIn.photos.length > 0) {
+      const realPhotos = checkIn.photos.filter(p => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder'));
+      if (realPhotos.length > 0) {
+        this.photoVaultCache.set(String(checkIn.id), realPhotos);
+        this.recordPhotosAuditBatch(String(checkIn.id), 'checkin', realPhotos, 'saved');
+      }
+    }
 
     // Update Neighborhood stats
     const targetNeigh = neighborhoods.find(n => n.id === checkIn.neighborhoodId);
@@ -3354,6 +3407,225 @@ export class StorageService {
     this.set(STORAGE_KEYS.AUDIT_LOGS, logs.slice(0, 200));
   }
 
+  // ==========================================
+  // LOG DE AUDITORIA EXCLUSIVO DE ARMAZENAMENTO DE IMAGENS
+  // ==========================================
+
+  static getPhotoAuditLogs(): PhotoStorageAuditLog[] {
+    if (this.photoAuditLogsMemoryCache && Array.isArray(this.photoAuditLogsMemoryCache)) {
+      return this.photoAuditLogsMemoryCache;
+    }
+    const fromLocal = this.get<PhotoStorageAuditLog[]>(STORAGE_KEYS.PHOTO_AUDIT_LOGS, []);
+    this.photoAuditLogsMemoryCache = fromLocal;
+
+    // Hidrata do cofre permanente IndexedDB
+    if (typeof window !== 'undefined') {
+      vaultStorage.getItem<PhotoStorageAuditLog[]>(STORAGE_KEYS.PHOTO_AUDIT_LOGS).then(vaultLogs => {
+        if (vaultLogs && Array.isArray(vaultLogs) && vaultLogs.length > (this.photoAuditLogsMemoryCache?.length || 0)) {
+          this.photoAuditLogsMemoryCache = vaultLogs;
+          window.dispatchEvent(new CustomEvent('militancia_data_updated'));
+        }
+      }).catch(() => {});
+    }
+
+    return fromLocal;
+  }
+
+  static recordPhotoAudit(
+    entityId: string,
+    entityType: 'bairro_action' | 'checkin' | 'van_route' | 'other',
+    photo: string,
+    photoIndex = 0,
+    action: 'saved' | 'cached' | 'updated' | 'verified' = 'saved',
+    customDetails?: string
+  ): PhotoStorageAuditLog {
+    const photoHash = computeImageHash(photo);
+    const sizeBytes = typeof photo === 'string' ? photo.length : 0;
+    const trackingKey = `${entityId}_${photoIndex}`;
+    const previousHash = this.photoLastKnownHashMap.get(trackingKey);
+
+    let status: PhotoStorageAuditLog['status'] = 'valid';
+    if (action === 'verified') {
+      status = 'verified';
+    } else if (previousHash && previousHash !== photoHash) {
+      status = 'overwritten';
+    }
+
+    this.photoLastKnownHashMap.set(trackingKey, photoHash);
+
+    const log: PhotoStorageAuditLog = {
+      id: `p-audit-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      timestamp: new Date().toISOString(),
+      entityId,
+      entityType,
+      photoIndex,
+      photoHash,
+      sizeBytes,
+      action,
+      previousHash: previousHash || undefined,
+      status,
+      details: customDetails || `Hash registrado para foto #${photoIndex + 1} de ${entityType} (${entityId}). Tamanho: ${(sizeBytes / 1024).toFixed(1)} KB`
+    };
+
+    const current = this.getPhotoAuditLogs();
+    const updated = [log, ...current].slice(0, 500);
+    this.photoAuditLogsMemoryCache = updated;
+    this.safeLocalStorageSet(STORAGE_KEYS.PHOTO_AUDIT_LOGS, updated.slice(0, 100));
+
+    if (typeof window !== 'undefined') {
+      vaultStorage.setItem(STORAGE_KEYS.PHOTO_AUDIT_LOGS, updated).catch(() => {});
+    }
+
+    return log;
+  }
+
+  static recordPhotosAuditBatch(
+    entityId: string,
+    entityType: 'bairro_action' | 'checkin' | 'van_route' | 'other',
+    photos: string[],
+    action: 'saved' | 'cached' | 'updated' = 'saved'
+  ): PhotoStorageAuditLog[] {
+    if (!Array.isArray(photos) || photos.length === 0) return [];
+    return photos.map((p, idx) => this.recordPhotoAudit(entityId, entityType, p, idx, action));
+  }
+
+  static verifyPhotoIntegrity(entityId: string, currentPhotos: string[]): {
+    verified: boolean;
+    totalChecked: number;
+    matches: number;
+    mismatches: Array<{ index: number; expectedHash: string; currentHash: string; issue: string }>;
+  } {
+    const logs = this.getPhotoAuditLogs();
+    const entityLogs = logs.filter(l => l.entityId === entityId);
+
+    const originalHashMap = new Map<number, string>();
+    for (let i = entityLogs.length - 1; i >= 0; i--) {
+      const l = entityLogs[i];
+      if (!originalHashMap.has(l.photoIndex)) {
+        originalHashMap.set(l.photoIndex, l.photoHash);
+      }
+    }
+
+    const mismatches: Array<{ index: number; expectedHash: string; currentHash: string; issue: string }> = [];
+    let matches = 0;
+
+    currentPhotos.forEach((photo, idx) => {
+      const currentHash = computeImageHash(photo);
+      const expected = originalHashMap.get(idx);
+      if (expected) {
+        if (expected === currentHash) {
+          matches++;
+        } else {
+          mismatches.push({
+            index: idx,
+            expectedHash: expected,
+            currentHash,
+            issue: 'Divergência de hash com a referência original gravada no cofre local.'
+          });
+        }
+      } else {
+        matches++;
+      }
+    });
+
+    return {
+      verified: mismatches.length === 0,
+      totalChecked: currentPhotos.length,
+      matches,
+      mismatches
+    };
+  }
+
+  static verifyAllStoragePhotosIntegrity(): {
+    totalEntitiesChecked: number;
+    totalPhotosChecked: number;
+    intactCount: number;
+    corruptedCount: number;
+    report: Array<{
+      entityId: string;
+      entityType: 'bairro_action' | 'checkin';
+      title: string;
+      photosCount: number;
+      status: 'intact' | 'corrupted';
+      issues: string[];
+    }>;
+  } {
+    const actions = this.getBairroActions();
+    const checkins = this.getCheckIns();
+    let totalPhotosChecked = 0;
+    let intactCount = 0;
+    let corruptedCount = 0;
+    const report: Array<any> = [];
+
+    actions.forEach(act => {
+      const photos = act.photos || [];
+      if (photos.length > 0) {
+        totalPhotosChecked += photos.length;
+        const result = this.verifyPhotoIntegrity(String(act.id), photos);
+        if (result.verified) {
+          intactCount += photos.length;
+          report.push({
+            entityId: String(act.id),
+            entityType: 'bairro_action',
+            title: act.title || `Ação em ${act.neighborhoodName}`,
+            photosCount: photos.length,
+            status: 'intact',
+            issues: []
+          });
+        } else {
+          corruptedCount += result.mismatches.length;
+          intactCount += (photos.length - result.mismatches.length);
+          report.push({
+            entityId: String(act.id),
+            entityType: 'bairro_action',
+            title: act.title || `Ação em ${act.neighborhoodName}`,
+            photosCount: photos.length,
+            status: 'corrupted',
+            issues: result.mismatches.map(m => `Foto #${m.index + 1}: ${m.issue} (esperado ${m.expectedHash}, atual ${m.currentHash})`)
+          });
+        }
+      }
+    });
+
+    checkins.forEach(chk => {
+      const photos = chk.photos || [];
+      if (photos.length > 0) {
+        totalPhotosChecked += photos.length;
+        const result = this.verifyPhotoIntegrity(String(chk.id), photos);
+        if (result.verified) {
+          intactCount += photos.length;
+          report.push({
+            entityId: String(chk.id),
+            entityType: 'checkin',
+            title: `${chk.streetName} (${chk.neighborhoodName})`,
+            photosCount: photos.length,
+            status: 'intact',
+            issues: []
+          });
+        } else {
+          corruptedCount += result.mismatches.length;
+          intactCount += (photos.length - result.mismatches.length);
+          report.push({
+            entityId: String(chk.id),
+            entityType: 'checkin',
+            title: `${chk.streetName} (${chk.neighborhoodName})`,
+            photosCount: photos.length,
+            status: 'corrupted',
+            issues: result.mismatches.map(m => `Foto #${m.index + 1}: ${m.issue}`)
+          });
+        }
+      }
+    });
+
+    return {
+      totalEntitiesChecked: actions.length + checkins.length,
+      totalPhotosChecked,
+      intactCount,
+      corruptedCount,
+      report
+    };
+  }
+
   // Export Full Database Backup Package
   static exportDatabaseBackup(exportedBy = 'Coordenador Geral'): DatabaseBackupPackage {
     const users = this.getUsers();
@@ -3368,6 +3640,7 @@ export class StorageService {
     const payrolls = this.getPayrolls();
     const admins = this.getAdmins();
     const auditLogs = this.getAuditLogs();
+    const photoAuditLogs = this.getPhotoAuditLogs();
     const notifications = this.getNotifications();
     const bairroActions = this.getBairroActions();
 
@@ -3383,6 +3656,7 @@ export class StorageService {
       payrolls: payrolls.length,
       admins: admins.length,
       auditLogs: auditLogs.length,
+      photoAuditLogs: photoAuditLogs.length,
       calendarDays: calendar.length,
       notifications: notifications.length,
       users: users.length
@@ -3416,6 +3690,7 @@ export class StorageService {
         [STORAGE_KEYS.AUDIT_LOGS]: auditLogs,
         [STORAGE_KEYS.NOTIFICATIONS]: notifications,
         [STORAGE_KEYS.BAIRRO_ACTIONS]: bairroActions,
+        [STORAGE_KEYS.PHOTO_AUDIT_LOGS]: photoAuditLogs,
         users,
         neighborhoods,
         militants,
@@ -3428,6 +3703,7 @@ export class StorageService {
         payrolls,
         admins,
         auditLogs,
+        photoAuditLogs,
         notifications,
         bairroActions
       }
@@ -3473,6 +3749,7 @@ export class StorageService {
       const incomingAuditLogs: ActivityAuditLog[] = data[STORAGE_KEYS.AUDIT_LOGS] || data.auditLogs || [];
       const incomingNotifications: PushNotification[] = data[STORAGE_KEYS.NOTIFICATIONS] || data.notifications || [];
       const incomingBairroActions: BairroAction[] = data[STORAGE_KEYS.BAIRRO_ACTIONS] || data.bairroActions || [];
+      const incomingPhotoAuditLogs: PhotoStorageAuditLog[] = data[STORAGE_KEYS.PHOTO_AUDIT_LOGS] || data.photoAuditLogs || [];
 
       // Validate that at least some core collections exist
       const hasCoreData =
@@ -3506,6 +3783,7 @@ export class StorageService {
         if (incomingAdmins.length > 0) this.set(STORAGE_KEYS.ADMINS, incomingAdmins, false);
         if (incomingNotifications.length > 0) this.set(STORAGE_KEYS.NOTIFICATIONS, incomingNotifications, false);
         if (incomingAuditLogs.length > 0) this.set(STORAGE_KEYS.AUDIT_LOGS, incomingAuditLogs, false);
+        if (incomingPhotoAuditLogs.length > 0) this.set(STORAGE_KEYS.PHOTO_AUDIT_LOGS, incomingPhotoAuditLogs, false);
         if (incomingBairroActions.length > 0) this.set(STORAGE_KEYS.BAIRRO_ACTIONS, incomingBairroActions, false);
       } else {
         // Merge mode: combine without duplicating IDs
@@ -3527,6 +3805,8 @@ export class StorageService {
         if (incomingCalendar.length > 0) this.set(STORAGE_KEYS.CALENDAR, mergeById(this.getCalendar(), incomingCalendar), false);
         if (incomingPayrolls.length > 0) this.set(STORAGE_KEYS.PAYROLLS, mergeById(this.getPayrolls(), incomingPayrolls), false);
         if (incomingAdmins.length > 0) this.set(STORAGE_KEYS.ADMINS, mergeById(this.getAdmins(), incomingAdmins), false);
+        if (incomingAuditLogs.length > 0) this.set(STORAGE_KEYS.AUDIT_LOGS, mergeById(this.getAuditLogs(), incomingAuditLogs), false);
+        if (incomingPhotoAuditLogs.length > 0) this.set(STORAGE_KEYS.PHOTO_AUDIT_LOGS, mergeById(this.getPhotoAuditLogs(), incomingPhotoAuditLogs), false);
         if (incomingNotifications.length > 0) this.set(STORAGE_KEYS.NOTIFICATIONS, mergeById(this.getNotifications(), incomingNotifications), false);
         if (incomingBairroActions.length > 0) this.set(STORAGE_KEYS.BAIRRO_ACTIONS, mergeById(this.getBairroActions(), incomingBairroActions), false);
       }

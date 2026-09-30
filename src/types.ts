@@ -259,6 +259,20 @@ export interface ActivityAuditLog {
   details: string;
 }
 
+export interface PhotoStorageAuditLog {
+  id: string;
+  timestamp: string;
+  entityId: string;
+  entityType: 'bairro_action' | 'checkin' | 'van_route' | 'other';
+  photoIndex: number;
+  photoHash: string; // Hash único e determinístico da imagem para auditoria
+  sizeBytes: number;
+  action: 'saved' | 'cached' | 'updated' | 'verified';
+  previousHash?: string;
+  status: 'valid' | 'corrupted' | 'overwritten' | 'verified';
+  details?: string;
+}
+
 export interface VanRouteLog {
   id: string;
   vanId: string;
@@ -413,6 +427,7 @@ export interface DatabaseBackupMetadata {
     notifications: number;
     users: number;
     bairroActions?: number;
+    photoAuditLogs?: number;
   };
 }
 
@@ -434,6 +449,7 @@ export interface DatabaseBackupPackage {
     militancia_audit_logs_v1?: ActivityAuditLog[];
     militancia_notifications_v1?: PushNotification[];
     militancia_bairro_actions_v1?: BairroAction[];
+    militancia_photo_audit_logs_v1?: PhotoStorageAuditLog[];
     users?: User[];
     neighborhoods?: Neighborhood[];
     militants?: Militant[];
@@ -446,6 +462,7 @@ export interface DatabaseBackupPackage {
     payrolls?: WeeklyPayroll[];
     admins?: AdminUser[];
     auditLogs?: ActivityAuditLog[];
+    photoAuditLogs?: PhotoStorageAuditLog[];
     notifications?: PushNotification[];
     bairroActions?: BairroAction[];
   };

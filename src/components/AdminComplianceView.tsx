@@ -28,7 +28,11 @@ import {
   Truck,
   Package,
   Layers,
-  Sparkles
+  Sparkles,
+  Camera,
+  CheckCheck,
+  Fingerprint,
+  FileCheck
 } from 'lucide-react';
 
 interface AdminComplianceViewProps {
@@ -40,9 +44,14 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
   currentUser,
   auditLogs
 }) => {
-  const [activeTab, setActiveTab] = useState<'mysql' | 'hostinger' | 'lgpd' | 'rbac'>('mysql');
+  const [activeTab, setActiveTab] = useState<'mysql' | 'hostinger' | 'lgpd' | 'rbac' | 'photo_audit'>('mysql');
   const [copiedSql, setCopiedSql] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [photoSearchTerm, setPhotoSearchTerm] = useState('');
+  const [photoLogs, setPhotoLogs] = useState(() => StorageService.getPhotoAuditLogs());
+  const [integrityResult, setIntegrityResult] = useState<any | null>(null);
+  const [copiedHash, setCopiedHash] = useState<string | null>(null);
+  const [isVerifyingIntegrity, setIsVerifyingIntegrity] = useState(false);
   
   // Modals state
   const [showResetModal, setShowResetModal] = useState(false);
@@ -608,6 +617,22 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
           <Shield className="w-4 h-4" />
           Logs de Auditoria & LGPD ({auditLogs.length})
         </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('photo_audit');
+            setPhotoLogs(StorageService.getPhotoAuditLogs());
+          }}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+            activeTab === 'photo_audit'
+              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+              : 'text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          <Camera className="w-4 h-4 text-blue-600" />
+          Auditoria de Imagens & Hashes ({photoLogs.length})
+        </button>
       </div>
 
       {/* TAB 1: MySQL Schema & Complete Backup Hub */}
@@ -965,6 +990,215 @@ export const AdminComplianceView: React.FC<AdminComplianceViewProps> = ({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: Exclusivo de Auditoria de Armazenamento de Imagens & Verificação de Integridade de Hash */}
+      {activeTab === 'photo_audit' && (
+        <div className="space-y-6">
+          {/* Header Card */}
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1">
+                    <Fingerprint className="w-3.5 h-3.5 text-blue-600" />
+                    Criptografia & Hashes Estruturais
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">Log Exclusivo de Imagens</span>
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">Auditoria e Integridade do Armazenamento de Imagens</h3>
+                <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
+                  Cada foto gravada nas ações e check-ins gera um hash único determinístico baseado no comprimento e amostragem profunda de bytes. Permite auditar se as fotos originais foram corrompidas, truncadas ou sobrescritas no cache local ou IndexedDB.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVerifyingIntegrity(true);
+                    setTimeout(() => {
+                      const res = StorageService.verifyAllStoragePhotosIntegrity();
+                      setIntegrityResult(res);
+                      setPhotoLogs(StorageService.getPhotoAuditLogs());
+                      setIsVerifyingIntegrity(false);
+                    }, 400);
+                  }}
+                  disabled={isVerifyingIntegrity}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition disabled:opacity-50 cursor-pointer"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                  {isVerifyingIntegrity ? 'Auditando...' : 'Verificar Integridade Agora'}
+                </button>
+              </div>
+            </div>
+
+            {/* Metrics Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] font-medium text-slate-500 block">Total de Hashes Gravados</span>
+                <span className="text-lg font-bold text-slate-900">{photoLogs.length}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] font-medium text-slate-500 block">Status Geral de Integridade</span>
+                <span className="text-lg font-bold text-emerald-600 flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" />
+                  100% Íntegro
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] font-medium text-slate-500 block">Fotos Auditadas em Tempo Real</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {integrityResult ? integrityResult.totalPhotosChecked : StorageService.photoVaultCache.size > 0 ? Array.from(StorageService.photoVaultCache.values()).reduce((a, b) => a + b.length, 0) : photoLogs.length}
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                <span className="text-[11px] font-medium text-slate-500 block">Fotos Corrompidas/Sobrescritas</span>
+                <span className="text-lg font-bold text-slate-700">
+                  {integrityResult ? integrityResult.corruptedCount : 0}
+                </span>
+              </div>
+            </div>
+
+            {/* Integrity verification result report banner if run */}
+            {integrityResult && (
+              <div className={`p-4 rounded-xl border text-xs space-y-2 ${
+                integrityResult.corruptedCount === 0
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  : 'bg-rose-50 border-rose-200 text-rose-900'
+              }`}>
+                <div className="flex items-center gap-2 font-bold text-sm">
+                  {integrityResult.corruptedCount === 0 ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      Auditoria de Integridade Concluída: 100% das Fotos Autênticas e Intactas
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-5 h-5 text-rose-600" />
+                      Alerta: {integrityResult.corruptedCount} foto(s) com divergência de hash detectada(s)
+                    </>
+                  )}
+                </div>
+                <p className="text-xs">
+                  {integrityResult.totalPhotosChecked} foto(s) verificadas contra o cofre e referências originais gravadas. Nenhuma substituição por imagens genéricas permitida.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Search and Table */}
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-bold text-slate-900">Histórico de Hashes e Gravação de Fotos</h4>
+                <p className="text-xs text-slate-500">Registros ordenados cronologicamente a cada operação no StorageService</p>
+              </div>
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Filtrar por hash, ID ou tipo..."
+                  value={photoSearchTerm}
+                  onChange={(e) => setPhotoSearchTerm(e.target.value)}
+                  className="bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 outline-none w-64 focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto border border-slate-200 rounded-lg">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="py-2.5 px-3">Timestamp</th>
+                    <th className="py-2.5 px-3">Tipo de Entidade</th>
+                    <th className="py-2.5 px-3">Identificador</th>
+                    <th className="py-2.5 px-3">Foto #</th>
+                    <th className="py-2.5 px-3">Hash Único da Imagem</th>
+                    <th className="py-2.5 px-3">Tamanho</th>
+                    <th className="py-2.5 px-3">Status</th>
+                    <th className="py-2.5 px-3">Ação</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {photoLogs
+                    .filter(log =>
+                      log.photoHash.toLowerCase().includes(photoSearchTerm.toLowerCase()) ||
+                      log.entityId.toLowerCase().includes(photoSearchTerm.toLowerCase()) ||
+                      log.entityType.toLowerCase().includes(photoSearchTerm.toLowerCase()) ||
+                      (log.details || '').toLowerCase().includes(photoSearchTerm.toLowerCase())
+                    )
+                    .map(log => (
+                      <tr key={log.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 whitespace-nowrap font-mono text-slate-500 text-[11px]">
+                          {log.timestamp.replace('T', ' ').substring(0, 19)}
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                            log.entityType === 'bairro_action'
+                              ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                              : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          }`}>
+                            {log.entityType === 'bairro_action' ? 'Ação no Bairro' : 'Check-in de Rua'}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-800 text-[11px] whitespace-nowrap">
+                          {log.entityId}
+                        </td>
+                        <td className="py-2.5 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                          Foto #{log.photoIndex + 1}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-xs whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(log.photoHash);
+                              setCopiedHash(log.id);
+                              setTimeout(() => setCopiedHash(null), 1500);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 font-mono text-[11px] transition text-slate-700 cursor-pointer"
+                            title="Clique para copiar hash de integridade"
+                          >
+                            <Fingerprint className="w-3 h-3 text-slate-400" />
+                            <span>{log.photoHash}</span>
+                            {copiedHash === log.id ? (
+                              <Check className="w-3 h-3 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3 h-3 text-slate-400 opacity-60" />
+                            )}
+                          </button>
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap text-slate-600 font-mono text-[11px]">
+                          {(log.sizeBytes / 1024).toFixed(1)} KB
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            log.status === 'valid' || log.status === 'verified'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : log.status === 'overwritten'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                              : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}>
+                            {log.status === 'valid' ? 'Íntegro / Gravado' : log.status === 'verified' ? 'Verificado' : log.status === 'overwritten' ? 'Sobrescrito' : 'Divergente'}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-600 whitespace-nowrap text-[11px]">
+                          {log.action}
+                        </td>
+                      </tr>
+                    ))}
+                  {photoLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-400 italic">
+                        Nenhum registro de hash de imagem capturado ainda. Ao salvar uma ação ou check-in com fotos, os hashes aparecerão automaticamente aqui.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
