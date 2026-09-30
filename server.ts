@@ -208,8 +208,9 @@ async function startServer() {
                   synced: true
                 };
               } else if (key === 'militancia_bairro_actions_v1') {
-                const existingPhotos = Array.isArray(existingItem.photos) ? existingItem.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
-                const incomingPhotos = Array.isArray(incomingItem.photos) ? incomingItem.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
+                const isRealBairroPhoto = (p: any) => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder');
+                const existingPhotos = Array.isArray(existingItem.photos) ? existingItem.photos.filter(isRealBairroPhoto) : [];
+                const incomingPhotos = Array.isArray(incomingItem.photos) ? incomingItem.photos.filter(isRealBairroPhoto) : [];
                 const finalPhotos = incomingPhotos.length > 0 ? incomingPhotos : existingPhotos;
 
                 merged = {
@@ -858,7 +859,15 @@ async function startServer() {
               serverVault[key].forEach((item: any) => {
                 if (item && item.id && !blacklist.has(String(item.id))) {
                   const existing = map.get(String(item.id));
-                  map.set(String(item.id), { ...existing, ...item });
+                  if (key === 'militancia_bairro_actions_v1') {
+                    const isAuthP = (p: any) => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder');
+                    const exP = Array.isArray(existing?.photos) ? existing.photos.filter(isAuthP) : [];
+                    const inP = Array.isArray(item?.photos) ? item.photos.filter(isAuthP) : [];
+                    const finalP = inP.length > 0 ? inP : exP;
+                    map.set(String(item.id), { ...existing, ...item, photos: finalP });
+                  } else {
+                    map.set(String(item.id), { ...existing, ...item });
+                  }
                 }
               });
               combinedData[key] = Array.from(map.values());
@@ -978,16 +987,21 @@ async function startServer() {
       const currentActions: any[] = current['militancia_bairro_actions_v1'] || [];
 
       let updatedActions: any[];
+      const isRealActionPhoto = (p: any) => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder');
+
       if (Array.isArray(incoming)) {
-        // Replacing or bulk updating
-        updatedActions = incoming;
+        // Replacing or bulk updating - strictly filter out generic photos
+        updatedActions = incoming.map((act: any) => ({
+          ...act,
+          photos: Array.isArray(act.photos) ? act.photos.filter(isRealActionPhoto) : []
+        }));
       } else if (incoming && incoming.id) {
         // Single action upsert
         const index = currentActions.findIndex((a: any) => a.id === incoming.id);
         if (index >= 0) {
           const existing = currentActions[index];
-          const existingPhotos = Array.isArray(existing.photos) ? existing.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
-          const incomingPhotos = Array.isArray(incoming.photos) ? incoming.photos.filter((p: any) => p && p !== '[vault_photo]') : [];
+          const existingPhotos = Array.isArray(existing.photos) ? existing.photos.filter(isRealActionPhoto) : [];
+          const incomingPhotos = Array.isArray(incoming.photos) ? incoming.photos.filter(isRealActionPhoto) : [];
           const finalPhotos = incomingPhotos.length > 0 ? incomingPhotos : existingPhotos;
 
           currentActions[index] = {
@@ -998,7 +1012,11 @@ async function startServer() {
           };
           updatedActions = [...currentActions];
         } else {
-          updatedActions = [incoming, ...currentActions];
+          const cleanIncoming = {
+            ...incoming,
+            photos: Array.isArray(incoming.photos) ? incoming.photos.filter(isRealActionPhoto) : []
+          };
+          updatedActions = [cleanIncoming, ...currentActions];
         }
       } else {
         return res.status(400).json({ status: 'error', message: 'Dados inválidos para ação no bairro.' });

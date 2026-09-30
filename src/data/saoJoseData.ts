@@ -962,10 +962,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6353996,
     "longitude": -48.6320256,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -992,10 +989,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6175541,
     "longitude": -48.6467543,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1022,10 +1016,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6199913,
     "longitude": -48.6445984,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1052,10 +1043,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6214463,
     "longitude": -48.6424678,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1082,10 +1070,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6210826,
     "longitude": -48.6439346,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1112,10 +1097,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5544657,
     "longitude": -48.6241074,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1142,10 +1124,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5811806,
     "longitude": -48.6103603,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1172,10 +1151,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6028623,
     "longitude": -48.6447339,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1202,10 +1178,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5750729,
     "longitude": -48.6650612,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1232,10 +1205,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5750729,
     "longitude": -48.6650612,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1262,9 +1232,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6022455,
     "longitude": -48.6483546,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1291,11 +1259,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5764147,
     "longitude": -48.624667,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1322,9 +1286,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5618981,
     "longitude": -48.6569486,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1351,9 +1313,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5609605,
     "longitude": -48.6562311,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1380,9 +1340,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5447693,
     "longitude": -48.63381,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1409,9 +1367,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5452438,
     "longitude": -48.6329062,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1438,9 +1394,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5576718,
     "longitude": -48.629461,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1467,9 +1421,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5621255,
     "longitude": -48.6376609,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1496,9 +1448,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5627111,
     "longitude": -48.6363532,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1525,9 +1475,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5662742,
     "longitude": -48.6436658,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1554,9 +1502,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5610558,
     "longitude": -48.634706,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1583,9 +1529,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5622378,
     "longitude": -48.6367137,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1612,9 +1556,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5544657,
     "longitude": -48.6241074,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1641,9 +1583,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5917535,
     "longitude": -48.6241103,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1670,9 +1610,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5923292,
     "longitude": -48.6261503,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1699,9 +1637,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5923292,
     "longitude": -48.6261503,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1728,9 +1664,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.55197,
     "longitude": -48.6573,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1757,9 +1691,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.55135,
     "longitude": -48.65768,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1786,9 +1718,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5650968,
     "longitude": -48.6745714,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1815,9 +1745,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.57525,
     "longitude": -48.67316,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1844,9 +1772,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5672541,
     "longitude": -48.6673606,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1873,9 +1799,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.574659,
     "longitude": -48.651667,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1902,9 +1826,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5651062,
     "longitude": -48.6254931,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1931,9 +1853,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.570394,
     "longitude": -48.6392128,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1960,9 +1880,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.57011,
     "longitude": -48.642,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -1989,9 +1907,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5829116,
     "longitude": -48.6043488,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2018,9 +1934,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5757185,
     "longitude": -48.6607909,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2047,9 +1961,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5760901,
     "longitude": -48.6602336,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2076,9 +1988,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5771623,
     "longitude": -48.661744,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2105,9 +2015,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5766823,
     "longitude": -48.659159,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2134,9 +2042,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5755468,
     "longitude": -48.6541495,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2163,9 +2069,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5752006,
     "longitude": -48.6617073,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2192,9 +2096,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5714932,
     "longitude": -48.6058069,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 4,
       "adesivos": 0,
@@ -2221,9 +2123,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5569988,
     "longitude": -48.6263331,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2250,9 +2150,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5539445,
     "longitude": -48.6218707,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2279,9 +2177,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5611184,
     "longitude": -48.6320708,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2308,9 +2204,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5845136,
     "longitude": -48.6061229,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2337,9 +2231,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5645331,
     "longitude": -48.6377915,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2366,9 +2258,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5452421,
     "longitude": -48.6395147,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2395,9 +2285,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5419317,
     "longitude": -48.6323232,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2424,9 +2312,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5426368,
     "longitude": -48.6465482,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2453,9 +2339,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5409207,
     "longitude": -48.6369685,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2482,9 +2366,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5735148,
     "longitude": -48.6029927,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2511,9 +2393,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5788755,
     "longitude": -48.668638,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2540,9 +2420,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5793806,
     "longitude": -48.6685319,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2569,9 +2447,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5806455,
     "longitude": -48.6691286,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2608,9 +2484,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -2627,9 +2501,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5989113,
     "longitude": -48.6419768,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2656,9 +2528,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5715749,
     "longitude": -48.6150196,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2685,9 +2555,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.573599,
     "longitude": -48.6283341,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2714,9 +2582,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5673835,
     "longitude": -48.6198308,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2743,9 +2609,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5684708,
     "longitude": -48.6424924,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2772,9 +2636,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5673339,
     "longitude": -48.6417136,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2801,9 +2663,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5716244,
     "longitude": -48.6159013,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2830,9 +2690,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5671868,
     "longitude": -48.6167989,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2859,9 +2717,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5688612,
     "longitude": -48.6224819,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2888,9 +2744,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5725516,
     "longitude": -48.6134587,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2917,9 +2771,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5781767,
     "longitude": -48.6175847,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2946,9 +2798,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5739592,
     "longitude": -48.6145662,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -2975,10 +2825,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5989113,
     "longitude": -48.6419768,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -3005,9 +2852,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.5415373,
     "longitude": -48.6327915,
     "accuracyMeters": 3.5,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,
@@ -3044,9 +2889,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3073,9 +2916,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3102,9 +2943,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3131,9 +2970,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3160,9 +2997,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3189,9 +3024,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3218,9 +3051,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3247,9 +3078,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3276,9 +3105,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3305,9 +3132,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3334,9 +3159,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3363,9 +3186,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3392,9 +3213,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3421,9 +3240,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3450,9 +3267,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3479,9 +3294,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3508,9 +3321,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 4
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3537,9 +3348,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 4
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3566,9 +3375,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 4
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3595,9 +3402,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 4
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3624,9 +3429,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3653,9 +3456,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3682,9 +3483,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3711,9 +3510,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3740,9 +3537,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3769,9 +3564,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3798,9 +3591,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3827,16 +3618,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3863,12 +3645,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3895,10 +3672,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80",
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3925,9 +3699,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3954,9 +3726,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
       "comercio": 0
     },
     "observations": "",
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "status": "validado",
     "synced": true
   },
@@ -3973,9 +3743,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6015755,
     "longitude": -48.6453365,
     "accuracyMeters": 4.2,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 25,
@@ -4002,9 +3770,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.6022061,
     "longitude": -48.6458576,
     "accuracyMeters": 4.2,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 25,
@@ -4031,9 +3797,7 @@ export const INITIAL_CHECKINS: StreetCheckIn[] = [
     "latitude": -27.60463,
     "longitude": -48.64938,
     "accuracyMeters": 4.2,
-    "photos": [
-      "https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80"
-    ],
+    "photos": [],
     "materialsDelivered": {
       "santinhos": 0,
       "adesivos": 0,

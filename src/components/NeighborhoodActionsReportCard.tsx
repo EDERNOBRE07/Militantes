@@ -62,7 +62,10 @@ export const NeighborhoodActionsReportCard: React.FC<NeighborhoodActionsReportCa
     }
   };
 
-  const totalPhotos = actions.reduce((acc, a) => acc + (a.photos?.length || 0), 0);
+  const totalPhotos = actions.reduce((acc, a) => {
+    const valid = (a.photos || []).filter(p => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder'));
+    return acc + valid.length;
+  }, 0);
   const totalPeople = actions.reduce((acc, a) => acc + (a.estimatedPeople || 0), 0);
   const totalAbordagensAcoes = actions.reduce((acc, a) => {
     if (a.totalApproaches) return acc + a.totalApproaches;
@@ -279,39 +282,48 @@ export const NeighborhoodActionsReportCard: React.FC<NeighborhoodActionsReportCa
 
                 {/* Photo Gallery for this action */}
                 <div className="pt-2 border-t border-slate-200/80">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1">
-                      <Camera className="w-3 h-3 text-blue-600" />
-                      Galeria de Fotos da Ação ({act.photos?.length || 0})
-                    </span>
-                    <span className="text-[10px] text-slate-400">Clique para ampliar</span>
-                  </div>
-
-                  {act.photos && act.photos.length > 0 ? (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                      {act.photos.map((photo, pIdx) => (
-                        <div
-                          key={pIdx}
-                          onClick={() => onZoomPhoto(photo)}
-                          className="relative aspect-4/3 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer group shadow-2xs hover:shadow-md transition"
-                        >
-                          <img
-                            src={photo}
-                            alt={`Foto ${pIdx + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Eye className="w-3.5 h-3.5 text-white drop-shadow" />
-                          </div>
+                  {(() => {
+                    const validPhotos = (act.photos || []).filter(p => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder'));
+                    return (
+                      <>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1">
+                            <Camera className="w-3 h-3 text-blue-600" />
+                            Galeria de Fotos da Ação ({validPhotos.length})
+                          </span>
+                          {validPhotos.length > 0 && (
+                            <span className="text-[10px] text-slate-400">Clique para ampliar</span>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-slate-400 italic block">
-                      Sem fotos registradas nesta ação.
-                    </span>
-                  )}
+
+                        {validPhotos.length > 0 ? (
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                            {validPhotos.map((photo, pIdx) => (
+                              <div
+                                key={pIdx}
+                                onClick={() => onZoomPhoto(photo)}
+                                className="relative aspect-4/3 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer group shadow-2xs hover:shadow-md transition"
+                              >
+                                <img
+                                  src={photo}
+                                  alt={`Foto ${pIdx + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Eye className="w-3.5 h-3.5 text-white drop-shadow" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic block">
+                            Sem fotos registradas nesta ação.
+                          </span>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             ))}

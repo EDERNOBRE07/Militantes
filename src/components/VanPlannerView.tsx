@@ -53,9 +53,7 @@ export const VanPlannerView: React.FC<VanPlannerViewProps> = ({
   const [vLogPassengers, setVLogPassengers] = useState(14);
   const [vLogStatus, setVLogStatus] = useState<VanRouteLog['checkInStatus']>('em_andamento');
   const [vLogNotes, setVLogNotes] = useState('');
-  const [vLogPhotos, setVLogPhotos] = useState<string[]>([
-    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80'
-  ]);
+  const [vLogPhotos, setVLogPhotos] = useState<string[]>([]);
   const [isGettingGps, setIsGettingGps] = useState(false);
 
   const currentDay = calendarDays.find(d => d.date === selectedDate) || calendarDays[0];
@@ -134,7 +132,7 @@ export const VanPlannerView: React.FC<VanPlannerViewProps> = ({
       streetRoute: streetsArr.join(', '),
       latitude: vLogLatitude,
       longitude: vLogLongitude,
-      photos: vLogPhotos.length > 0 ? vLogPhotos : ['https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80'],
+      photos: vLogPhotos || [],
       passengersCount: vLogPassengers,
       checkInStatus: vLogStatus,
       status: vLogStatus === 'concluido' ? 'concluido' : 'em_rota',

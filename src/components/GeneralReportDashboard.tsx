@@ -143,8 +143,12 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
   }, [targetActions]);
 
   // Total de fotos nas Ações no Bairro
+  const isAuthPhotoGen = (p: any) => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder');
   const totalPhotosAcoes = useMemo(() => {
-    return targetActions.reduce((acc, act) => acc + (act.photos?.length || 0), 0);
+    return targetActions.reduce((acc, act) => {
+      const valid = (act.photos || []).filter(isAuthPhotoGen);
+      return acc + valid.length;
+    }, 0);
   }, [targetActions]);
 
   // Totais Gerais
@@ -152,7 +156,10 @@ export const GeneralReportDashboard: React.FC<GeneralReportDashboardProps> = ({
   const totalAbordagensRuas = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
   const totalAbordagens = totalAbordagensRuas + totalAbordagensAcoes;
   const totalComercios = checkIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-  const totalPhotosRuas = checkIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+  const totalPhotosRuas = checkIns.reduce((acc, c) => {
+    const valid = (c.photos || []).filter(isAuthPhotoGen);
+    return acc + valid.length;
+  }, 0);
   const totalPhotos = totalPhotosRuas + totalPhotosAcoes;
 
   // Militantes Ativos e cálculo de produtividade consolidada se não passado via prop

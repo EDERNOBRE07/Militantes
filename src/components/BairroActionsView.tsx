@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BairroAction,
   BairroActionScope,
@@ -8,7 +8,8 @@ import {
   Team,
   User
 } from '../types';
-import { StorageService } from '../services/storageService';
+import { StorageService, STORAGE_KEYS } from '../services/storageService';
+import { vaultStorage } from '../utils/vaultStorage';
 import { compressImageFile } from '../utils/imageCompressor';
 import {
   Camera,
@@ -113,9 +114,74 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; isError?: boolean } | null>(null);
 
+  const isAuthenticPhoto = (p: unknown): p is string => {
+    return typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder');
+  };
+
   const reloadActions = () => {
     setActions(StorageService.getBairroActions());
   };
+
+  useEffect(() => {
+    // 1. Recarrega dados imediatos
+    reloadActions();
+
+    // 2. Conecta ao cofre permanente IndexedDB para hidratar fotos reais de alta resolução
+    vaultStorage.getItem<BairroAction[]>(STORAGE_KEYS.BAIRRO_ACTIONS).then(vaultItems => {
+      if (vaultItems && Array.isArray(vaultItems) && vaultItems.length > 0) {
+        let hasNewPhotos = false;
+        vaultItems.forEach(v => {
+          if (v && v.id && Array.isArray(v.photos)) {
+            const realPhotos = v.photos.filter(isAuthenticPhoto);
+            if (realPhotos.length > 0) {
+              const currentCache = StorageService.photoVaultCache.get(String(v.id)) || [];
+              if (realPhotos.length > currentCache.length) {
+                StorageService.photoVaultCache.set(String(v.id), realPhotos);
+                hasNewPhotos = true;
+              }
+            }
+          }
+        });
+        if (hasNewPhotos) {
+          reloadActions();
+        }
+      }
+    }).catch(() => {});
+
+    // 3. Sincroniza com o endpoint dedicado permanente do servidor
+    fetch('/api/bairro-actions')
+      .then(r => r.json())
+      .then(res => {
+        if (res && res.status === 'success' && Array.isArray(res.data) && res.data.length > 0) {
+          let hasServerPhotos = false;
+          res.data.forEach((serverAct: any) => {
+            if (serverAct && serverAct.id && Array.isArray(serverAct.photos)) {
+              const realPhotos = serverAct.photos.filter(isAuthenticPhoto);
+              if (realPhotos.length > 0) {
+                const currentCache = StorageService.photoVaultCache.get(String(serverAct.id)) || [];
+                if (realPhotos.length > currentCache.length) {
+                  StorageService.photoVaultCache.set(String(serverAct.id), realPhotos);
+                  hasServerPhotos = true;
+                }
+              }
+            }
+          });
+          if (hasServerPhotos) {
+            reloadActions();
+          }
+        }
+      })
+      .catch(() => {});
+
+    // 4. Ouvinte de eventos globais de atualização
+    const handleUpdate = () => {
+      reloadActions();
+    };
+    window.addEventListener('militancia_data_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('militancia_data_updated', handleUpdate);
+    };
+  }, []);
 
   const handleOpenNewModal = (preselectedBairroId?: string) => {
     setEditingActionId(null);
@@ -194,7 +260,8 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
     setFormAccuracy(action.accuracyMeters || 3.5);
     setFormAddress(action.address || '');
     setFormTimestamp(action.timestamp ? action.timestamp.replace(' ', 'T').substring(0, 16) : new Date().toISOString().substring(0, 16));
-    setFormPhotos(action.photos || []);
+    const validActionPhotos = (action.photos || []).filter(isAuthenticPhoto);
+    setFormPhotos(validActionPhotos);
     setFormEstimatedPeople(action.estimatedPeople || 100);
     setFormObservations(action.observations || '');
     setIsModalOpen(true);
@@ -841,39 +908,48 @@ export const BairroActionsView: React.FC<BairroActionsViewProps> = ({
 
                 {/* Photo Gallery for this Action */}
                 <div className="pt-2 border-t border-slate-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-                      <Camera className="w-3.5 h-3.5 text-blue-600" />
-                      Galeria de Fotos ({action.photos?.length || 0}/20 fotos)
-                    </span>
-                    <span className="text-[10px] text-slate-400">Clique para ampliar</span>
-                  </div>
-
-                  {action.photos && action.photos.length > 0 ? (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {action.photos.map((photo, pIdx) => (
-                        <div
-                          key={pIdx}
-                          onClick={() => handleZoom(photo)}
-                          className="relative aspect-4/3 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer group shadow-2xs hover:shadow-md transition"
-                        >
-                          <img
-                            src={photo}
-                            alt={`Foto da ação ${pIdx + 1}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Eye className="w-4 h-4 text-white drop-shadow" />
-                          </div>
+                  {(() => {
+                    const validPhotos = (action.photos || []).filter(isAuthenticPhoto);
+                    return (
+                      <>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                            <Camera className="w-3.5 h-3.5 text-blue-600" />
+                            Galeria de Fotos ({validPhotos.length}/20 fotos)
+                          </span>
+                          {validPhotos.length > 0 && (
+                            <span className="text-[10px] text-slate-400">Clique para ampliar</span>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-3 text-center rounded-lg bg-slate-50 border border-slate-100 text-[11px] text-slate-400">
-                      Nenhuma foto vinculada a esta ação.
-                    </div>
-                  )}
+
+                        {validPhotos.length > 0 ? (
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {validPhotos.map((photo, pIdx) => (
+                              <div
+                                key={pIdx}
+                                onClick={() => handleZoom(photo)}
+                                className="relative aspect-4/3 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 cursor-pointer group shadow-2xs hover:shadow-md transition"
+                              >
+                                <img
+                                  src={photo}
+                                  alt={`Foto da ação ${pIdx + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <Eye className="w-4 h-4 text-white drop-shadow" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-3 text-center rounded-lg bg-slate-50 border border-slate-100 text-[11px] text-slate-400">
+                            Nenhuma foto vinculada a esta ação.
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             );

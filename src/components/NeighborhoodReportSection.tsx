@@ -123,9 +123,13 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   }, [isAllBairros, qualifyingNeighborhoods, currentBairro, checkIns]);
 
   // Estatísticas agregadas
+  const isAuthPhotoItem = (p: any) => typeof p === 'string' && p.trim() !== '' && p !== '[vault_photo]' && !p.includes('unsplash.com') && !p.includes('placeholder');
   const totalAbordagensRuas = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.abordagens || 0), 0);
   const totalComercios = bairroCheckIns.reduce((acc, c) => acc + (c.materialsDelivered.comercio || 0), 0);
-  const totalPhotosCountRuas = bairroCheckIns.reduce((acc, c) => acc + (c.photos?.length || 0), 0);
+  const totalPhotosCountRuas = bairroCheckIns.reduce((acc, c) => {
+    const valid = (c.photos || []).filter(isAuthPhotoItem);
+    return acc + valid.length;
+  }, 0);
 
   const relevantBairroActions = useMemo(() => {
     if (isAllBairros) return allBairroActions;
@@ -150,7 +154,10 @@ export const NeighborhoodReportSection: React.FC<NeighborhoodReportSectionProps>
   }, [relevantBairroActions]);
 
   const totalActionPhotos = useMemo(() => {
-    return relevantBairroActions.reduce((acc, a) => acc + (a.photos?.length || 0), 0);
+    return relevantBairroActions.reduce((acc, a) => {
+      const valid = (a.photos || []).filter(isAuthPhotoItem);
+      return acc + valid.length;
+    }, 0);
   }, [relevantBairroActions]);
 
   const totalAbordagens = totalAbordagensRuas + totalActionAbordagens;
