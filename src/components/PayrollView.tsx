@@ -88,6 +88,8 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
   const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
   const [receiptItem, setReceiptItem] = useState<WeeklyPayrollItem | null>(null);
   const [copiedPixId, setCopiedPixId] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfFeedback, setPdfFeedback] = useState<string | null>(null);
 
   // Form State for Payroll Item
   const [formWorkerName, setFormWorkerName] = useState('');
@@ -526,6 +528,431 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
     window.print();
   };
 
+  // Exportar Folha Completa em PDF para Reuniões de Coordenação
+  const handleExportPDF = async () => {
+    if (!currentPayroll) return;
+    try {
+      setIsGeneratingPdf(true);
+      setPdfFeedback('Compilando Folha de Pagamento Oficial em PDF...');
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const emissionDate = new Date().toLocaleString('pt-BR');
+
+      // Helper Header Banner
+      const drawHeader = () => {
+        doc.setFillColor(15, 23, 42); // Slate 900
+        doc.rect(0, 0, pageWidth, 24, 'F');
+
+        // Green accent stripe
+        doc.setFillColor(16, 185, 129); // Emerald 500
+        doc.rect(0, 24, pageWidth, 1.5, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text('FOLHA DE PAGAMENTO SEMANAL CONSOLIDADA • REUNIÃO DE COORDENAÇÃO GERAL', 14, 10);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.text(
+          `Campanha Majoritária São José - SC | Período: ${currentPayroll.weekLabel} (${currentPayroll.startDate} a ${currentPayroll.endDate})`,
+          14,
+          17
+        );
+
+        // Coordinator Badge
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text('Coordenação Geral: Eder Nobre', pageWidth - 14, 10, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text(`Emissão: ${emissionDate} | Autenticação: FOLHA-SJ-${currentPayroll.id}`, pageWidth - 14, 17, { align: 'right' });
+      };
+
+      // Header on first page
+      drawHeader();
+
+      // Financial KPI Summaries
+      const items = currentPayroll.items || [];
+      const totalAmount = items.reduce((acc, i) => acc + (i.totalAmount || 0), 0);
+      const totalPaid = items.filter(i => i.status === 'pago').reduce((acc, i) => acc + (i.totalAmount || 0), 0);
+      const totalPending = items.filter(i => i.status !== 'pago').reduce((acc, i) => acc + (i.totalAmount || 0), 0);
+      const militantesCount = items.filter(i => i.role === 'militante').length;
+      const lideresCount = items.filter(i => i.role === 'lider').length;
+      const vansCount = items.filter(i => i.role === 'motorista_van').length;
+      const paidCount = items.filter(i => i.status === 'pago').length;
+
+      // Summary Cards on Page 1
+      const kpis = [
+        { label: 'TOTAL GERAL DA FOLHA', val: `R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, sub: `${items.length} Colaboradores` },
+        { label: 'TOTAL PAGO (LIQUIDADO)', val: `R$ ${totalPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, sub: `${paidCount} Pagamentos Confirmados` },
+        { label: 'TOTAL PENDENTE', val: `R$ ${totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, sub: `${items.length - paidCount} a Pagar` },
+        { label: 'EQUIPES & LOGÍSTICA', val: `${militantesCount} Mils • ${lideresCount} Líds`, sub: `${vansCount} Motoristas de Van` }
+      ];
+
+      const cardWidth = (pageWidth - 28 - (kpis.length - 1) * 4) / kpis.length;
+      kpis.forEach((kpi, idx) => {
+        const xPos = 14 + idx * (cardWidth + 4);
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(xPos, 28, cardWidth, 16, 2, 2, 'FD');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(6.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text(kpi.label, xPos + cardWidth / 2, 33, { align: 'center' });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(15, 23, 42);
+        doc.text(kpi.val, xPos + cardWidth / 2, 38.5, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6);
+        doc.setTextColor(71, 85, 105);
+        doc.text(kpi.sub, xPos + cardWidth / 2, 42.5, { align: 'center' });
+      });
+
+      // Data Rows for Table
+      const roleLabel = (r: string) => {
+        if (r === 'militante') return 'Militante';
+        if (r === 'lider') return 'Líder Equipe';
+        if (r === 'motorista_van') return 'Motorista Van';
+        if (r === 'coordenador') return 'Coordenador';
+        return r;
+      };
+
+      const tableRows = items.map((item, idx) => {
+        return [
+          item.matricula || String(idx + 1).padStart(3, '0'),
+          item.workerName,
+          roleLabel(item.role),
+          item.teamName || 'Equipe São José',
+          `${item.pixType}: ${item.pixKey}`,
+          `R$ ${item.dailyRate.toFixed(0)}`,
+          `${item.daysWorked}d`,
+          item.bonus > 0 ? `+${item.bonus.toFixed(0)}` : '-',
+          item.deductions > 0 ? `-${item.deductions.toFixed(0)}` : '-',
+          `R$ ${item.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          item.status === 'pago' ? 'PAGO ✓' : 'PENDENTE'
+        ];
+      });
+
+      autoTable(doc, {
+        head: [[
+          'MATRÍCULA',
+          'COLABORADOR',
+          'FUNÇÃO',
+          'EQUIPE / VEÍCULO',
+          'CHAVE PIX',
+          'DIÁRIA',
+          'DIAS',
+          'BÔNUS',
+          'DESC.',
+          'LÍQUIDO A PAGAR',
+          'STATUS'
+        ]],
+        body: tableRows,
+        foot: [[
+          'TOTAL CONSOLIDADO',
+          `${items.length} Trabalhadores`,
+          '',
+          '',
+          '',
+          '',
+          `${items.reduce((acc, i) => acc + (i.daysWorked || 0), 0)} diárias`,
+          `R$ ${items.reduce((acc, i) => acc + (i.bonus || 0), 0).toFixed(0)}`,
+          `R$ ${items.reduce((acc, i) => acc + (i.deductions || 0), 0).toFixed(0)}`,
+          `R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          `${paidCount}/${items.length} PAGOS`
+        ]],
+        startY: 47,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 7,
+          halign: 'left',
+          cellPadding: 2
+        },
+        bodyStyles: {
+          fontSize: 6.8,
+          textColor: [30, 41, 59],
+          cellPadding: 1.8
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        footStyles: {
+          fillColor: [15, 23, 42],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 7.5,
+          cellPadding: 2.2
+        },
+        columnStyles: {
+          0: { cellWidth: 20, fontStyle: 'bold' },
+          1: { cellWidth: 42, fontStyle: 'bold' },
+          2: { cellWidth: 24 },
+          3: { cellWidth: 38 },
+          4: { cellWidth: 46 },
+          5: { cellWidth: 16, halign: 'right' },
+          6: { cellWidth: 14, halign: 'center' },
+          7: { cellWidth: 14, halign: 'right' },
+          8: { cellWidth: 14, halign: 'right' },
+          9: { cellWidth: 25, halign: 'right', fontStyle: 'bold' },
+          10: { cellWidth: 16, halign: 'center', fontStyle: 'bold' }
+        },
+        didDrawPage: (data) => {
+          if (data.pageNumber > 1) {
+            drawHeader();
+          }
+
+          doc.setDrawColor(203, 213, 225);
+          doc.line(14, pageHeight - 16, pageWidth - 14, pageHeight - 16);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(6.5);
+          doc.setTextColor(100, 116, 139);
+          doc.text(
+            'Documento oficial de controle de diárias, folha de pagamento e auditoria da campanha majoritária de São José - SC.',
+            14,
+            pageHeight - 11
+          );
+          doc.text(
+            `Emissão: ${emissionDate} • Coordenação de Campanha 2026`,
+            14,
+            pageHeight - 7
+          );
+
+          doc.setDrawColor(71, 85, 105);
+          doc.line(pageWidth - 95, pageHeight - 10, pageWidth - 14, pageHeight - 10);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(15, 23, 42);
+          doc.text('Eder Nobre - Coordenador Geral da Campanha', pageWidth - 54.5, pageHeight - 6.5, { align: 'center' });
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(148, 163, 184);
+          doc.text(`Página ${data.pageNumber}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
+        },
+        margin: { top: 28, bottom: 18, left: 14, right: 14 }
+      });
+
+      // Signatures Page for Executive Presentation
+      doc.addPage('a4', 'landscape');
+      drawHeader();
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text('TERMO DE FECHAMENTO, VALIDAÇÃO E APROVAÇÃO DA FOLHA DE PAGAMENTO', 14, 38);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(
+        `Declaramos para os devidos fins de auditoria, coordenação e prestação de contas que os pagamentos descritos neste relatório foram devidamente apurados e validados de acordo com os dias efetivamente trabalhados em campo no município de São José - SC durante o período de ${currentPayroll.startDate} a ${currentPayroll.endDate}.`,
+        14,
+        46,
+        { maxWidth: pageWidth - 28 }
+      );
+
+      // Summary Table of Categories
+      autoTable(doc, {
+        head: [['CATEGORIA / FUNÇÃO', 'QUANTIDADE', 'VALOR DIÁRIA MÉDIO', 'TOTAL BRUTO (R$)', 'STATUS']],
+        body: [
+          ['Militantes de Rua / Abordagem', `${militantesCount}`, 'R$ 150,00', `R$ ${(items.filter(i => i.role === 'militante').reduce((a, b) => a + b.totalAmount, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Apurado'],
+          ['Líderes de Equipe Territorial', `${lideresCount}`, 'R$ 250,00', `R$ ${(items.filter(i => i.role === 'lider').reduce((a, b) => a + b.totalAmount, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Apurado'],
+          ['Motoristas de Van e Logística', `${vansCount}`, 'R$ 250,00', `R$ ${(items.filter(i => i.role === 'motorista_van').reduce((a, b) => a + b.totalAmount, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Apurado'],
+          ['TOTAL GERAL APROVADO', `${items.length}`, '-', `R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'HOMOLOGADO']
+        ],
+        startY: 60,
+        theme: 'grid',
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        bodyStyles: { fontSize: 8, textColor: [30, 41, 59] },
+        footStyles: { fillColor: [16, 185, 129], fontStyle: 'bold' },
+        margin: { left: 14, right: 14 }
+      });
+
+      // Signature lines
+      const sigY = 135;
+      const sigColWidth = (pageWidth - 42) / 3;
+
+      doc.setDrawColor(71, 85, 105);
+      doc.line(14, sigY, 14 + sigColWidth, sigY);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Eder Nobre', 14 + sigColWidth / 2, sigY + 5, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text('Coordenador Geral da Campanha', 14 + sigColWidth / 2, sigY + 9, { align: 'center' });
+
+      const sig2X = 14 + sigColWidth + 7;
+      doc.line(sig2X, sigY, sig2X + sigColWidth, sigY);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Diretoria Financeira / Tesouraria', sig2X + sigColWidth / 2, sigY + 5, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text('Aprovação e Liquidação Bancária PIX', sig2X + sigColWidth / 2, sigY + 9, { align: 'center' });
+
+      const sig3X = sig2X + sigColWidth + 7;
+      doc.line(sig3X, sigY, sig3X + sigColWidth, sigY);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Auditoria de Campo & GPS', sig3X + sigColWidth / 2, sigY + 5, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text('Validação de Presença e Check-ins', sig3X + sigColWidth / 2, sigY + 9, { align: 'center' });
+
+      doc.setDrawColor(203, 213, 225);
+      doc.line(14, pageHeight - 16, pageWidth - 14, pageHeight - 16);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Documento oficial emitido pelo Sistema de Gestão de Militância São José • Validação Georreferenciada.', 14, pageHeight - 11);
+      doc.text(`Página ${doc.getNumberOfPages()}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
+
+      const fileName = `Folha_Pagamento_${currentPayroll.weekLabel.replace(/\s+/g, '_')}_Sao_Jose.pdf`;
+      try {
+        const blobUrl = doc.output('bloburl');
+        const triggered = safeTriggerDownload(String(blobUrl), fileName);
+        if (!triggered) {
+          doc.save(fileName);
+        }
+      } catch {
+        doc.save(fileName);
+      }
+
+      setPdfFeedback('✓ Folha de pagamento exportada com sucesso em PDF!');
+      setTimeout(() => setPdfFeedback(null), 4000);
+    } catch (err: any) {
+      console.error('Erro ao gerar PDF da folha:', err);
+      setPdfFeedback(`Erro ao gerar PDF: ${err.message || 'Falha na compilação'}`);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // Exportar Recibo Individual em PDF
+  const handleExportReceiptPDF = (item: WeeklyPayrollItem) => {
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+
+      // Header Banner
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, pageWidth, 26, 'F');
+      doc.setFillColor(16, 185, 129);
+      doc.rect(0, 26, pageWidth, 2, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('COMPROVANTE INDIVIDUAL DE PAGAMENTO DE DIÁRIAS', 14, 11);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.text(`Campanha Majoritária São José - SC | ${currentPayroll?.weekLabel || 'Semana de Trabalho'}`, 14, 18);
+
+      // Receipt Box
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(14, 34, pageWidth - 28, 36, 2, 2, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(15, 23, 42);
+      doc.text(item.workerName, 20, 43);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`Função: ${item.role.toUpperCase()} | Matrícula: ${item.matricula || '-'} | CPF: ${item.cpfMasked || '-'}`, 20, 49);
+      doc.text(`Equipe / Vinculação: ${item.teamName || 'Equipe Geral'} | Telefone: ${item.phone || '-'}`, 20, 55);
+      doc.text(`Chave PIX (${item.pixType}): ${item.pixKey}`, 20, 61);
+
+      autoTable(doc, {
+        head: [['DISCRIMINAÇÃO', 'QUANTIDADE / DETALHE', 'VALOR UNITÁRIO (R$)', 'VALOR TOTAL (R$)']],
+        body: [
+          ['Diárias Trabalhadas na Semana', `${item.daysWorked} dias`, `R$ ${item.dailyRate.toFixed(2)}`, `R$ ${(item.daysWorked * item.dailyRate).toFixed(2)}`],
+          ['Bônus / Ajuda de Custo Adicional', 'Desempenho de Campo', '-', `R$ ${item.bonus.toFixed(2)}`],
+          ['Descontos / Retenções', item.deductions > 0 ? 'Faltas / Ajustes' : 'Sem descontos', '-', `- R$ ${item.deductions.toFixed(2)}`],
+          ['TOTAL LÍQUIDO PAGO', 'Transferência Bancária PIX', '-', `R$ ${item.totalAmount.toFixed(2)}`]
+        ],
+        startY: 75,
+        theme: 'grid',
+        headStyles: { fillColor: [15, 23, 42], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        footStyles: { fillColor: [16, 185, 129], fontStyle: 'bold' },
+        margin: { left: 14, right: 14 }
+      });
+
+      const finalY = (doc as any).lastAutoTable?.finalY || 135;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(51, 65, 85);
+      doc.text(
+        `Declaro que recebi da Coordenação da Campanha de São José - SC a importância líquida de R$ ${item.totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} referente à prestação de serviços de mobilização e militância de rua, conferindo plena, geral e irrevogável quitação.`,
+        14,
+        finalY + 14,
+        { maxWidth: pageWidth - 28 }
+      );
+
+      const sigY = finalY + 45;
+      doc.setDrawColor(71, 85, 105);
+      doc.line(14, sigY, 95, sigY);
+      doc.line(pageWidth - 95, sigY, pageWidth - 14, sigY);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(15, 23, 42);
+      doc.text(item.workerName, 54.5, sigY + 5, { align: 'center' });
+      doc.text('Eder Nobre - Coordenação Geral', pageWidth - 54.5, sigY + 5, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Assinatura do Colaborador', 54.5, sigY + 9, { align: 'center' });
+      doc.text('Validação Financeira da Campanha', pageWidth - 54.5, sigY + 9, { align: 'center' });
+
+      const fileName = `Recibo_${item.workerName.replace(/\s+/g, '_')}_${item.matricula || 'diaria'}.pdf`;
+      try {
+        const blobUrl = doc.output('bloburl');
+        const triggered = safeTriggerDownload(String(blobUrl), fileName);
+        if (!triggered) {
+          doc.save(fileName);
+        }
+      } catch {
+        doc.save(fileName);
+      }
+    } catch (err: any) {
+      alert(`Erro ao gerar recibo: ${err.message}`);
+    }
+  };
+
   // Filter items
   const filteredItems = (currentPayroll?.items || []).filter(item => {
     const matchesSearch = item.workerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -634,19 +1061,48 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
+            onClick={handleExportPDF}
+            disabled={isGeneratingPdf}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 hover:shadow-md cursor-pointer"
+            title="Exportar documento oficial em PDF para Reuniões de Coordenação"
+          >
+            <FileDown className="w-4 h-4" />
+            {isGeneratingPdf ? 'Gerando PDF Oficial...' : 'Exportar PDF da Folha'}
+          </button>
+          <button
+            type="button"
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200 transition"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200 transition cursor-pointer"
           >
             <Download className="w-4 h-4" /> Exportar CSV
           </button>
           <button
+            type="button"
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-sm transition cursor-pointer"
           >
             <Printer className="w-4 h-4" /> Imprimir Folha
           </button>
         </div>
       </div>
+
+      {/* PDF Feedback Toast */}
+      {pdfFeedback && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center justify-between animate-in fade-in duration-200 shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{pdfFeedback}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPdfFeedback(null)}
+            className="text-emerald-700 hover:text-emerald-900 text-xs px-2 py-0.5 rounded cursor-pointer"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {/* Tabs Selector (Hidden in Print Mode) */}
       <div className="no-print flex items-center gap-2 border-b border-slate-200 pb-2">
@@ -1544,12 +2000,20 @@ export const PayrollView: React.FC<PayrollViewProps> = ({
               <span className="text-xs font-bold text-blue-700 uppercase">Comprovante de Diária de Campanha</span>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => window.print()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition"
+                  type="button"
+                  onClick={() => handleExportReceiptPDF(receiptItem)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition cursor-pointer"
+                  title="Baixar Recibo Individual em PDF"
                 >
-                  <Printer className="w-3.5 h-3.5" /> Imprimir Recibo
+                  <FileDown className="w-3.5 h-3.5" /> Baixar PDF
                 </button>
-                <button onClick={() => setReceiptItem(null)} className="p-1 text-slate-400 hover:text-slate-600">
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Imprimir
+                </button>
+                <button onClick={() => setReceiptItem(null)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
